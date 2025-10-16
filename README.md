@@ -229,4 +229,4 @@ This project is currently in active development. Version 1.0 is expected to be r
 
 ---
 
-**Made with ❤️ by the Student Resource Exchange Team**
+**Made with ❤️ by Amol Solase**
