@@ -298,7 +298,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Amol Solase** - *Initial work* - [YourGitHub](https://github.com/amol1027/)
+- **Amol Solase** - *Initial work* - [GitHub](https://github.com/amol1027/)
 
 ## 🙏 Acknowledgments
 
