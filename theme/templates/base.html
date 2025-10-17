@@ -10,7 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% tailwind_css %}
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -21,6 +24,9 @@
         }
         
         [x-cloak] { display: none !important; }
+        
+        /* Mobile menu visibility */
+    /* x-cloak hides elements until Alpine initializes. Keep only x-cloak. */
         
         /* Fade in animation */
         @keyframes fadeInUp {
@@ -74,5 +80,58 @@
     {% block content %}
     {% endblock %}
     
+    <!-- Vanilla JS Fallback for Mobile Menu -->
+    <script>
+        // Fallback if Alpine.js doesn't load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for Alpine to initialize
+            setTimeout(function() {
+                if (typeof window.Alpine === 'undefined') {
+                    console.log('Alpine.js not detected, using vanilla JS fallback');
+                    
+                    const menuButton = document.querySelector('[data-mobile-menu-button]');
+                    const closeButton = document.querySelector('[data-mobile-menu-close]');
+                    const mobileMenu = document.querySelector('[data-mobile-menu]');
+                    const backdrop = document.querySelector('[data-mobile-menu-backdrop]');
+                    const menuLinks = document.querySelectorAll('[data-mobile-menu-link]');
+                    const menuPanel = document.querySelector('[data-mobile-menu-panel]');
+                    
+                    if (menuButton && menuPanel) {
+                        // Initialize menu as hidden
+                        menuPanel.style.display = 'none';
+                        
+                        menuButton.addEventListener('click', function() {
+                            const isHidden = menuPanel.style.display === 'none';
+                            menuPanel.style.display = isHidden ? 'block' : 'none';
+                            // Also toggle the parent menu visibility
+                            mobileMenu.style.display = isHidden ? 'block' : 'none';
+                        });
+                        
+                        if (closeButton) {
+                            closeButton.addEventListener('click', function() {
+                                menuPanel.style.display = 'none';
+                                mobileMenu.style.display = 'none';
+                            });
+                        }
+                        
+                        if (backdrop) {
+                            backdrop.addEventListener('click', function() {
+                                menuPanel.style.display = 'none';
+                                mobileMenu.style.display = 'none';
+                            });
+                        }
+                        
+                        menuLinks.forEach(function(link) {
+                            link.addEventListener('click', function() {
+                                menuPanel.style.display = 'none';
+                                mobileMenu.style.display = 'none';
+                            });
+                        });
+                    }
+                }
+            }, 100);
+        });
+    </script>
+
 </body>
 </html>
