@@ -25,7 +25,17 @@
                     <a href="#products" class="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors">Products</a>
                 <a href="#features" class="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors">Features</a>
                 <a href="#about" class="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors">About</a>
-                <a href="#" class="ml-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">Log in <span aria-hidden="true">&rarr;</span></a>
+                {% if request.session.user_id %}
+                    {% if request.session.is_admin %}
+                        <a href="{% url 'dashboard:dashboard' %}" class="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors">Dashboard</a>
+                    {% else %}
+                        <a href="{% url 'profile:profile' %}" class="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors">Profile</a>
+                    {% endif %}
+                    <span class="px-4 py-2 text-sm font-medium text-gray-700">Welcome, {{ request.session.user_name }}!</span>
+                    <a href="{% url 'login:logout' %}" class="ml-2 px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors shadow-sm">Log out</a>
+                {% else %}
+                    <a href="{% url 'login:login' %}" class="ml-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">Log in <span aria-hidden="true">&rarr;</span></a>
+                {% endif %}
             </div>
         </nav>
     </header>
@@ -79,8 +89,23 @@
                                 @click="mobileMenuOpen = false" 
                                 class="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors">About</a><hr>
 
-                                <a href="#" 
-                                class="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-indigo-600 hover:bg-indigo-50 transition-colors">Log in <span aria-hidden="true">&rarr;</span></a>
+                                {% if request.session.user_id %}
+                                    {% if request.session.is_admin %}
+                                        <a href="{% url 'dashboard:dashboard' %}" 
+                                        @click="mobileMenuOpen = false" 
+                                        class="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-indigo-600 hover:bg-indigo-50 transition-colors">Dashboard</a><hr>
+                                    {% else %}
+                                        <a href="{% url 'profile:profile' %}" 
+                                        @click="mobileMenuOpen = false" 
+                                        class="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-indigo-600 hover:bg-indigo-50 transition-colors">Profile</a><hr>
+                                    {% endif %}
+                                    <div class="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-700">Welcome, {{ request.session.user_name }}!</div><hr>
+                                    <a href="{% url 'login:logout' %}" 
+                                    class="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-red-600 hover:bg-red-50 transition-colors">Log out</a>
+                                {% else %}
+                                    <a href="{% url 'login:login' %}" 
+                                    class="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-indigo-600 hover:bg-indigo-50 transition-colors">Log in <span aria-hidden="true">&rarr;</span></a>
+                                {% endif %}
                         </div>
                     </div>
                 </div>
@@ -98,7 +123,7 @@
                 <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">Student Resource Exchange</h1>
                 <p class="mt-6 text-base sm:text-lg leading-7 sm:leading-8 text-gray-600 max-w-2xl">Share, exchange, and discover resources with fellow students. Books, notes, gadgets, and more!</p>
                 <div class="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start gap-4 sm:gap-x-6">
-                    <a href="#" class="btn-hover w-full sm:w-auto text-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Get started</a>
+                    <a href="{% url 'registration:register' %}" class="btn-hover w-full sm:w-auto text-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Get started</a>
                     <a href="#about" class="w-full sm:w-auto text-center text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors py-3">Learn more <span aria-hidden="true">→</span></a>
                 </div>
             </div>
@@ -201,7 +226,7 @@
             <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Ready to Join?</h2>
             <p class="mt-6 text-base sm:text-lg leading-7 sm:leading-8 text-gray-700">Sign up now and start exchanging resources today! Become part of a vibrant student community.</p>
             <div class="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6">
-                <a href="#" class="btn-hover w-full sm:w-auto text-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign Up Now</a>
+                <a href="{% url 'registration:register' %}" class="btn-hover w-full sm:w-auto text-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign Up Now</a>
                 <a href="#about" class="w-full sm:w-auto text-center text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 py-3 transition-all">Learn More <span aria-hidden="true">→</span></a>
             </div>
         </div>
