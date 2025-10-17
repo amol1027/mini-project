@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <!-- Header -->
+    <header class="sticky inset-x-0 top-0 z-50 backdrop-blur-sm bg-white/80 border-b border-gray-200">
+        <nav class="flex items-center justify-between p-4 sm:p-6 lg:px-8 max-w-7xl mx-auto" aria-label="Global">
+            <div class="flex lg:flex-1">
+                <a href="{% url 'landing:landing' %}" class="-m-1.5 p-1.5 flex items-center gap-2">
+                    <span class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">SRE</span>
+                </a>
+            </div>
+            <div class="flex items-center gap-x-4">
+                <a href="{% url 'landing:landing' %}" class="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors">Back to Home</a>
+                <a href="{% url 'login:login' %}" class="px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">Log in</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="relative isolate py-12 px-4 sm:px-6 lg:px-8">
+        <!-- Background decoration -->
+        <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
+            <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
+        </div>
+
+        <div class="max-w-2xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Create Your Account</h1>
+                <p class="text-gray-600">Join the Student Resource Exchange community</p>
+            </div>
+
+        <!-- Registration Form Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800{% else %}bg-red-50 border border-red-200 text-red-800{% endif %} px-4 py-3 rounded-lg mb-3" role="alert">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    {% if message.tags == 'success' %}
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    {% else %}
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    {% endif %}
+                                </svg>
+                                <span>{{ message }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Form -->
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Email -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Address <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- College ID -->
+                <div>
+                    <label for="{{ form.college_id.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        College ID <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.college_id }}
+                    {% if form.college_id.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.college_id.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Name (Optional) -->
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Full Name
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Password <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password.errors.0 }}</p>
+                    {% else %}
+                        <p class="mt-1 text-xs text-gray-500">{{ form.password.help_text }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label for="{{ form.confirm_password.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Confirm Password <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.confirm_password }}
+                    {% if form.confirm_password.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.confirm_password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Address Section -->
+                <div class="pt-4 border-t border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Address Information (Optional)</h3>
+                    
+                    <!-- Address Line 1 -->
+                    <div class="mb-4">
+                        <label for="{{ form.address_line1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Address Line 1
+                        </label>
+                        {{ form.address_line1 }}
+                        {% if form.address_line1.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address_line1.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Address Line 2 -->
+                    <div class="mb-4">
+                        <label for="{{ form.address_line2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Address Line 2
+                        </label>
+                        {{ form.address_line2 }}
+                        {% if form.address_line2.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.address_line2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- City and State -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                City
+                            </label>
+                            {{ form.city }}
+                            {% if form.city.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.city.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.state_province.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                State/Province
+                            </label>
+                            {{ form.state_province }}
+                            {% if form.state_province.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.state_province.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ZIP and Country -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.zip_postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                ZIP/Postal Code
+                            </label>
+                            {{ form.zip_postal_code }}
+                            {% if form.zip_postal_code.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.zip_postal_code.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Country
+                            </label>
+                            {{ form.country }}
+                            {% if form.country.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.country.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form-level errors -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Submit Button -->
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl">
+                        Register
+                    </button>
+                </div>
+            </form>
+
+            <!-- Additional Links -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Already have an account? 
+                    <a href="{% url 'login:login' %}" class="text-indigo-600 hover:text-indigo-800 font-semibold">Sign in here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom decoration -->
+    <div class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
+        <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
+    </div>
+</div>
+{% endblock %}
