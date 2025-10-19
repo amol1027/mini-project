@@ -21,13 +21,17 @@ def profile_view(request):
     
     # Calculate profile completion
     fields_filled = 0
-    total_fields = 12  # Total important fields to track
+    total_fields = 14  # Total important fields to track (increased from 12)
     
     if user.name:
         fields_filled += 1
     if user.email:
         fields_filled += 1
     if user.college_id:
+        fields_filled += 1
+    if user.college_name:
+        fields_filled += 1
+    if user.university_name:
         fields_filled += 1
     if user.email_verified:
         fields_filled += 1
@@ -51,9 +55,15 @@ def profile_view(request):
     
     profile_completion = int((fields_filled / total_fields) * 100)
     
+    # Calculate stroke-dashoffset for circular progress bar
+    # Circle circumference = 2 * π * radius = 2 * 3.14159 * 56 ≈ 351.86
+    circumference = 351.86
+    stroke_offset = circumference - (profile_completion / 100 * circumference)
+    
     context = {
         'user': user,
         'profile_completion': profile_completion,
+        'stroke_offset': round(stroke_offset, 2),
     }
     
     return render(request, 'user_profile/profile.html', context)

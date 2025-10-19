@@ -131,6 +131,41 @@
                 }
             }, 100);
         });
+
+        // Auto-dismiss messages after 5 seconds with smooth animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('[role="alert"]');
+            messages.forEach(function(message) {
+                // Add a close button to each message
+                const closeBtn = document.createElement('button');
+                closeBtn.innerHTML = '&times;';
+                closeBtn.className = 'ml-auto text-2xl font-bold leading-none hover:opacity-75 transition-opacity';
+                closeBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 0 0 0 12px;';
+                closeBtn.setAttribute('aria-label', 'Close');
+                
+                // Add close button to message
+                const messageContent = message.querySelector('div');
+                if (messageContent) {
+                    messageContent.appendChild(closeBtn);
+                }
+                
+                // Function to dismiss message
+                function dismissMessage() {
+                    message.style.transition = 'all 0.5s ease-out';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 500);
+                }
+                
+                // Close button click handler
+                closeBtn.addEventListener('click', dismissMessage);
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(dismissMessage, 5000);
+            });
+        });
     </script>
 
 </body>

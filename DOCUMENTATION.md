@@ -10,11 +10,12 @@
 6. [Backend Services](#backend-services)
 7. [Authentication & Authorization](#authentication--authorization)
 8. [User Registration System](#user-registration-system)
-9. [File Structure](#file-structure)
-10. [Configuration](#configuration)
-11. [Deployment Guide](#deployment-guide)
-12. [Troubleshooting](#troubleshooting)
-13. [Development Workflow](#development-workflow)
+9. [Products Marketplace System](#products-marketplace-system)
+10. [File Structure](#file-structure)
+11. [Configuration](#configuration)
+12. [Deployment Guide](#deployment-guide)
+13. [Troubleshooting](#troubleshooting)
+14. [Development Workflow](#development-workflow)
 
 ---
 
@@ -107,22 +108,27 @@ Student Resource Exchange (SRE) is a Django-based web platform designed to facil
 
 ### Database Configuration
 
-- **Database Name**: `sre1027.sqlite3`
-- **Location**: `d:\projects\mini project\sre1027.sqlite3`
+- **Database Name**: `db.sqlite3`
+- **Location**: `d:\projects\mini project\db.sqlite3`
 - **Type**: SQLite3 (Development), PostgreSQL (Production Recommended)
 
 ### Current Models
 
 #### User Model (Custom Registration Model)
+**Location**: `registration/models.py`
+
 ```python
-User (Table: user)
+User (Table: registration_user)
 ├── id (Primary Key, AutoField)
 ├── email (EmailField, unique, indexed)
 ├── password_hash (CharField, 128 chars)
 ├── college_id (CharField, 100 chars)
 ├── name (CharField, 255 chars, optional)
-├── rating (IntegerField, default=0)
+├── college_name (CharField, 255 chars, optional) [NEW]
+├── university_name (CharField, 255 chars, optional) [NEW]
+├── rating (DecimalField, max_digits=3, decimal_places=2, default=0.0)
 ├── email_verified (BooleanField, default=False)
+├── is_admin (BooleanField, default=False)
 ├── address_line1 (CharField, 255 chars, optional)
 ├── address_line2 (CharField, 255 chars, optional)
 ├── city (CharField, 100 chars, optional)
@@ -134,7 +140,10 @@ User (Table: user)
 
 Methods:
 ├── set_password(raw_password) - Hash and store password
-└── check_password(raw_password) - Verify password
+├── check_password(raw_password) - Verify password
+└── __str__() - Returns email
+
+Total Fields: 14 (tracked for profile completion)
 ```
 
 **Security Features**:
@@ -143,47 +152,46 @@ Methods:
 - CSRF protection enabled on all forms
 - SQL injection protection via Django ORM
 
-### Planned Models
+#### Product Model (Marketplace)
+**Location**: `products/models.py`
 
-#### Resource Model
 ```python
-Resource
-├── id (Primary Key)
-├── owner (Foreign Key → User)
-├── title
-├── description
-├── category
-├── condition
-├── availability_status
-├── images (Many-to-Many → ResourceImage)
-├── created_at
-└── updated_at
-```
+Product (Table: products_product)
+├── id (Primary Key, AutoField)
+├── title (CharField, max_length=200)
+├── description (TextField)
+├── price (DecimalField, max_digits=10, decimal_places=2)
+├── category (CharField, max_length=20, choices=[
+│   'books', 'notes', 'electronics', 'stationery', 'lab_equipment'
+│   ])
+├── condition (CharField, max_length=20, choices=[
+│   'new', 'like_new', 'good', 'fair', 'poor'
+│   ])
+├── seller (ForeignKey → User, on_delete=CASCADE)
+├── is_available (BooleanField, default=True)
+├── views (IntegerField, default=0)
+├── created_at (DateTimeField, auto_now_add)
+└── updated_at (DateTimeField, auto_now)
 
-#### Transaction Model
-```python
-Transaction
-├── id (Primary Key)
-├── resource (Foreign Key → Resource)
-├── borrower (Foreign Key → User)
-├── lender (Foreign Key → User)
-├── borrow_date
-├── return_date
-├── actual_return_date
-├── status
-└── created_at
-```
+Methods:
+├── increment_views() - Increment view counter
+├── get_category_display() - Return human-readable category
+├── get_condition_display() - Return human-readable condition
+└── __str__() - Returns title
 
-#### Review Model
-```python
-Review
-├── id (Primary Key)
-├── transaction (Foreign Key → Transaction)
-├── reviewer (Foreign Key → User)
-├── reviewee (Foreign Key → User)
-├── rating (1-5)
-├── comment
-└── created_at
+Categories:
+├── books - Books
+├── notes - Notes
+├── electronics - Electronics
+├── stationery - Stationery
+└── lab_equipment - Lab Equipment
+
+Conditions:
+├── new - New
+├── like_new - Like New
+├── good - Good
+├── fair - Fair
+└── poor - Poor
 ```
 
 ### Database Relationships
@@ -191,12 +199,15 @@ Review
 ```
 User ──┐
        │ 1:N
-       ├──────> Resource (planned)
+       ├──────> Product (as seller)
+       │
+       │ (Future Relationships)
        │ 1:N
-       ├──────> Transaction (as borrower) (planned)
+       ├──────> Transaction (as buyer)
        │ 1:N
-       ├──────> Transaction (as lender) (planned)
+       ├──────> Transaction (as seller)
        │ 1:N
+       └──────> Review (as reviewer/reviewee)
        └──────> Review (as reviewer/reviewee) (planned)
 
 Resource ──> Transaction (1:N) (planned)
@@ -232,11 +243,83 @@ Transaction ──> Review (1:1 or 1:2) (planned)
     - `password` (required, min 8 chars)
     - `confirm_password` (required, must match password)
     - `college_id` (required)
+    - `college_name` (required)
+    - `university_name` (required)
     - `name` (optional)
     - `address_line1` (optional)
     - `address_line2` (optional)
     - `city` (optional)
     - `state_province` (optional)
+    - `zip_postal_code` (optional)
+    - `country` (optional)
+  - Success: Redirect to `/login/` with success message
+  - Failure: Re-render form with error messages
+  - Authentication: Not required
+
+#### Login
+- **GET** `/login/` - Display login form
+  - Template: `login/login.html`
+  - Context: `{'form': LoginForm()}`
+  - Authentication: Not required
+  
+- **POST** `/login/` - Process user login
+  - Form Data: `email`, `password`, `remember_me` (optional)
+  - Success Redirect:
+    - Admin users → `/dashboard/`
+    - Regular users → `/products/`
+  - Failure: Re-render with error message
+  - Sets session: `user_id`, `user_name`, `user_email`, `is_admin`
+  - Authentication: Not required
+
+#### Logout
+- **GET** `/logout/` - Logout user
+  - Clears all session data
+  - Redirects to `/login/` with success message
+  - Authentication: Required (session)
+
+#### Products
+- **GET** `/products/` - Browse products marketplace
+  - Template: `products/product_list.html`
+  - Query Parameters:
+    - `search` - Full-text search in title/description
+    - `category` - Filter by category (books, notes, electronics, stationery, lab_equipment)
+  - Context: `{'products': QuerySet, 'search_query': str, 'selected_category': str}`
+  - Authentication: Not required (limited view for anonymous users)
+
+- **GET** `/products/<int:product_id>/` - View product details
+  - Template: `products/product_detail.html`
+  - Context: `{'product': Product, 'related_products': QuerySet}`
+  - Features:
+    - Increments view counter automatically
+    - Shows full seller info if logged in
+    - Shows limited seller info (name, college) if anonymous
+    - Displays related products (same category, max 4)
+  - Authentication: Not required (privacy controls apply)
+
+#### User Profile
+- **GET** `/profile/` - View user profile
+  - Template: `user_profile/profile.html`
+  - Context: User data with profile completion percentage and stroke_offset
+  - Authentication: Required (session)
+  - Redirect: `/login/` if not authenticated
+
+#### Admin Dashboard
+- **GET** `/dashboard/` - Admin overview
+  - Template: `dashboard/dashboard.html`
+  - Context: User statistics and analytics
+  - Authentication: Required (admin only)
+  - Access Control: Redirects non-admin to `/profile/`
+
+- **GET** `/dashboard/users/` - List all users
+  - Template: `dashboard/user_list.html`
+  - Query Parameters: `search` - Search by email, name, or college ID
+  - Context: `{'users': QuerySet, 'search_query': str}`
+  - Authentication: Required (admin only)
+
+- **GET** `/dashboard/users/<int:user_id>/` - View user details
+  - Template: `dashboard/user_detail.html`
+  - Context: Complete user information including college/university
+  - Authentication: Required (admin only)
     - `zip_postal_code` (optional)
     - `country` (optional)
   - Validation:
@@ -865,7 +948,369 @@ else:
 
 ---
 
-## 9. File Structure
+## 9. Products Marketplace System
+
+### 9.1 Overview
+
+The Products Marketplace is a core feature that allows students to list, browse, search, and purchase educational resources from other students. It includes product categories, search functionality, privacy controls, and comprehensive product details.
+
+### 9.2 Product Model
+
+**Location**: `products/models.py`
+
+```python
+class Product(models.Model):
+    # Categories
+    CATEGORY_CHOICES = [
+        ('books', 'Books'),
+        ('notes', 'Notes'),
+        ('electronics', 'Electronics'),
+        ('stationery', 'Stationery'),
+        ('lab_equipment', 'Lab Equipment'),
+    ]
+    
+    # Conditions
+    CONDITION_CHOICES = [
+        ('new', 'New'),
+        ('like_new', 'Like New'),
+        ('good', 'Good'),
+        ('fair', 'Fair'),
+        ('poor', 'Poor'),
+    ]
+    
+    # Fields
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES)
+    seller = models.ForeignKey('registration.User', on_delete=models.CASCADE)
+    is_available = models.BooleanField(default=True)
+    views = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+```
+
+### 9.3 Views
+
+#### Product List View
+**Location**: `products/views.py`
+
+```python
+def product_list(request):
+    products = Product.objects.filter(is_available=True).order_by('-created_at')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        products = products.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        )
+    
+    # Category filtering
+    category = request.GET.get('category', '')
+    if category:
+        products = products.filter(category=category)
+    
+    return render(request, 'products/product_list.html', {
+        'products': products,
+        'search_query': search_query,
+        'selected_category': category,
+    })
+```
+
+#### Product Detail View
+**Location**: `products/views.py`
+
+```python
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    
+    # Increment view counter
+    product.views += 1
+    product.save()
+    
+    # Get related products (same category, different seller)
+    related_products = Product.objects.filter(
+        category=product.category,
+        is_available=True
+    ).exclude(id=product.id)[:4]
+    
+    return render(request, 'products/product_detail.html', {
+        'product': product,
+        'related_products': related_products,
+    })
+```
+
+### 9.4 URL Patterns
+
+**Location**: `products/urls.py`
+
+```python
+from django.urls import path
+from . import views
+
+app_name = 'products'
+
+urlpatterns = [
+    path('', views.product_list, name='product_list'),
+    path('<int:product_id>/', views.product_detail, name='product_detail'),
+]
+```
+
+### 9.5 Templates
+
+#### Product List Template
+**Location**: `products/templates/products/product_list.html`
+
+**Features**:
+- Responsive grid layout (1-4 columns based on screen size)
+- Search bar with icon
+- Category filter buttons
+- Product cards with hover effects
+- User dropdown navigation (Alpine.js)
+- Login/Logout buttons
+- Product count display
+
+**Key Components**:
+- Search form with GET method
+- Category links with active state highlighting
+- Product cards showing:
+  - Category emoji icon
+  - Title (truncated to 2 lines)
+  - Description (truncated to 2 lines)
+  - Price in INR (₹)
+  - Condition badge
+  - View count
+  - Seller name (truncated)
+
+#### Product Detail Template
+**Location**: `products/templates/products/product_detail.html`
+
+**Features**:
+- Two-column layout (product info + seller info)
+- Large product icon/placeholder
+- Comprehensive product details
+- Privacy-aware seller information
+- Related products carousel
+- Breadcrumb navigation
+
+**Privacy Controls**:
+- **Logged In Users**: See full seller details (email, university, rating)
+- **Anonymous Users**: See limited info (name, college only) with login prompt
+
+**Seller Information Display**:
+```django
+{% if request.session.user_id %}
+    <!-- Full seller information -->
+    <div>Email: {{ product.seller.email }}</div>
+    <div>University: {{ product.seller.university_name }}</div>
+    <div>Rating: {{ product.seller.rating }}/5</div>
+    <button>Contact Seller</button>
+{% else %}
+    <!-- Limited information with login prompt -->
+    <div>Seller: {{ product.seller.name }}</div>
+    <div class="login-prompt">
+        Login to view full seller details
+        <a href="{% url 'login:login' %}">Login to Continue</a>
+    </div>
+    <button disabled>Login to Contact Seller</button>
+{% endif %}
+```
+
+### 9.6 Management Commands
+
+#### Create Sample Products
+**Location**: `products/management/commands/create_sample_products.py`
+
+**Purpose**: Generate 10 diverse product listings for testing and demonstration
+
+**Usage**:
+```bash
+python manage.py create_sample_products
+```
+
+**Sample Data Generated**:
+- 2 Books (Data Structures, Physics textbook)
+- 2 Notes (Machine Learning, Organic Chemistry)
+- 2 Electronics (Graphing calculator, USB drive)
+- 2 Stationery (Scientific calculator, Geometry set)
+- 2 Lab Equipment (Digital multimeter, Microscope slides)
+
+**Features**:
+- Realistic product titles and descriptions
+- Varied pricing (₹50 - ₹2499)
+- Different conditions (new, like_new, good)
+- Assigned to first available user as seller
+- All products marked as available
+
+### 9.7 Admin Integration
+
+**Location**: `products/admin.py`
+
+```python
+from django.contrib import admin
+from .models import Product
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category', 'price', 'seller', 'is_available', 'views', 'created_at']
+    list_filter = ['category', 'condition', 'is_available', 'created_at']
+    search_fields = ['title', 'description', 'seller__email', 'seller__name']
+    readonly_fields = ['views', 'created_at', 'updated_at']
+    
+    fieldsets = [
+        ('Product Information', {
+            'fields': ['title', 'description', 'price']
+        }),
+        ('Classification', {
+            'fields': ['category', 'condition']
+        }),
+        ('Seller & Availability', {
+            'fields': ['seller', 'is_available']
+        }),
+        ('Statistics', {
+            'fields': ['views', 'created_at', 'updated_at']
+        }),
+    ]
+```
+
+**Admin Features**:
+- List view with sortable columns
+- Filters by category, condition, availability, date
+- Search by title, description, seller email/name
+- Organized fieldsets for easy editing
+- Read-only fields for statistics
+
+### 9.8 Features & Functionality
+
+#### Search & Filtering
+- **Full-text search**: Searches in title and description fields
+- **Category filters**: 5 categories with emoji icons
+- **Active state**: Highlights selected category
+- **URL parameters**: Search and category persist in URL
+- **Empty state**: Friendly message when no products found
+
+#### Privacy & Security
+- **Anonymous users**: See seller name and college only
+- **Logged-in users**: See full contact details (email, university, rating)
+- **Login prompts**: Beautiful gradient CTA boxes encourage registration
+- **Blurred preview**: Shows placeholder of hidden information
+- **Disabled buttons**: Contact button disabled for anonymous users
+
+#### User Experience
+- **View counter**: Automatically increments on each product view
+- **Related products**: Shows 4 similar items from same category
+- **Responsive design**: Mobile-first with adaptive layouts
+- **Smooth animations**: Hover effects and transitions
+- **Loading states**: Proper handling of empty states
+
+#### Navigation
+- **Breadcrumbs**: Easy navigation back to product list
+- **User dropdown**: Avatar-based menu with Alpine.js
+- **Quick links**: Home, Profile, Dashboard (admin), Logout
+- **Login redirect**: After login, redirects to products page
+
+### 9.9 Database Queries
+
+**Get all available products**:
+```python
+products = Product.objects.filter(is_available=True)
+```
+
+**Search products**:
+```python
+from django.db.models import Q
+products = Product.objects.filter(
+    Q(title__icontains=query) | Q(description__icontains=query)
+)
+```
+
+**Get products by category**:
+```python
+books = Product.objects.filter(category='books')
+```
+
+**Get seller's products**:
+```python
+user_products = Product.objects.filter(seller=user, is_available=True)
+```
+
+**Get related products**:
+```python
+related = Product.objects.filter(
+    category=product.category,
+    is_available=True
+).exclude(id=product.id)[:4]
+```
+
+**Most viewed products**:
+```python
+popular = Product.objects.filter(is_available=True).order_by('-views')[:10]
+```
+
+### 9.10 Testing
+
+**Unit Tests**:
+```python
+from django.test import TestCase
+from products.models import Product
+from registration.models import User
+
+class ProductModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            email="seller@test.com",
+            college_id="TEST123"
+        )
+        
+    def test_create_product(self):
+        product = Product.objects.create(
+            title="Test Book",
+            description="Test Description",
+            price=500.00,
+            category="books",
+            condition="good",
+            seller=self.user
+        )
+        self.assertEqual(product.title, "Test Book")
+        self.assertEqual(product.views, 0)
+        self.assertTrue(product.is_available)
+```
+
+**Manual Testing Checklist**:
+- [ ] Browse products as anonymous user
+- [ ] Search for products
+- [ ] Filter by each category
+- [ ] View product details (anonymous)
+- [ ] Verify limited seller info for anonymous users
+- [ ] Login and view product details
+- [ ] Verify full seller info for logged-in users
+- [ ] Test view counter increments
+- [ ] Check related products appear
+- [ ] Test responsive design on mobile
+- [ ] Verify admin can manage products
+
+### 9.11 Future Enhancements
+
+**Planned Features**:
+- Image uploads for products
+- User ability to post products
+- Edit and delete own products
+- Favorites/wishlist functionality
+- Product reviews and ratings
+- Direct messaging between buyers and sellers
+- Transaction history
+- Payment integration
+- Product status (sold, reserved, available)
+- Advanced filters (price range, location, seller rating)
+- Sorting options (price, date, popularity)
+- Bulk product upload for admin
+
+---
+
+## 10. File Structure
 
 ```
 mini project/
@@ -893,19 +1338,69 @@ mini project/
 ├── registration/                    # User registration app
 │   ├── migrations/
 │   │   ├── __init__.py
-│   │   └── 0001_initial.py        # Initial User model migration
+│   │   ├── 0001_initial.py        # Initial User model migration
+│   │   ├── 0002_user_rating.py    # Added rating field
+│   │   └── 0003_user_college_name_user_university_name.py  # Added college/university
 │   ├── templates/
 │   │   └── registration/
 │   │       └── register.html      # Registration form template
 │   ├── __init__.py
 │   ├── admin.py                    # User admin configuration
 │   ├── apps.py                     # App configuration
-│   ├── forms.py                    # RegistrationForm
-│   ├── models.py                   # User model
+│   ├── forms.py                    # RegistrationForm (14 fields)
+│   ├── models.py                   # User model (14 fields)
 │   ├── tests.py                    # Unit tests
 │   ├── urls.py                     # Registration URLs
 │   ├── views.py                    # Registration views
 │   └── README.md                   # Registration app docs
+│
+├── login/                           # Authentication app
+│   ├── templates/
+│   │   └── login/
+│   │       └── login.html         # Login page
+│   ├── __init__.py
+│   ├── forms.py                    # LoginForm
+│   ├── views.py                    # Login/logout (redirects to products)
+│   └── urls.py                     # Login URLs
+│
+├── products/                        # Products marketplace app
+│   ├── management/
+│   │   └── commands/
+│   │       └── create_sample_products.py  # Generate 10 sample products
+│   ├── migrations/
+│   │   ├── __init__.py
+│   │   └── 0001_initial.py        # Product model migration
+│   ├── templates/
+│   │   └── products/
+│   │       ├── product_list.html  # Browse products page
+│   │       └── product_detail.html # Product detail page
+│   ├── __init__.py
+│   ├── admin.py                    # Product admin configuration
+│   ├── apps.py                     # App configuration
+│   ├── models.py                   # Product model (categories, conditions)
+│   ├── tests.py                    # Unit tests
+│   ├── urls.py                     # Product URLs
+│   └── views.py                    # Product list & detail views
+│
+├── dashboard/                       # Admin dashboard app
+│   ├── templates/
+│   │   └── dashboard/
+│   │       ├── dashboard.html     # Admin overview
+│   │       ├── user_list.html     # User management
+│   │       └── user_detail.html   # User details (incl. college/university)
+│   ├── templatetags/
+│   │   └── dashboard_filters.py   # Custom template filters
+│   ├── __init__.py
+│   ├── views.py                    # Dashboard views
+│   └── urls.py                     # Dashboard URLs
+│
+├── user_profile/                    # User profile app
+│   ├── templates/
+│   │   └── user_profile/
+│   │       └── profile.html       # Profile page (14-field completion)
+│   ├── __init__.py
+│   ├── views.py                    # Profile view (calculates stroke_offset)
+│   └── urls.py                     # Profile URLs
 │
 ├── theme/                           # Tailwind theme app
 │   ├── static/
@@ -918,22 +1413,16 @@ mini project/
 │   │   ├── postcss.config.js      # PostCSS config
 │   │   └── tailwind.config.js     # Tailwind config
 │   ├── templates/
-│   │   └── base.html              # Base template
+│   │   └── base.html              # Base template (auto-dismiss messages)
 │   ├── __init__.py
 │   └── apps.py
 │
-├── sre1027.sqlite3                  # SQLite database (NEW)
-├── db.sqlite3                       # Old database (deprecated)
+├── db.sqlite3                       # SQLite database
 ├── manage.py                        # Django CLI
 ├── requirements.txt                 # Python dependencies
-├── test_registration.py             # Registration test script
 ├── README.md                        # Project README
-├── DOCUMENTATION.md                 # This file
-├── UI_UX_IMPROVEMENTS.md           # UI/UX documentation
-├── development_tracking.md         # Development notes
-├── REGISTRATION_SETUP_COMPLETE.md  # Registration setup guide
-├── REGISTRATION_APP_SUMMARY.md     # Registration summary
-└── REGISTRATION_ARCHITECTURE.md    # Registration architecture
+├── DOCUMENTATION.md                 # This file (comprehensive technical docs)
+└── UI_UX_IMPROVEMENTS.md           # UI/UX changelog
 ```
 
 ---
