@@ -158,33 +158,47 @@ Total Fields: 14 (tracked for profile completion)
 ```python
 Product (Table: products_product)
 ├── id (Primary Key, AutoField)
-├── title (CharField, max_length=200)
+├── title (CharField, max_length=255)
 ├── description (TextField)
-├── price (DecimalField, max_digits=10, decimal_places=2)
-├── category (CharField, max_length=20, choices=[
-│   'books', 'notes', 'electronics', 'stationery', 'lab_equipment'
+├── price (DecimalField, max_digits=10, decimal_places=2, min_value=0.01)
+├── category (CharField, max_length=50, choices=[
+│   'books', 'notes', 'electronics', 'stationery', 'lab_equipment', 'other'
 │   ])
 ├── condition (CharField, max_length=20, choices=[
 │   'new', 'like_new', 'good', 'fair', 'poor'
 │   ])
-├── seller (ForeignKey → User, on_delete=CASCADE)
+├── image1 (ImageField, upload_to='products/<seller_id>/', blank=True, null=True)
+├── image2 (ImageField, upload_to='products/<seller_id>/', blank=True, null=True)
+├── image3 (ImageField, upload_to='products/<seller_id>/', blank=True, null=True)
+├── image4 (ImageField, upload_to='products/<seller_id>/', blank=True, null=True)
+├── image5 (ImageField, upload_to='products/<seller_id>/', blank=True, null=True)
+├── seller (ForeignKey → User, on_delete=CASCADE, related_name='products')
 ├── is_available (BooleanField, default=True)
-├── views (IntegerField, default=0)
+├── views (IntegerField, default=0, editable=False)
 ├── created_at (DateTimeField, auto_now_add)
 └── updated_at (DateTimeField, auto_now)
 
 Methods:
-├── increment_views() - Increment view counter
+├── get_primary_image() - Return image1 or None
+├── get_all_images() - Return list of all non-null images (image1-image5)
+├── has_images() - Check if product has at least one image
 ├── get_category_display() - Return human-readable category
 ├── get_condition_display() - Return human-readable condition
 └── __str__() - Returns title
+
+Image Upload:
+├── Path: media/products/<seller_id>/<filename>
+├── Automatic path management per seller
+├── Up to 5 images per product
+└── Fallback to emoji icons if no images
 
 Categories:
 ├── books - Books
 ├── notes - Notes
 ├── electronics - Electronics
 ├── stationery - Stationery
-└── lab_equipment - Lab Equipment
+├── lab_equipment - Lab Equipment
+└── other - Other
 
 Conditions:
 ├── new - New
@@ -282,19 +296,77 @@ Transaction ──> Review (1:1 or 1:2) (planned)
   - Template: `products/product_list.html`
   - Query Parameters:
     - `search` - Full-text search in title/description
-    - `category` - Filter by category (books, notes, electronics, stationery, lab_equipment)
+    - `category` - Filter by category (books, notes, electronics, stationery, lab_equipment, other)
   - Context: `{'products': QuerySet, 'search_query': str, 'selected_category': str}`
   - Authentication: Not required (limited view for anonymous users)
 
 - **GET** `/products/<int:product_id>/` - View product details
   - Template: `products/product_detail.html`
-  - Context: `{'product': Product, 'related_products': QuerySet}`
+  - Context: `{'product': Product, 'related_products': QuerySet, 'is_owner': bool}`
   - Features:
-    - Increments view counter automatically
+    - Increments view counter atomically using F() expressions
     - Shows full seller info if logged in
     - Shows limited seller info (name, college) if anonymous
     - Displays related products (same category, max 4)
+    - Shows Edit/Delete buttons if user is product owner
+    - Shows Contact Seller button if user is not owner
+    - Displays actual uploaded images with thumbnail gallery
   - Authentication: Not required (privacy controls apply)
+
+- **GET** `/products/create/` - Display product upload form
+  - Template: `products/product_form.html`
+  - Context: `{'form': ProductForm(), 'page_title': 'Upload New Product'}`
+  - Authentication: Required (redirects to login if not authenticated)
+
+- **POST** `/products/create/` - Create new product
+  - Template: `products/product_form.html`
+  - Form Data:
+    - `title` (required, max 255 chars)
+    - `description` (required)
+    - `price` (required, decimal, min 0.01)
+    - `category` (required, choice field)
+    - `condition` (required, choice field)
+    - `image1` to `image5` (optional, image files)
+  - Success: Redirect to product detail page with success message
+  - Failure: Re-render form with error messages
+  - Authentication: Required
+
+- **GET** `/products/<int:product_id>/edit/` - Display product edit form
+  - Template: `products/product_form.html`
+  - Context: `{'form': ProductForm(instance=product), 'product': Product, 'page_title': 'Edit Product', 'is_edit': True}`
+  - Authorization: Must be product owner
+  - Authentication: Required
+
+- **POST** `/products/<int:product_id>/edit/` - Update product
+  - Template: `products/product_form.html`
+  - Form Data: Same as create
+  - Success: Redirect to product detail page with success message
+  - Failure: Re-render form with error messages
+  - Authorization: Must be product owner
+  - Authentication: Required
+
+- **GET** `/products/<int:product_id>/delete/` - Display delete confirmation
+  - Template: `products/product_confirm_delete.html`
+  - Context: `{'product': Product}`
+  - Authorization: Must be product owner
+  - Authentication: Required
+
+- **POST** `/products/<int:product_id>/delete/` - Delete product
+  - Hard delete from database
+  - Success: Redirect to product list with success message
+  - Authorization: Must be product owner
+  - Authentication: Required
+
+- **GET** `/products/my-products/` - View user's own products
+  - Template: `products/my_products.html`
+  - Context:
+    - `products`: QuerySet of user's products
+    - `user`: Current user object
+    - `total_products`: Total count
+    - `available_count`: Count of available products
+    - `total_views`: Sum of all views
+    - `avg_price`: Average price of products
+  - Authentication: Required
 
 #### User Profile
 - **GET** `/profile/` - View user profile
@@ -967,6 +1039,7 @@ class Product(models.Model):
         ('electronics', 'Electronics'),
         ('stationery', 'Stationery'),
         ('lab_equipment', 'Lab Equipment'),
+        ('other', 'Other'),
     ]
     
     # Conditions
@@ -979,17 +1052,60 @@ class Product(models.Model):
     ]
     
     # Fields
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=255)
     description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES)
-    seller = models.ForeignKey('registration.User', on_delete=models.CASCADE)
+    price = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)]
+    )
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='other')
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='good')
+    
+    # Images (up to 5 images per product)
+    image1 = models.ImageField(upload_to=product_image_upload_path, blank=True, null=True)
+    image2 = models.ImageField(upload_to=product_image_upload_path, blank=True, null=True)
+    image3 = models.ImageField(upload_to=product_image_upload_path, blank=True, null=True)
+    image4 = models.ImageField(upload_to=product_image_upload_path, blank=True, null=True)
+    image5 = models.ImageField(upload_to=product_image_upload_path, blank=True, null=True)
+    
+    seller = models.ForeignKey('registration.User', on_delete=models.CASCADE, related_name='products')
     is_available = models.BooleanField(default=True)
-    views = models.IntegerField(default=0)
+    views = models.IntegerField(default=0, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Helper Methods
+    def get_primary_image(self):
+        """Return the primary image or None"""
+        return self.image1 if self.image1 else None
+    
+    def get_all_images(self):
+        """Return list of all non-null images"""
+        images = []
+        for i in range(1, 6):
+            img = getattr(self, f'image{i}')
+            if img:
+                images.append(img)
+        return images
+    
+    def has_images(self):
+        """Check if product has at least one image"""
+        return bool(self.image1)
+
+# Custom upload path function
+def product_image_upload_path(instance, filename):
+    """Generate upload path: products/<seller_id>/<filename>"""
+    ext = filename.split('.')[-1]
+    filename = f"{instance.title[:50]}_{instance.id or 'new'}.{ext}"
+    return os.path.join('products', str(instance.seller.id), filename)
 ```
+
+**Image Management**:
+- Up to 5 images per product
+- Automatic path: `media/products/<seller_id>/<filename>`
+- Organized by seller for easy management
+- Fallback to emoji icons if no images uploaded
 
 ### 9.3 Views
 
@@ -1027,9 +1143,8 @@ def product_list(request):
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
-    # Increment view counter
-    product.views += 1
-    product.save()
+    # Increment view counter atomically (concurrency-safe)
+    Product.objects.filter(pk=product.pk).update(views=F('views') + 1)
     
     # Get related products (same category, different seller)
     related_products = Product.objects.filter(
@@ -1037,9 +1152,107 @@ def product_detail(request, product_id):
         is_available=True
     ).exclude(id=product.id)[:4]
     
+    # Check if current user is the owner
+    is_owner = False
+    if 'user_id' in request.session:
+        is_owner = product.seller.id == request.session['user_id']
+    
     return render(request, 'products/product_detail.html', {
         'product': product,
         'related_products': related_products,
+        'is_owner': is_owner,
+    })
+```
+
+**Concurrency Safety**:
+- Uses Django's `F()` expressions for atomic view counter increment
+- Prevents race conditions when multiple users view simultaneously
+- Database-level operation ensures accuracy
+
+#### Product Create View
+**Location**: `products/views.py`
+
+```python
+def product_create(request):
+    if 'user_id' not in request.session:
+        messages.error(request, 'Please login to upload a product.')
+        return redirect('login:login')
+    
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.seller = User.objects.get(id=request.session['user_id'])
+            product.save()
+            messages.success(request, f'Product "{product.title}" uploaded successfully!')
+            return redirect('products:product_detail', product_id=product.id)
+    else:
+        form = ProductForm()
+    
+    return render(request, 'products/product_form.html', {
+        'form': form,
+        'page_title': 'Upload New Product',
+    })
+```
+
+#### Product Edit View
+**Location**: `products/views.py`
+
+```python
+def product_edit(request, product_id):
+    if 'user_id' not in request.session:
+        messages.error(request, 'Please login to edit products.')
+        return redirect('login:login')
+    
+    product = get_object_or_404(Product, id=product_id)
+    
+    # Check ownership
+    if product.seller.id != request.session['user_id']:
+        messages.error(request, 'You can only edit your own products.')
+        return redirect('products:product_detail', product_id=product_id)
+    
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Product "{product.title}" updated successfully!')
+            return redirect('products:product_detail', product_id=product.id)
+    else:
+        form = ProductForm(instance=product)
+    
+    return render(request, 'products/product_form.html', {
+        'form': form,
+        'product': product,
+        'page_title': 'Edit Product',
+        'is_edit': True,
+    })
+```
+
+#### My Products View
+**Location**: `products/views.py`
+
+```python
+def my_products(request):
+    if 'user_id' not in request.session:
+        messages.error(request, 'Please login to view your products.')
+        return redirect('login:login')
+    
+    user = User.objects.get(id=request.session['user_id'])
+    products = Product.objects.filter(seller=user).order_by('-created_at')
+    
+    # Calculate statistics
+    total_products = products.count()
+    available_count = products.filter(is_available=True).count()
+    total_views = sum(product.views for product in products)
+    avg_price = sum(product.price for product in products) // total_products if total_products > 0 else 0
+    
+    return render(request, 'products/my_products.html', {
+        'products': products,
+        'user': user,
+        'total_products': total_products,
+        'available_count': available_count,
+        'total_views': total_views,
+        'avg_price': avg_price,
     })
 ```
 
@@ -1056,8 +1269,20 @@ app_name = 'products'
 urlpatterns = [
     path('', views.product_list, name='product_list'),
     path('<int:product_id>/', views.product_detail, name='product_detail'),
+    path('create/', views.product_create, name='product_create'),
+    path('<int:product_id>/edit/', views.product_edit, name='product_edit'),
+    path('<int:product_id>/delete/', views.product_delete, name='product_delete'),
+    path('my-products/', views.my_products, name='my_products'),
 ]
 ```
+
+**URL Access Control**:
+- `/products/` - Public (browse products)
+- `/products/<id>/` - Public (view details with privacy controls)
+- `/products/create/` - Login required
+- `/products/<id>/edit/` - Login required + Owner only
+- `/products/<id>/delete/` - Login required + Owner only
+- `/products/my-products/` - Login required
 
 ### 9.5 Templates
 
@@ -1068,37 +1293,62 @@ urlpatterns = [
 - Responsive grid layout (1-4 columns based on screen size)
 - Search bar with icon
 - Category filter buttons
-- Product cards with hover effects
+- Product cards with hover effects and image zoom
 - User dropdown navigation (Alpine.js)
 - Login/Logout buttons
 - Product count display
+- Actual product images with fallback to emoji icons
 
 **Key Components**:
 - Search form with GET method
 - Category links with active state highlighting
 - Product cards showing:
-  - Category emoji icon
+  - Actual uploaded image or category emoji icon
   - Title (truncated to 2 lines)
   - Description (truncated to 2 lines)
   - Price in INR (₹)
   - Condition badge
   - View count
   - Seller name (truncated)
+  - Hover effect with image scale animation
 
 #### Product Detail Template
 **Location**: `products/templates/products/product_detail.html`
 
 **Features**:
 - Two-column layout (product info + seller info)
-- Large product icon/placeholder
+- Large product image display with actual uploaded images
+- Thumbnail gallery for multiple images (if more than one)
 - Comprehensive product details
 - Privacy-aware seller information
-- Related products carousel
+- Owner-specific controls (Edit/Delete for owners)
+- Related products carousel with actual images
 - Breadcrumb navigation
+
+**Image Display**:
+- Primary image displayed prominently (max-height: 384px)
+- Thumbnail gallery below for additional images
+- Fallback to category emoji if no images uploaded
+- Related products show actual images with hover effects
 
 **Privacy Controls**:
 - **Logged In Users**: See full seller details (email, university, rating)
 - **Anonymous Users**: See limited info (name, college only) with login prompt
+
+**Owner Controls**:
+```django
+{% if is_owner %}
+    <!-- Owner Actions: Edit/Delete buttons -->
+    <a href="{% url 'products:product_edit' product.id %}">Edit Product</a>
+    <a href="{% url 'products:product_delete' product.id %}">Delete Product</a>
+    <div>This is your product listing</div>
+{% elif product.is_available %}
+    <!-- Non-owner: Show Contact Seller button -->
+    <button>Contact Seller</button>
+{% else %}
+    <button disabled>Not Available</button>
+{% endif %}
+```
 
 **Seller Information Display**:
 ```django
@@ -1107,7 +1357,13 @@ urlpatterns = [
     <div>Email: {{ product.seller.email }}</div>
     <div>University: {{ product.seller.university_name }}</div>
     <div>Rating: {{ product.seller.rating }}/5</div>
-    <button>Contact Seller</button>
+    
+    {% if is_owner %}
+        <a href="{% url 'products:product_edit' product.id %}">Edit Product</a>
+        <a href="{% url 'products:product_delete' product.id %}">Delete Product</a>
+    {% else %}
+        <button>Contact Seller</button>
+    {% endif %}
 {% else %}
     <!-- Limited information with login prompt -->
     <div>Seller: {{ product.seller.name }}</div>
@@ -1117,6 +1373,29 @@ urlpatterns = [
     </div>
     <button disabled>Login to Contact Seller</button>
 {% endif %}
+```
+
+#### My Products Template
+**Location**: `products/templates/products/my_products.html`
+
+**Features**:
+- Dashboard-style statistics cards:
+  - Total Products count
+  - Available Products count
+  - Total Views across all products
+  - Average Price of products
+- Product table with all user's listings
+- Quick actions (View, Edit, Delete) for each product
+- Product thumbnails in table
+- Responsive design with mobile support
+- Empty state with upload prompt
+
+**Statistics Display**:
+```django
+<div>Total Products: {{ total_products }}</div>
+<div>Available: {{ available_count }}</div>
+<div>Total Views: {{ total_views }}</div>
+<div>Avg. Price: ₹{{ avg_price }}</div>
 ```
 
 ### 9.6 Management Commands
@@ -1492,6 +1771,45 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 ```
+
+### Media Files Configuration
+
+```python
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Maximum upload file size (default: 2.5MB in Django)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+```
+
+**URL Configuration** (`Student_Resource_Exchange/urls.py`):
+```python
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    # ... your URL patterns ...
+]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+**Product Image Upload Path**:
+- Images are stored in: `media/products/<seller_id>/<filename>`
+- Automatic directory creation per seller
+- Up to 5 images per product (image1 to image5)
+- Supported formats: JPG, PNG, GIF, WebP
+- Automatic filename sanitization
+
+**Important Notes**:
+- Media files are served by Django in development (DEBUG=True)
+- In production, configure Nginx/Apache to serve media files directly
+- Ensure media directory has proper write permissions
+- Consider using cloud storage (AWS S3, Cloudinary) for production
 
 ---
 

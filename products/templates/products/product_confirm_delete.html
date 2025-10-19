@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-16">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Confirmation Card -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
+            
+            <!-- Warning Icon -->
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="text-2xl font-bold text-gray-900 text-center mb-4">
+                Delete Product?
+            </h1>
+            
+            <!-- Product Info -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="flex items-center gap-4">
+                    {% if product.get_primary_image %}
+                    <img src="{{ product.get_primary_image.url }}" alt="{{ product.title }}" class="w-20 h-20 rounded-lg object-cover">
+                    {% else %}
+                    <div class="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                        <span class="text-3xl">
+                            {% if product.category == 'books' %}📚
+                            {% elif product.category == 'notes' %}📝
+                            {% elif product.category == 'electronics' %}💻
+                            {% elif product.category == 'stationery' %}✏️
+                            {% elif product.category == 'lab_equipment' %}🔬
+                            {% else %}📦{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-900">{{ product.title }}</h3>
+                        <p class="text-sm text-gray-600">{{ product.get_category_display }} • {{ product.get_condition_display }}</p>
+                        <p class="text-lg font-bold text-indigo-600 mt-1">₹{{ product.price }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Warning Message -->
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="font-semibold text-red-900 mb-1">This action cannot be undone!</h4>
+                        <p class="text-sm text-red-700">
+                            Deleting this product will permanently remove it from the marketplace. 
+                            All product information, images, and view statistics will be lost.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Confirmation Form -->
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="flex items-center justify-center gap-4">
+                    <a href="{% url 'products:my_products' %}" 
+                       class="flex-1 px-6 py-3 text-center text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="flex-1 px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Yes, Delete Product
+                    </button>
+                </div>
+            </form>
+            
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

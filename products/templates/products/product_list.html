@@ -14,19 +14,27 @@
                         </div>
                     </a>
                     <div class="hidden sm:block h-6 w-px bg-gray-300"></div>
-                    <h1 class="text-base sm:text-lg font-semibold text-gray-900">Products</h1>
+                    <h1 class="text-base sm:text-lg font-semibold text-gray-900">Home</h1>
                 </div>
                 
                 <!-- Right: Actions -->
                 <div class="flex items-center gap-2 sm:gap-3">
                     {% if request.session.user_id %}
                     <!-- User logged in -->
-                    <a href="{% url 'landing:landing' %}" 
-                       class="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                    <a href="{% url 'products:my_products' %}" 
+                       class="hidden sm:flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
-                        <span class="hidden sm:inline">Home</span>
+                        My Products
+                    </a>
+                    
+                    <a href="{% url 'products:product_create' %}" 
+                       class="hidden sm:flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Upload
                     </a>
                     
                     <!-- User Info Dropdown -->
@@ -157,7 +165,14 @@
             {% for product in products %}
             <a href="{% url 'products:product_detail' product.id %}" class="group">
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                    <!-- Product Image Placeholder -->
+                    <!-- Product Image -->
+                    {% if product.get_primary_image %}
+                    <div class="bg-gray-100 h-48 flex items-center justify-center overflow-hidden">
+                        <img src="{{ product.get_primary_image.url }}" 
+                             alt="{{ product.title }}" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    </div>
+                    {% else %}
                     <div class="bg-gradient-to-br from-indigo-100 to-purple-100 h-48 flex items-center justify-center">
                         <span class="text-6xl">
                             {% if product.category == 'books' %}📚
@@ -168,6 +183,7 @@
                             {% else %}📦{% endif %}
                         </span>
                     </div>
+                    {% endif %}
                     
                     <!-- Product Info -->
                     <div class="p-4 flex-1 flex flex-col">

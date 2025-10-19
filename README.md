@@ -24,10 +24,15 @@ A modern web platform built with Django that enables students to share, exchange
 - 🏷️ **Category Filters** - Filter by Books, Notes, Electronics, Stationery, Lab Equipment
 - 💰 **Pricing & Conditions** - View prices and product condition (New, Like New, Good, Fair, Poor)
 - 👁️ **View Counter** - Track product popularity with view counts
-- � **Seller Privacy** - Limited seller info for anonymous users (login required for contact details)
+- 🔒 **Seller Privacy** - Limited seller info for anonymous users (login required for contact details)
 - 📝 **Product Details** - Comprehensive product information with seller ratings
 - 🎯 **Related Products** - Discover similar items from the same category
 - 📊 **Sample Data** - Pre-loaded with 10 diverse product listings
+- 📸 **Image Upload** - Support for up to 5 images per product with automatic path management
+- 🖼️ **Image Gallery** - Display actual product images with thumbnail gallery
+- ✏️ **Product Management** - Full CRUD operations (Create, Read, Update, Delete)
+- 👤 **Owner Controls** - Product owners see Edit/Delete buttons instead of Contact Seller
+- 📱 **My Products Dashboard** - View and manage your own product listings with statistics
 
 ### �👨‍💼 Admin Dashboard
 - 📊 **User Statistics** - Real-time metrics for total, verified, and recent users
@@ -236,7 +241,43 @@ python manage.py test
 2. Navigate to products page
 3. Click on any product
 4. Full seller information visible (email, university, rating)
-5. Contact Seller button enabled
+5. If you're the product owner, you'll see Edit/Delete buttons
+6. If you're not the owner, you'll see Contact Seller button
+
+### Test Product Upload
+1. Login as a regular user
+2. Navigate to http://127.0.0.1:8000/products/create/
+3. Fill in product details (title, description, price, category, condition)
+4. Upload up to 5 images (optional)
+5. Submit the form
+6. Should redirect to product detail page with success message
+
+### Test My Products Dashboard
+1. Login as a regular user
+2. Navigate to http://127.0.0.1:8000/products/my-products/
+3. View statistics: Total Products, Available Count, Total Views, Average Price
+4. See all your uploaded products in a table
+5. Use Edit/Delete actions on your products
+
+### Test Product Editing
+1. Login as the product owner
+2. View your product detail page
+3. Click "Edit Product" button (blue)
+4. Update product information and/or images
+5. Submit changes
+6. Verify updates on product detail page
+
+### Test Product Deletion
+1. Login as the product owner
+2. View your product detail page or My Products page
+3. Click "Delete Product" button (red)
+4. Confirm deletion in the popup
+5. Product should be removed from database
+
+### Test Owner vs Non-Owner Views
+1. **As Owner**: View your own product → See Edit/Delete buttons
+2. **As Other User**: View someone else's product → See Contact Seller button
+3. **As Anonymous**: View any product → See login prompt for contact details
 
 ### Test User Profile
 1. Login as a regular user
@@ -322,6 +363,10 @@ The `Product` model includes:
 - **Basic Info**: `title`, `description`, `price`
 - **Categories**: Books, Notes, Electronics, Stationery, Lab Equipment
 - **Condition**: New, Like New, Good, Fair, Poor
+- **Images**: Up to 5 images per product (`image1` to `image5`)
+  - Automatic upload path: `media/products/<seller_id>/<filename>`
+  - Support for primary image and thumbnail gallery
+  - Methods: `get_primary_image()`, `get_all_images()`, `has_images()`
 - **Status**: `is_available`, `views` (counter)
 - **Relationships**: `seller` (ForeignKey to User)
 - **Timestamps**: `created_at`, `updated_at`
@@ -390,7 +435,7 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 
 ## 🗺️ Roadmap
 
-### ✅ Completed (v1.5)
+### ✅ Completed (v1.6)
 - [x] User authentication and profiles
 - [x] User registration with college/university fields
 - [x] Login/logout with smart redirects
@@ -401,26 +446,30 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 - [x] Session-based authentication
 - [x] Password security (PBKDF2)
 - [x] User search functionality
-- [x] **Products marketplace with 5 categories**
-- [x] **Product search and filtering**
-- [x] **Privacy controls for seller information**
-- [x] **Atomic view counter (F() expressions for concurrency safety)**
-- [x] **Related products feature**
-- [x] **Auto-dismiss messages (5 seconds)**
-- [x] **User dropdown navigation with Alpine.js**
-- [x] **Management command for sample data**
+- [x] Products marketplace with 5 categories
+- [x] Product search and filtering
+- [x] Privacy controls for seller information
+- [x] Atomic view counter (F() expressions for concurrency safety)
+- [x] Related products feature
+- [x] Auto-dismiss messages (5 seconds)
+- [x] User dropdown navigation with Alpine.js
+- [x] Management command for sample data
+- [x] **Product image upload (up to 5 images per product)**
+- [x] **Image display with fallback to emoji icons**
+- [x] **Product CRUD operations (Create, Read, Update, Delete)**
+- [x] **Owner-specific product controls (Edit/Delete buttons)**
+- [x] **My Products dashboard with statistics**
+- [x] **Thumbnail gallery for multiple product images**
+- [x] **Automatic image path management by seller**
 
 ### 🚧 In Progress
-- [ ] Profile editing functionality
-- [ ] Product posting by users
-- [ ] Image upload for products
+- [ ] Real-time chat between buyers and sellers
+- [ ] Email notifications for new products
 
 ### 📋 Planned Features
-- [ ] Real-time chat between buyers and sellers
 - [ ] Advanced product filtering (price range, condition, location)
 - [ ] Favorites/wishlist functionality
 - [ ] User ratings and reviews for transactions
-- [ ] Email notifications for new products
 - [ ] Password change and reset feature
 - [ ] Email verification workflow
 - [ ] Mobile app development
@@ -433,11 +482,12 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 
 ## 📊 Project Status
 
-**Current Version**: 1.5 (Products Marketplace)  
-**Status**: ✅ Core marketplace features completed  
+**Current Version**: 1.6 (Full Product Management)  
+**Status**: ✅ Complete product lifecycle with image support  
 **Last Updated**: October 19, 2025
 
 ### Version History
+- **v1.6** (Oct 2025) - Product image upload, CRUD operations, owner controls, My Products dashboard
 - **v1.5** (Oct 2025) - Products marketplace, privacy controls, auto-dismiss messages, UI improvements
 - **v1.2** (Oct 2025) - Added college/university fields, profile completion tracking
 - **v1.0** (Oct 2025) - User authentication, registration, admin dashboard, user profiles
@@ -468,6 +518,12 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 - View full seller contact information (when logged in)
 - Profile completion tracking (14 fields)
 - Account statistics and ratings
+- **Upload products** - Create new product listings at `/products/create/`
+- **Manage products** - View all your products at `/products/my-products/`
+- **Edit products** - Modify your own product listings
+- **Delete products** - Remove your product listings with confirmation
+- **Upload images** - Add up to 5 images per product
+- **Owner controls** - See Edit/Delete buttons on your own products instead of Contact Seller
 
 ### Anonymous Users (Not Logged In)
 - Browse products marketplace

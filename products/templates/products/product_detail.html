@@ -93,6 +93,15 @@
                 
                 <!-- Product Image -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    {% if product.get_primary_image %}
+                    <!-- Show actual uploaded image -->
+                    <div class="bg-gray-100 h-96 flex items-center justify-center">
+                        <img src="{{ product.get_primary_image.url }}" 
+                             alt="{{ product.title }}" 
+                             class="max-h-96 w-full object-contain">
+                    </div>
+                    {% else %}
+                    <!-- Fallback to emoji if no image -->
                     <div class="bg-gradient-to-br from-indigo-100 to-purple-100 h-96 flex items-center justify-center">
                         <span class="text-9xl">
                             {% if product.category == 'books' %}📚
@@ -103,6 +112,20 @@
                             {% else %}📦{% endif %}
                         </span>
                     </div>
+                    {% endif %}
+                    
+                    <!-- Thumbnail Gallery for Additional Images -->
+                    {% if product.get_all_images|length > 1 %}
+                    <div class="flex gap-2 p-4 bg-gray-50 overflow-x-auto">
+                        {% for image in product.get_all_images %}
+                        <div class="flex-shrink-0 w-20 h-20 bg-white border-2 {% if forloop.first %}border-indigo-600{% else %}border-gray-200 hover:border-indigo-400{% endif %} rounded-lg overflow-hidden cursor-pointer">
+                            <img src="{{ image.url }}" 
+                                 alt="{{ product.title }} - Image {{ forloop.counter }}" 
+                                 class="w-full h-full object-cover">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Product Details -->
@@ -197,11 +220,40 @@
                         </div>
                     </div>
                     
-                    {% if product.is_available %}
+                    {% if is_owner %}
+                    <!-- Owner Actions: Edit/Delete buttons -->
+                    <div class="mt-4 space-y-2">
+                        <a href="{% url 'products:product_edit' product.id %}" 
+                           class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit Product
+                        </a>
+                        <a href="{% url 'products:product_delete' product.id %}" 
+                           class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                           onclick="return confirm('Are you sure you want to delete this product?');">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Delete Product
+                        </a>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                            <p class="text-xs text-blue-800">
+                                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                This is your product listing
+                            </p>
+                        </div>
+                    </div>
+                    {% elif product.is_available %}
+                    <!-- Non-owner: Show Contact Seller button -->
                     <button class="w-full mt-4 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
                         Contact Seller
                     </button>
                     {% else %}
+                    <!-- Product not available -->
                     <button class="w-full mt-4 px-4 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed" disabled>
                         Not Available
                     </button>
@@ -297,6 +349,15 @@
                 {% for related in related_products %}
                 <a href="{% url 'products:product_detail' related.id %}" class="group">
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300">
+                        {% if related.get_primary_image %}
+                        <!-- Show actual uploaded image -->
+                        <div class="bg-gray-100 h-40 flex items-center justify-center overflow-hidden">
+                            <img src="{{ related.get_primary_image.url }}" 
+                                 alt="{{ related.title }}" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        {% else %}
+                        <!-- Fallback to emoji -->
                         <div class="bg-gradient-to-br from-indigo-100 to-purple-100 h-40 flex items-center justify-center">
                             <span class="text-5xl">
                                 {% if related.category == 'books' %}📚
@@ -307,6 +368,7 @@
                                 {% else %}📦{% endif %}
                             </span>
                         </div>
+                        {% endif %}
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600">{{ related.title }}</h3>
                             <p class="text-xl font-bold text-indigo-600">₹{{ related.price }}</p>
