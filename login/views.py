@@ -7,6 +7,13 @@ def login_view(request):
     """
     Handle user login
     """
+    # If user is already logged in, redirect them to appropriate page
+    if request.session.get('user_id'):
+        if request.session.get('is_admin', False):
+            return redirect('dashboard:dashboard')
+        else:
+            return redirect('products:product_list')  # Regular users go to products page
+    
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -38,7 +45,7 @@ def login_view(request):
                     if user.is_admin:
                         return redirect('dashboard:dashboard')  # Admin goes to dashboard
                     else:
-                        return redirect('profile:profile')  # Regular user goes to profile
+                        return redirect('products:product_list')  # Regular user goes to products page
                 else:
                     messages.error(request, 'Invalid email or password.')
             except User.DoesNotExist:

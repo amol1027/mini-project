@@ -25,20 +25,29 @@ class RegistrationForm(forms.ModelForm):
     
     class Meta:
         model = User
-        fields = ['email', 'college_id', 'name', 'address_line1', 'address_line2', 
-                  'city', 'state_province', 'zip_postal_code', 'country']
+        fields = ['email', 'name', 'college_id', 'college_name', 'university_name',
+                  'address_line1', 'address_line2', 'city', 'state_province', 
+                  'zip_postal_code', 'country']
         widgets = {
             'email': forms.EmailInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'placeholder': 'Enter your email address'
             }),
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'placeholder': 'Enter your full name'
+            }),
             'college_id': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'placeholder': 'Enter your college ID'
             }),
-            'name': forms.TextInput(attrs={
+            'college_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                'placeholder': 'Enter your full name (optional)'
+                'placeholder': 'Enter your college name'
+            }),
+            'university_name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'placeholder': 'Enter your university name'
             }),
             'address_line1': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',

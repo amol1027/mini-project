@@ -134,6 +134,14 @@
                         <label class="block text-sm font-medium text-gray-500 mb-1">College ID</label>
                         <p class="text-base text-gray-900">{{ user.college_id }}</p>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">College Name</label>
+                        <p class="text-base text-gray-900">{{ user.college_name|default:"Not provided" }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">University Name</label>
+                        <p class="text-base text-gray-900">{{ user.university_name|default:"Not provided" }}</p>
+                    </div>
                 </div>
             </div>
 

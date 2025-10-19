@@ -7,6 +7,13 @@ def register(request):
     """
     Handle user registration
     """
+    # If user is already logged in, redirect them to appropriate page
+    if request.session.get('user_id'):
+        if request.session.get('is_admin', False):
+            return redirect('dashboard:dashboard')
+        else:
+            return redirect('products:product_list')  # Regular users go to products page
+    
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():

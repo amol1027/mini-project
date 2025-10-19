@@ -10,6 +10,8 @@ class User(models.Model):
     password_hash = models.CharField(max_length=128)
     college_id = models.CharField(max_length=100)
     name = models.CharField(max_length=255, blank=True, null=True)
+    college_name = models.CharField(max_length=255, blank=True, null=True)
+    university_name = models.CharField(max_length=255, blank=True, null=True)
     rating = models.IntegerField(default=0)
     email_verified = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)

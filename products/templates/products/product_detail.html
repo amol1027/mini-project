@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'products:product_list' %}" class="text-gray-600 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </a>
+                    <h1 class="text-base sm:text-lg font-semibold text-gray-900">Product Details</h1>
+                </div>
+                
+                <!-- Right: User Actions -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    {% if request.session.user_id %}
+                    <!-- User logged in -->
+                    <a href="{% url 'landing:landing' %}" 
+                       class="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Home
+                    </a>
+                    
+                    <!-- User Info Dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <span class="text-indigo-600 font-semibold text-xs">
+                                    {{ request.session.user_name.0|upper }}
+                                </span>
+                            </div>
+                            <span class="hidden md:inline">{{ request.session.user_name }}</span>
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                             style="display: none;">
+                            <a href="{% url 'profile:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                                My Profile
+                            </a>
+                            {% if request.session.is_admin %}
+                            <a href="{% url 'dashboard:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                                </svg>
+                                Dashboard
+                            </a>
+                            {% endif %}
+                            <hr class="my-1">
+                            <a href="{% url 'login:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                                </svg>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- User not logged in -->
+                    <a href="{% url 'login:login' %}" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
+                        Login
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column - Product Image and Info -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Product Image -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    {% if product.get_primary_image %}
+                    <!-- Show actual uploaded image -->
+                    <div class="bg-gray-100 h-96 flex items-center justify-center">
+                        <img src="{{ product.get_primary_image.url }}" 
+                             alt="{{ product.title }}" 
+                             class="max-h-96 w-full object-contain">
+                    </div>
+                    {% else %}
+                    <!-- Fallback to emoji if no image -->
+                    <div class="bg-gradient-to-br from-indigo-100 to-purple-100 h-96 flex items-center justify-center">
+                        <span class="text-9xl">
+                            {% if product.category == 'books' %}📚
+                            {% elif product.category == 'notes' %}📝
+                            {% elif product.category == 'electronics' %}💻
+                            {% elif product.category == 'stationery' %}✏️
+                            {% elif product.category == 'lab_equipment' %}🔬
+                            {% else %}📦{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Thumbnail Gallery for Additional Images -->
+                    {% if product.get_all_images|length > 1 %}
+                    <div class="flex gap-2 p-4 bg-gray-50 overflow-x-auto">
+                        {% for image in product.get_all_images %}
+                        <div class="flex-shrink-0 w-20 h-20 bg-white border-2 {% if forloop.first %}border-indigo-600{% else %}border-gray-200 hover:border-indigo-400{% endif %} rounded-lg overflow-hidden cursor-pointer">
+                            <img src="{{ image.url }}" 
+                                 alt="{{ product.title }} - Image {{ forloop.counter }}" 
+                                 class="w-full h-full object-cover">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Product Details -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <span class="inline-block px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-800 rounded-full mb-3">
+                                {{ product.get_category_display }}
+                            </span>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ product.title }}</h1>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-indigo-600">₹{{ product.price }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 text-sm text-gray-600 mb-6">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ product.views }} views
+                        </span>
+                        <span>•</span>
+                        <span>Posted {{ product.created_at|timesince }} ago</span>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                        <p class="text-gray-700 leading-relaxed">{{ product.description }}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 border-t border-gray-200 pt-6">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Condition</p>
+                            <p class="text-base font-semibold text-gray-900">{{ product.get_condition_display }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Availability</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if product.is_available %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if product.is_available %}Available{% else %}Sold{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column - Seller Info and Actions -->
+            <div class="space-y-6">
+                
+                <!-- Seller Info -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Seller Information</h3>
+                    
+                    {% if request.session.user_id %}
+                    <!-- Logged in - Show full seller information -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span class="text-indigo-600 font-semibold text-lg">
+                                {{ product.seller.name.0|default:product.seller.email.0|upper }}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ product.seller.name|default:"Student Seller" }}</p>
+                            <p class="text-sm text-gray-600">{{ product.seller.college_name|default:"College Student" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                            </svg>
+                            {{ product.seller.email }}
+                        </div>
+                        {% if product.seller.university_name %}
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                            </svg>
+                            {{ product.seller.university_name }}
+                        </div>
+                        {% endif %}
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            Rating: {{ product.seller.rating }}/5
+                        </div>
+                    </div>
+                    
+                    {% if is_owner %}
+                    <!-- Owner Actions: Edit/Delete buttons -->
+                    <div class="mt-4 space-y-2">
+                        <a href="{% url 'products:product_edit' product.id %}" 
+                           class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit Product
+                        </a>
+                        <a href="{% url 'products:product_delete' product.id %}" 
+                           class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                           onclick="return confirm('Are you sure you want to delete this product?');">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Delete Product
+                        </a>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                            <p class="text-xs text-blue-800">
+                                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                This is your product listing
+                            </p>
+                        </div>
+                    </div>
+                    {% elif product.is_available %}
+                    <!-- Non-owner: Show Contact Seller button -->
+                    <button class="w-full mt-4 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                        Contact Seller
+                    </button>
+                    {% else %}
+                    <!-- Product not available -->
+                    <button class="w-full mt-4 px-4 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed" disabled>
+                        Not Available
+                    </button>
+                    {% endif %}
+                    
+                    {% else %}
+                    <!-- Not logged in - Show limited information with login prompt -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span class="text-indigo-600 font-semibold text-lg">
+                                {{ product.seller.name.0|default:product.seller.email.0|upper }}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ product.seller.name|default:"Student Seller" }}</p>
+                            <p class="text-sm text-gray-600">{{ product.seller.college_name|default:"College Student" }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Login Prompt Box -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-indigo-900 mb-1">Login Required</p>
+                                <p class="text-xs text-indigo-700 mb-3">Please login to view complete seller details including contact information, email, university, and rating.</p>
+                                <a href="{% url 'login:login' %}" class="inline-block px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                                    Login to Continue
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blurred Preview of Hidden Information -->
+                    <div class="space-y-2 text-sm relative">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white z-10 backdrop-blur-sm"></div>
+                        <div class="flex items-center gap-2 text-gray-400 blur-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                            </svg>
+                            seller@example.com
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-400 blur-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                            </svg>
+                            University Information
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-400 blur-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            Rating: ★★★★☆
+                        </div>
+                    </div>
+                    
+                    <!-- Disabled Contact Button -->
+                    <button class="w-full mt-4 px-4 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed" disabled>
+                        Login to Contact Seller
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Info -->
+                <div class="bg-blue-50 rounded-lg border border-blue-200 p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-medium text-blue-900 mb-1">Safety Tips</p>
+                            <ul class="text-xs text-blue-800 space-y-1">
+                                <li>• Meet in a safe, public location</li>
+                                <li>• Verify the product before purchase</li>
+                                <li>• Use secure payment methods</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Related Products -->
+        {% if related_products %}
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for related in related_products %}
+                <a href="{% url 'products:product_detail' related.id %}" class="group">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300">
+                        {% if related.get_primary_image %}
+                        <!-- Show actual uploaded image -->
+                        <div class="bg-gray-100 h-40 flex items-center justify-center overflow-hidden">
+                            <img src="{{ related.get_primary_image.url }}" 
+                                 alt="{{ related.title }}" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        {% else %}
+                        <!-- Fallback to emoji -->
+                        <div class="bg-gradient-to-br from-indigo-100 to-purple-100 h-40 flex items-center justify-center">
+                            <span class="text-5xl">
+                                {% if related.category == 'books' %}📚
+                                {% elif related.category == 'notes' %}📝
+                                {% elif related.category == 'electronics' %}💻
+                                {% elif related.category == 'stationery' %}✏️
+                                {% elif related.category == 'lab_equipment' %}🔬
+                                {% else %}📦{% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="p-4">
+                            <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600">{{ related.title }}</h3>
+                            <p class="text-xl font-bold text-indigo-600">₹{{ related.price }}</p>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}

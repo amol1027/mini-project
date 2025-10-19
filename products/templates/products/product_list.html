@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Left: Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'landing:landing' %}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">SRE</span>
+                        </div>
+                    </a>
+                    <div class="hidden sm:block h-6 w-px bg-gray-300"></div>
+                    <h1 class="text-base sm:text-lg font-semibold text-gray-900">Home</h1>
+                </div>
+                
+                <!-- Right: Actions -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    {% if request.session.user_id %}
+                    <!-- User logged in -->
+                    <a href="{% url 'products:my_products' %}" 
+                       class="hidden sm:flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        My Products
+                    </a>
+                    
+                    <a href="{% url 'products:product_create' %}" 
+                       class="hidden sm:flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Upload
+                    </a>
+                    
+                    <!-- User Info Dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <span class="text-indigo-600 font-semibold text-xs">
+                                    {{ request.session.user_name.0|upper }}
+                                </span>
+                            </div>
+                            <span class="hidden md:inline">{{ request.session.user_name }}</span>
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                             style="display: none;">
+                            <a href="{% url 'profile:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                                My Profile
+                            </a>
+                            {% if request.session.is_admin %}
+                            <a href="{% url 'dashboard:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                                </svg>
+                                Dashboard
+                            </a>
+                            {% endif %}
+                            <hr class="my-1">
+                            <a href="{% url 'login:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                                </svg>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- User not logged in -->
+                    <a href="{% url 'landing:landing' %}" 
+                       class="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
+                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                        </svg>
+                        <span class="hidden sm:inline">Home</span>
+                    </a>
+                    <a href="{% url 'login:login' %}" 
+                       class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
+                        Login
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Search and Filter Bar -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- Search -->
+                <form method="get" class="flex-1">
+                    <div class="relative">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query|default:'' }}"
+                               placeholder="Search products..." 
+                               class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </form>
+                
+                <!-- Category Filter -->
+                <div class="flex gap-2 overflow-x-auto">
+                    <a href="{% url 'products:product_list' %}" 
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if not selected_category %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        All
+                    </a>
+                    <a href="?category=books" 
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'books' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        📚 Books
+                    </a>
+                    <a href="?category=notes" 
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'notes' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        📝 Notes
+                    </a>
+                    <a href="?category=electronics" 
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'electronics' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        💻 Electronics
+                    </a>
+                    <a href="?category=stationery" 
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'stationery' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        ✏️ Stationery
+                    </a>
+                    <a href="?category=lab_equipment" 
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'lab_equipment' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        🔬 Lab Equipment
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="mb-4">
+            <h2 class="text-2xl font-bold text-gray-900">Available Products</h2>
+            <p class="text-gray-600">{{ products.count }} product{{ products.count|pluralize }} found</p>
+        </div>
+
+        {% if products %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for product in products %}
+            <a href="{% url 'products:product_detail' product.id %}" class="group">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <!-- Product Image -->
+                    {% if product.get_primary_image %}
+                    <div class="bg-gray-100 h-48 flex items-center justify-center overflow-hidden">
+                        <img src="{{ product.get_primary_image.url }}" 
+                             alt="{{ product.title }}" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    </div>
+                    {% else %}
+                    <div class="bg-gradient-to-br from-indigo-100 to-purple-100 h-48 flex items-center justify-center">
+                        <span class="text-6xl">
+                            {% if product.category == 'books' %}📚
+                            {% elif product.category == 'notes' %}📝
+                            {% elif product.category == 'electronics' %}💻
+                            {% elif product.category == 'stationery' %}✏️
+                            {% elif product.category == 'lab_equipment' %}🔬
+                            {% else %}📦{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Product Info -->
+                    <div class="p-4 flex-1 flex flex-col">
+                        <!-- Category Badge -->
+                        <span class="inline-block px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded mb-2 w-fit">
+                            {{ product.get_category_display }}
+                        </span>
+                        
+                        <!-- Title -->
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                            {{ product.title }}
+                        </h3>
+                        
+                        <!-- Description -->
+                        <p class="text-sm text-gray-600 mb-3 line-clamp-2 flex-1">
+                            {{ product.description }}
+                        </p>
+                        
+                        <!-- Footer -->
+                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div>
+                                <p class="text-2xl font-bold text-indigo-600">₹{{ product.price }}</p>
+                                <p class="text-xs text-gray-500">{{ product.get_condition_display }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">👁️ {{ product.views }} views</p>
+                                <p class="text-xs text-gray-500">by {{ product.seller.name|default:product.seller.email|truncatechars:15 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+            <p class="text-gray-600 mb-4">Try adjusting your search or filter criteria</p>
+            <a href="{% url 'products:product_list' %}" class="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                Clear Filters
+            </a>
+        </div>
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}

@@ -83,11 +83,33 @@
                 <!-- Name (Optional) -->
                 <div>
                     <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Full Name
+                        Full Name <span class="text-red-500">*</span>
                     </label>
                     {{ form.name }}
                     {% if form.name.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- College Name -->
+                <div>
+                    <label for="{{ form.college_name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        College Name <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.college_name }}
+                    {% if form.college_name.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.college_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- University Name -->
+                <div>
+                    <label for="{{ form.university_name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        University Name <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.university_name }}
+                    {% if form.university_name.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.university_name.errors.0 }}</p>
                     {% endif %}
                 </div>
 
