@@ -2,111 +2,7 @@
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Left: Logo & Title -->
-                <div class="flex items-center gap-4">
-                    <a href="{% url 'landing:landing' %}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                        <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">SRE</span>
-                        </div>
-                    </a>
-                    <div class="hidden sm:block h-6 w-px bg-gray-300"></div>
-                    <h1 class="text-base sm:text-lg font-semibold text-gray-900">Home</h1>
-                </div>
-                
-                <!-- Right: Actions -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    {% if request.session.user_id %}
-                    <!-- User logged in -->
-                    <a href="{% url 'products:my_products' %}" 
-                       class="hidden sm:flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
-                        My Products
-                    </a>
-                    
-                    <a href="{% url 'products:product_create' %}" 
-                       class="hidden sm:flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Upload
-                    </a>
-                    
-                    <!-- User Info Dropdown -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <span class="text-indigo-600 font-semibold text-xs">
-                                    {{ request.session.user_name.0|upper }}
-                                </span>
-                            </div>
-                            <span class="hidden md:inline">{{ request.session.user_name }}</span>
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div x-show="open" 
-                             @click.away="open = false"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="transform opacity-100 scale-100"
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
-                             style="display: none;">
-                            <a href="{% url 'profile:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
-                                My Profile
-                            </a>
-                            {% if request.session.is_admin %}
-                            <a href="{% url 'dashboard:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-                                </svg>
-                                Dashboard
-                            </a>
-                            {% endif %}
-                            <hr class="my-1">
-                            <a href="{% url 'login:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-                                </svg>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <!-- User not logged in -->
-                    <a href="{% url 'landing:landing' %}" 
-                       class="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                        </svg>
-                        <span class="hidden sm:inline">Home</span>
-                    </a>
-                    <a href="{% url 'login:login' %}" 
-                       class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
-                        Login
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
         <!-- Search and Filter Bar -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div class="flex flex-col md:flex-row gap-4">
@@ -157,7 +53,7 @@
         <!-- Products Grid -->
         <div class="mb-4">
             <h2 class="text-2xl font-bold text-gray-900">Available Products</h2>
-            <p class="text-gray-600">{{ products.count }} product{{ products.count|pluralize }} found</p>
+            <p class="text-gray-600">{{ products.paginator.count }} product{{ products.paginator.count|pluralize }} found{% if products.paginator.num_pages > 1 %} (Page {{ products.number }} of {{ products.paginator.num_pages }}){% endif %}</p>
         </div>
 
         {% if products %}
@@ -228,6 +124,79 @@
             <a href="{% url 'products:product_list' %}" class="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                 Clear Filters
             </a>
+        </div>
+        {% endif %}
+
+        <!-- Pagination Controls -->
+        {% if products.paginator.num_pages > 1 %}
+        <div class="mt-8 flex items-center justify-center">
+            <nav class="flex items-center gap-2" aria-label="Pagination">
+                
+                <!-- Previous Button -->
+                {% if products.has_previous %}
+                <a href="?page={{ products.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                {% else %}
+                <span class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </span>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                <div class="flex items-center gap-1">
+                    {% for num in products.paginator.page_range %}
+                        {% if products.number == num %}
+                        <!-- Current Page -->
+                        <span class="px-4 py-2 text-sm font-bold text-white bg-indigo-600 border border-indigo-600 rounded-lg">
+                            {{ num }}
+                        </span>
+                        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <!-- Pages near current page -->
+                        <a href="?page={{ num }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            {{ num }}
+                        </a>
+                        {% elif num == 1 or num == products.paginator.num_pages %}
+                        <!-- First and last page -->
+                        <a href="?page={{ num }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            {{ num }}
+                        </a>
+                        {% elif num == products.number|add:'-3' or num == products.number|add:'3' %}
+                        <!-- Ellipsis -->
+                        <span class="px-2 py-2 text-sm text-gray-500">...</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Next Button -->
+                {% if products.has_next %}
+                <a href="?page={{ products.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                {% else %}
+                <span class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </span>
+                {% endif %}
+                
+            </nav>
+        </div>
+        
+        <!-- Page Info -->
+        <div class="mt-4 text-center text-sm text-gray-600">
+            Showing {{ products.start_index }} to {{ products.end_index }} of {{ products.paginator.count }} products
         </div>
         {% endif %}
 

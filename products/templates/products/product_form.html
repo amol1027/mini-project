@@ -121,23 +121,37 @@
                         </svg>
                         Product Images
                     </h2>
-                    <p class="text-sm text-gray-600 mb-6">Upload up to 5 images of your product. First image will be the primary display image.</p>
+                    {% if is_edit %}
+                    <p class="text-sm text-gray-600 mb-4">Current images are shown below. Upload new images to replace them, or leave empty to keep existing images.</p>
+                    {% else %}
+                    <p class="text-sm text-gray-600 mb-4">Upload up to 5 images of your product. First image will be the primary display image.</p>
+                    {% endif %}
                     
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <!-- Image 1 -->
                         <div class="image-upload-box">
                             <label for="image1" class="block cursor-pointer">
                                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                    {% if is_edit and product.image1 %}
+                                    <img src="{{ product.image1.url }}" alt="Current Image 1" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-1">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
+                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    </div>
+                                    {% else %}
                                     <div class="text-center" id="preview-container-1">
                                         <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
                                         <p class="text-xs text-gray-500 mt-2">Primary</p>
                                     </div>
+                                    {% endif %}
                                     <img id="preview-1" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                                 </div>
                             </label>
                             {{ form.image1 }}
+                            {% if is_edit and product.image1 %}
+                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            {% endif %}
                             {% if form.image1.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image1.errors.0 }}</p>
                             {% endif %}
@@ -147,16 +161,26 @@
                         <div class="image-upload-box">
                             <label for="image2" class="block cursor-pointer">
                                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                    {% if is_edit and product.image2 %}
+                                    <img src="{{ product.image2.url }}" alt="Current Image 2" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-2">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
+                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    </div>
+                                    {% else %}
                                     <div class="text-center" id="preview-container-2">
                                         <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
                                         <p class="text-xs text-gray-500 mt-2">Image 2</p>
                                     </div>
+                                    {% endif %}
                                     <img id="preview-2" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                                 </div>
                             </label>
                             {{ form.image2 }}
+                            {% if is_edit and product.image2 %}
+                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            {% endif %}
                             {% if form.image2.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image2.errors.0 }}</p>
                             {% endif %}
@@ -166,16 +190,26 @@
                         <div class="image-upload-box">
                             <label for="image3" class="block cursor-pointer">
                                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                    {% if is_edit and product.image3 %}
+                                    <img src="{{ product.image3.url }}" alt="Current Image 3" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-3">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
+                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    </div>
+                                    {% else %}
                                     <div class="text-center" id="preview-container-3">
                                         <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
                                         <p class="text-xs text-gray-500 mt-2">Image 3</p>
                                     </div>
+                                    {% endif %}
                                     <img id="preview-3" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                                 </div>
                             </label>
                             {{ form.image3 }}
+                            {% if is_edit and product.image3 %}
+                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            {% endif %}
                             {% if form.image3.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image3.errors.0 }}</p>
                             {% endif %}
@@ -185,16 +219,26 @@
                         <div class="image-upload-box">
                             <label for="image4" class="block cursor-pointer">
                                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                    {% if is_edit and product.image4 %}
+                                    <img src="{{ product.image4.url }}" alt="Current Image 4" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-4">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
+                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    </div>
+                                    {% else %}
                                     <div class="text-center" id="preview-container-4">
                                         <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
                                         <p class="text-xs text-gray-500 mt-2">Image 4</p>
                                     </div>
+                                    {% endif %}
                                     <img id="preview-4" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                                 </div>
                             </label>
                             {{ form.image4 }}
+                            {% if is_edit and product.image4 %}
+                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            {% endif %}
                             {% if form.image4.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image4.errors.0 }}</p>
                             {% endif %}
@@ -204,16 +248,26 @@
                         <div class="image-upload-box">
                             <label for="image5" class="block cursor-pointer">
                                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                    {% if is_edit and product.image5 %}
+                                    <img src="{{ product.image5.url }}" alt="Current Image 5" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-5">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
+                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    </div>
+                                    {% else %}
                                     <div class="text-center" id="preview-container-5">
                                         <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
                                         <p class="text-xs text-gray-500 mt-2">Image 5</p>
                                     </div>
+                                    {% endif %}
                                     <img id="preview-5" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
                                 </div>
                             </label>
                             {{ form.image5 }}
+                            {% if is_edit and product.image5 %}
+                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            {% endif %}
                             {% if form.image5.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image5.errors.0 }}</p>
                             {% endif %}
@@ -274,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const input = document.getElementById(`image${i}`);
         const preview = document.getElementById(`preview-${i}`);
         const container = document.getElementById(`preview-container-${i}`);
+        const existingPreview = document.getElementById(`existing-preview-${i}`);
         
         if (input) {
             input.addEventListener('change', function(e) {
@@ -283,7 +338,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     reader.onload = function(event) {
                         preview.src = event.target.result;
                         preview.classList.remove('hidden');
-                        container.classList.add('hidden');
+                        
+                        // Hide the placeholder container
+                        if (container) {
+                            container.classList.add('hidden');
+                        }
+                        
+                        // Hide existing image if in edit mode
+                        if (existingPreview) {
+                            existingPreview.classList.add('hidden');
+                        }
                     };
                     reader.readAsDataURL(file);
                 }

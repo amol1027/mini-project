@@ -1,14 +1,15 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import F
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Product
 from .forms import ProductForm
 
 def product_list(request):
     """
-    Display list of all available products
+    Display list of all available products with pagination
     """
-    products = Product.objects.filter(is_available=True)
+    products = Product.objects.filter(is_available=True).order_by('-created_at')
     
     # Filter by category if provided
     category = request.GET.get('category')
@@ -20,10 +21,24 @@ def product_list(request):
     if search_query:
         products = products.filter(title__icontains=search_query)
     
+    # Pagination - 12 products per page
+    paginator = Paginator(products, 12)
+    page = request.GET.get('page')
+    
+    try:
+        products_page = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        products_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        products_page = paginator.page(paginator.num_pages)
+    
     context = {
-        'products': products,
+        'products': products_page,
         'selected_category': category,
         'search_query': search_query,
+        'paginator': paginator,
     }
     
     return render(request, 'products/product_list.html', context)

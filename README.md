@@ -33,6 +33,8 @@ A modern web platform built with Django that enables students to share, exchange
 - ✏️ **Product Management** - Full CRUD operations (Create, Read, Update, Delete)
 - 👤 **Owner Controls** - Product owners see Edit/Delete buttons instead of Contact Seller
 - 📱 **My Products Dashboard** - View and manage your own product listings with statistics
+- 📄 **Smart Pagination** - 12 products per page with page numbers, ellipsis, and navigation
+- 🔄 **Filter Preservation** - Category filters and searches preserved across page navigation
 
 ### �👨‍💼 Admin Dashboard
 - 📊 **User Statistics** - Real-time metrics for total, verified, and recent users
@@ -54,10 +56,13 @@ A modern web platform built with Django that enables students to share, exchange
 ### 🎨 Design & UI/UX
 - 📱 **Fully Responsive** - Mobile-first design with adaptive layouts
 - 🌈 **Modern Light Theme** - Clean white cards on light gray backgrounds with indigo accents
-- ✨ **Smooth Animations** - Hover effects, transitions, and auto-dismiss messages
-- 💬 **Smart Notifications** - Auto-hide messages after 5 seconds with close buttons
+- ✨ **Smooth Animations** - Hover effects, transitions, fadeInUp animations
+- 💬 **Global Message System** - Floating top-right notifications with auto-dismiss (5 seconds)
+- 🎯 **Smart Navigation** - Context-aware navbar (logged-in vs guest users)
 - 🍔 **User Dropdown Menu** - Alpine.js-powered navigation with avatar
-- 🎯 **Consistent Branding** - Unified design across all pages
+- � **Smart Home Button** - Routes logged-in users to products, guests to landing page
+- 📄 **Pagination** - Clean pagination UI with 12 products per page
+- �🎯 **Consistent Branding** - Unified design across all pages with global navbar
 - 🔐 **Login Prompts** - Beautiful gradient CTA boxes for restricted content
 
 ## 🚀 Quick Start
@@ -190,7 +195,7 @@ mini project/
 ├── theme/                       # Tailwind CSS theme
 │   ├── static/                  # Compiled CSS
 │   ├── static_src/              # Source files & config
-│   └── templates/base.html      # Base template (auto-dismiss messages)
+│   └── templates/base.html      # Global base template with navbar & messages
 ├── db.sqlite3                   # SQLite database
 ├── manage.py                    # Django management script
 ├── README.md                    # This file
@@ -230,11 +235,12 @@ python manage.py test
 
 ### Test Products Marketplace (Anonymous User)
 1. Navigate to http://127.0.0.1:8000/products/
-2. Browse 10 sample products across different categories
+2. Browse products with pagination (12 per page)
 3. Use search and category filters
-4. Click on a product to view details
-5. Notice seller information is limited (name and college only)
-6. See login prompt to view full seller contact details
+4. Navigate through pages while preserving filters
+5. Click on a product to view details
+6. Notice seller information is limited (name and college hidden - shows "Verified Seller")
+7. See login prompt to view full seller contact details
 
 ### Test Products Marketplace (Logged In User)
 1. Login first
@@ -435,7 +441,7 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 
 ## 🗺️ Roadmap
 
-### ✅ Completed (v1.6)
+### ✅ Completed (v1.7)
 - [x] User authentication and profiles
 - [x] User registration with college/university fields
 - [x] Login/logout with smart redirects
@@ -451,16 +457,22 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 - [x] Privacy controls for seller information
 - [x] Atomic view counter (F() expressions for concurrency safety)
 - [x] Related products feature
-- [x] Auto-dismiss messages (5 seconds)
-- [x] User dropdown navigation with Alpine.js
-- [x] Management command for sample data
-- [x] **Product image upload (up to 5 images per product)**
-- [x] **Image display with fallback to emoji icons**
-- [x] **Product CRUD operations (Create, Read, Update, Delete)**
-- [x] **Owner-specific product controls (Edit/Delete buttons)**
-- [x] **My Products dashboard with statistics**
-- [x] **Thumbnail gallery for multiple product images**
-- [x] **Automatic image path management by seller**
+- [x] Product image upload (up to 5 images per product)
+- [x] Image display with fallback to emoji icons
+- [x] Product CRUD operations (Create, Read, Update, Delete)
+- [x] Owner-specific product controls (Edit/Delete buttons)
+- [x] My Products dashboard with statistics
+- [x] Thumbnail gallery for multiple product images
+- [x] Automatic image path management by seller
+- [x] **Global navbar with Alpine.js** - Consistent navigation across all pages
+- [x] **Smart Home button** - Routes to products for logged-in users, landing for guests
+- [x] **Right-aligned navigation** - Clean, modern navbar layout
+- [x] **Simplified guest navigation** - Only "Browse Products" button for non-logged-in users
+- [x] **Product pagination** - 12 products per page with smart page controls
+- [x] **Filter preservation** - Category and search filters preserved across pagination
+- [x] **Global message system** - Floating top-right notifications with fadeInUp animation
+- [x] **Auto-dismiss messages** - Messages disappear after 5 seconds automatically
+- [x] **Removed duplicate headers** - Single global navbar replaces individual page headers
 
 ### 🚧 In Progress
 - [ ] Real-time chat between buyers and sellers
@@ -482,11 +494,12 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 
 ## 📊 Project Status
 
-**Current Version**: 1.6 (Full Product Management)  
-**Status**: ✅ Complete product lifecycle with image support  
+**Current Version**: 1.7 (Enhanced Navigation & UX)  
+**Status**: ✅ Global navbar, pagination, and improved message system  
 **Last Updated**: October 19, 2025
 
 ### Version History
+- **v1.7** (Oct 2025) - Global navbar with Alpine.js, smart navigation, pagination (12/page), global message system
 - **v1.6** (Oct 2025) - Product image upload, CRUD operations, owner controls, My Products dashboard
 - **v1.5** (Oct 2025) - Products marketplace, privacy controls, auto-dismiss messages, UI improvements
 - **v1.2** (Oct 2025) - Added college/university fields, profile completion tracking
@@ -497,7 +510,11 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 
 - **[README.md](README.md)** - This file (quick start guide)
 - **[DOCUMENTATION.md](DOCUMENTATION.md)** - Comprehensive technical documentation
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
 - **[UI_UX_IMPROVEMENTS.md](UI_UX_IMPROVEMENTS.md)** - UI/UX changelog and design decisions
+- **[ADMIN_USER_SETUP.md](ADMIN_USER_SETUP.md)** - Admin account setup guide
+- **[PRODUCT_UPLOAD_SYSTEM.md](PRODUCT_UPLOAD_SYSTEM.md)** - Product upload system documentation
+- **[QUICK_ACCESS_REFERENCE.md](QUICK_ACCESS_REFERENCE.md)** - Quick reference guide
 
 ## 🎯 User Roles
 
