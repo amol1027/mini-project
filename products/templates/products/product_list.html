@@ -101,8 +101,22 @@
                         <!-- Footer -->
                         <div class="flex items-center justify-between pt-3 border-t border-gray-100">
                             <div>
-                                <p class="text-2xl font-bold text-indigo-600">₹{{ product.price }}</p>
-                                <p class="text-xs text-gray-500">{{ product.get_condition_display }}</p>
+                                {% if product.listing_type == 'lend' %}
+                                    <p class="text-2xl font-bold text-green-600">₹{{ product.borrow_price_per_day }}<span class="text-sm">/day</span></p>
+                                    <p class="text-xs text-gray-500">For Lending</p>
+                                {% elif product.listing_type == 'both' %}
+                                    {% if product.price %}
+                                    <p class="text-2xl font-bold text-indigo-600">₹{{ product.price }}</p>
+                                    {% else %}
+                                    <p class="text-2xl font-bold text-green-600">₹{{ product.borrow_price_per_day }}<span class="text-sm">/day</span></p>
+                                    {% endif %}
+                                    <p class="text-xs text-gray-500">Sale or Lend</p>
+                                {% else %}
+                                    {% if product.price %}
+                                    <p class="text-2xl font-bold text-indigo-600">₹{{ product.price }}</p>
+                                    <p class="text-xs text-gray-500">{{ product.get_condition_display }}</p>
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="text-right">
                                 <p class="text-xs text-gray-500">👁️ {{ product.views }} views</p>

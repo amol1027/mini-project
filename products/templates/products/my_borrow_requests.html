@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Borrow Requests</h1>
+            <p class="mt-2 text-gray-600">Track all your borrow requests</p>
+        </div>
+
+        {% if borrow_requests %}
+        <div class="space-y-4">
+            {% for request in borrow_requests %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div class="flex items-start gap-4">
+                    <!-- Product Image -->
+                    <div class="flex-shrink-0">
+                        {% if request.product.get_primary_image %}
+                        <img src="{{ request.product.get_primary_image.url }}" 
+                             alt="{{ request.product.title }}" 
+                             class="w-24 h-24 object-cover rounded-lg">
+                        {% else %}
+                        <div class="w-24 h-24 bg-indigo-100 rounded-lg flex items-center justify-center text-3xl">
+                            📦
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Request Details -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ request.product.title }}</h3>
+                                <p class="text-sm text-gray-600">From: {{ request.lender.name }}</p>
+                            </div>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                {% if request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif request.status == 'approved' or request.status == 'active' %}bg-green-100 text-green-800
+                                {% elif request.status == 'returned' %}bg-blue-100 text-blue-800
+                                {% elif request.status == 'rejected' or request.status == 'cancelled' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ request.get_status_display }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <p class="text-xs text-gray-500">Duration</p>
+                                <p class="text-sm font-medium text-gray-900">{{ request.requested_days }} days</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Cost</p>
+                                <p class="text-sm font-medium text-indigo-600">₹{{ request.total_cost }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Requested</p>
+                                <p class="text-sm font-medium text-gray-900">{{ request.request_date|date:"M d, Y" }}</p>
+                            </div>
+                            {% if request.expected_return_date %}
+                            <div>
+                                <p class="text-xs text-gray-500">Return By</p>
+                                <p class="text-sm font-medium text-gray-900">{{ request.expected_return_date|date:"M d, Y" }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex gap-3">
+                            <a href="{% url 'products:borrow_request_detail' request.id %}" 
+                               class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                                View Details
+                            </a>
+                            {% if request.status == 'pending' %}
+                            <a href="{% url 'products:borrow_request_cancel' request.id %}" 
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel Request
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'chat:start_conversation_with_user' request.product.id request.lender.id %}" 
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                Message Lender
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No Borrow Requests Yet</h3>
+            <p class="text-gray-600 mb-6">Start browsing products to find items you can borrow</p>
+            <a href="{% url 'products:product_list' %}" 
+               class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                Browse Products
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

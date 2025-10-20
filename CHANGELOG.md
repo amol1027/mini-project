@@ -5,6 +5,59 @@ All notable changes to the Student Resource Exchange project will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2025-01-XX
+
+### Added
+- **Borrow/Lend System**
+  - Product listing types: sell, lend, or both
+  - Rental pricing with daily rates and security deposits
+  - Maximum borrow duration configuration (1-90 days)
+  - Real-time cost calculator showing total rental cost
+  - Borrow request workflow with pending/approved/active/returned/rejected/cancelled/overdue statuses
+  - Lender dashboard with statistics and request management
+  - Borrower request tracking page with filtering by status
+  - Request detail page with role-based actions (approve/reject/return/cancel)
+  - Approval workflow with date selection and validation
+  - Return confirmation with date tracking
+  - Overdue detection and status management
+  - Product availability tracking (is_currently_borrowed flag)
+  - Direct messaging between borrowers and lenders via chat integration
+  - Admin interface for BorrowRequest management
+  
+- **Enhanced Product Management**
+  - New fields: listing_type, borrow_price_per_day, borrow_deposit, max_borrow_days, is_currently_borrowed
+  - Dynamic form validation based on listing type
+  - Conditional display of pricing based on listing type (sale price vs rental rate)
+  - Status badges showing "Available" or "Currently Borrowed"
+  - Lending terms display on product detail pages
+  - Updated "My Products" page with borrow pricing information
+  
+- **Navigation Updates**
+  - "My Borrow Requests" link in user dropdown (desktop & mobile)
+  - "Lending Dashboard" link in user dropdown (desktop & mobile)
+  - SVG icons for new navigation items
+
+- **Documentation**
+  - `BORROW_LEND_FEATURE.md` - Comprehensive borrow/lend system documentation
+  - Updated README.md with feature descriptions and testing guide
+  - Updated database schema documentation with BorrowRequest model
+
+### Changed
+- **Product Forms**
+  - ProductForm now includes lending fields with conditional validation
+  - Image validation improved to handle both new uploads and existing images
+  - BorrowRequestForm created with dynamic max_days validation
+
+- **Chat Integration**
+  - Added `start_conversation_with_user` view for borrower-lender communication
+  - Enhanced chat routing to support product-based user connections
+
+### Fixed
+- ImageFieldFile validation error when editing products with existing images
+- URL reversal issues in chat redirect (pk vs product_id parameter)
+- Price display showing "None" for lend-only products
+- Chat conversation creation between borrowers and lenders
+
 ## [1.7.0] - 2025-10-19
 
 ### Added

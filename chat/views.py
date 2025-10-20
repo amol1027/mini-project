@@ -106,12 +106,55 @@ def start_conversation(request, product_id):
     
     # Can't start conversation with yourself
     if product.seller.id == buyer.id:
-        return redirect('products:product_detail', pk=product_id)
+        return redirect('products:product_detail', product_id=product_id)
     
     # Get or create conversation
     conversation, created = Conversation.objects.get_or_create(
         buyer=buyer,
         seller=product.seller,
+        product=product
+    )
+    
+    # Redirect to the chat detail page
+    return redirect('chat:chat_detail', conversation_id=conversation.id)
+
+
+def start_conversation_with_user(request, product_id, other_user_id):
+    """
+    Start a conversation with a specific user about a product.
+    This is useful for borrow/lend scenarios where the lender needs to chat with the borrower.
+    """
+    if 'user_id' not in request.session:
+        return redirect('login:login')
+    
+    user_id = request.session['user_id']
+    current_user = get_object_or_404(User, id=user_id)
+    other_user = get_object_or_404(User, id=other_user_id)
+    product = get_object_or_404(Product.objects.select_related('seller'), id=product_id)
+    
+    # Can't start conversation with yourself
+    if current_user.id == other_user.id:
+        return redirect('products:product_detail', product_id=product_id)
+    
+    # Determine who is buyer and who is seller based on product ownership
+    # The product owner is always the seller
+    if product.seller.id == current_user.id:
+        # Current user is the product owner (seller)
+        buyer = other_user
+        seller = current_user
+    elif product.seller.id == other_user.id:
+        # Other user is the product owner (seller)
+        buyer = current_user
+        seller = other_user
+    else:
+        # Neither is the product owner, make current user the buyer
+        buyer = current_user
+        seller = other_user
+    
+    # Get or create conversation
+    conversation, created = Conversation.objects.get_or_create(
+        buyer=buyer,
+        seller=seller,
         product=product
     )
     

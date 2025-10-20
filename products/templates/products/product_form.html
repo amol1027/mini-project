@@ -88,10 +88,51 @@
                         </div>
                     </div>
 
-                    <!-- Price -->
+                    <!-- Listing Type -->
                     <div class="mb-6">
+                        <label for="{{ form.listing_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.listing_type.label }}
+                        </label>
+                        {{ form.listing_type }}
+                        {% if form.listing_type.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ form.listing_type.help_text }}</p>
+                        {% endif %}
+                        {% if form.listing_type.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.listing_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Pricing Section -->
+                <div class="mb-8 border-t border-gray-200 pt-8">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Pricing & Lending Terms
+                    </h2>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex gap-2">
+                            <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="text-sm text-blue-800">
+                                <p class="font-medium mb-1">Pricing Guide:</p>
+                                <ul class="list-disc list-inside space-y-0.5">
+                                    <li><strong>For Sale:</strong> Set the sale price</li>
+                                    <li><strong>For Lending:</strong> Set daily rental rate and deposit</li>
+                                    <li><strong>Both:</strong> Fill in all pricing fields</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sale Price -->
+                    <div class="mb-6" id="price-field">
                         <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
                             {{ form.price.label }}
+                            <span class="text-gray-500 text-xs">(Required for "For Sale" or "Both")</span>
                         </label>
                         <div class="relative">
                             <span class="absolute left-3 top-2 text-gray-500 text-lg">₹</span>
@@ -110,6 +151,89 @@
                         {% if form.price.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.price.errors.0 }}</p>
                         {% endif %}
+                    </div>
+
+                    <!-- Lending Fields -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6" id="lending-fields">
+                        <h3 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                            Lending Options
+                            <span class="ml-2 text-xs text-gray-500 font-normal">(For "For Lending" or "Both")</span>
+                        </h3>
+
+                        <div class="space-y-6">
+                            <!-- Borrow Price Per Day -->
+                            <div>
+                                <label for="{{ form.borrow_price_per_day.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ form.borrow_price_per_day.label }}
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2 text-gray-500 text-lg">₹</span>
+                                    <input type="number" 
+                                           name="borrow_price_per_day" 
+                                           id="{{ form.borrow_price_per_day.id_for_label }}"
+                                           value="{{ form.borrow_price_per_day.value|default:'' }}"
+                                           step="0.01"
+                                           min="0.01"
+                                           placeholder="0.00"
+                                           class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                </div>
+                                {% if form.borrow_price_per_day.help_text %}
+                                <p class="mt-1 text-sm text-gray-500">{{ form.borrow_price_per_day.help_text }}</p>
+                                {% endif %}
+                                {% if form.borrow_price_per_day.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.borrow_price_per_day.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Security Deposit -->
+                                <div>
+                                    <label for="{{ form.borrow_deposit.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        {{ form.borrow_deposit.label }}
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-gray-500 text-lg">₹</span>
+                                        <input type="number" 
+                                               name="borrow_deposit" 
+                                               id="{{ form.borrow_deposit.id_for_label }}"
+                                               value="{{ form.borrow_deposit.value|default:'0' }}"
+                                               step="0.01"
+                                               min="0"
+                                               placeholder="0.00"
+                                               class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    </div>
+                                    {% if form.borrow_deposit.help_text %}
+                                    <p class="mt-1 text-sm text-gray-500">{{ form.borrow_deposit.help_text }}</p>
+                                    {% endif %}
+                                    {% if form.borrow_deposit.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.borrow_deposit.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Maximum Borrow Days -->
+                                <div>
+                                    <label for="{{ form.max_borrow_days.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        {{ form.max_borrow_days.label }}
+                                    </label>
+                                    <input type="number" 
+                                           name="max_borrow_days" 
+                                           id="{{ form.max_borrow_days.id_for_label }}"
+                                           value="{{ form.max_borrow_days.value|default:'30' }}"
+                                           min="1"
+                                           placeholder="30"
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    {% if form.max_borrow_days.help_text %}
+                                    <p class="mt-1 text-sm text-gray-500">{{ form.max_borrow_days.help_text }}</p>
+                                    {% endif %}
+                                    {% if form.max_borrow_days.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.max_borrow_days.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -354,6 +478,35 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+
+    // Handle listing type changes to show/hide relevant fields
+    const listingTypeSelect = document.getElementById('{{ form.listing_type.id_for_label }}');
+    const priceField = document.getElementById('price-field');
+    const lendingFields = document.getElementById('lending-fields');
+
+    function updateFieldVisibility() {
+        const listingType = listingTypeSelect.value;
+        
+        if (listingType === 'sell') {
+            // Show only sale price
+            priceField.style.display = 'block';
+            lendingFields.style.display = 'none';
+        } else if (listingType === 'lend') {
+            // Show only lending fields
+            priceField.style.display = 'none';
+            lendingFields.style.display = 'block';
+        } else if (listingType === 'both') {
+            // Show both
+            priceField.style.display = 'block';
+            lendingFields.style.display = 'block';
+        }
+    }
+
+    // Initialize visibility based on current selection
+    updateFieldVisibility();
+
+    // Update when selection changes
+    listingTypeSelect.addEventListener('change', updateFieldVisibility);
 });
 </script>
 {% endblock %}

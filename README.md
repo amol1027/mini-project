@@ -36,6 +36,20 @@ A modern web platform built with Django that enables students to share, exchange
 - 📄 **Smart Pagination** - 12 products per page with page numbers, ellipsis, and navigation
 - 🔄 **Filter Preservation** - Category filters and searches preserved across page navigation
 
+### 🔄 Borrow/Lend System (NEW!)
+- 🏷️ **Flexible Listing Types** - List items as "For Sale", "For Lending", or "Both"
+- 💵 **Smart Pricing** - Set daily rental rates and optional security deposits
+- 📅 **Duration Control** - Define maximum borrowing periods for your items
+- 📝 **Borrow Requests** - Send requests with desired duration and optional messages
+- ✅ **Request Management** - Approve, reject, or cancel borrow requests
+- 📊 **Lending Dashboard** - Track pending requests, active loans, and transaction history
+- 🔔 **Status Tracking** - Real-time status updates (Pending, Active, Returned, etc.)
+- 💬 **Smart Chat Integration** - Direct messaging between borrowers and lenders
+- 🔒 **Availability Tracking** - Automatic item locking when borrowed
+- 📈 **Transaction History** - Complete record of all lending activities
+- 💰 **Cost Calculator** - Real-time calculation of total rental costs
+- 🎯 **User-Friendly UI** - Intuitive interfaces for both borrowers and lenders
+
 ### �👨‍💼 Admin Dashboard
 - 📊 **User Statistics** - Real-time metrics for total, verified, and recent users
 - 👥 **User Management** - View, search, and manage all registered users
@@ -146,6 +160,9 @@ A modern web platform built with Django that enables students to share, exchange
    - Registration: http://127.0.0.1:8000/register/
    - Login: http://127.0.0.1:8000/login/
    - User Profile: http://127.0.0.1:8000/profile/ (login required)
+   - Chat: http://127.0.0.1:8000/chat/ (login required)
+   - My Borrow Requests: http://127.0.0.1:8000/products/my-borrow-requests/ (login required)
+   - Lending Dashboard: http://127.0.0.1:8000/products/my-lend-requests/ (login required)
    - Admin Dashboard: http://127.0.0.1:8000/dashboard/ (admin only)
    - Django Admin: http://127.0.0.1:8000/admin/
 
@@ -187,11 +204,27 @@ mini project/
 │   ├── views.py                 # Login/logout logic (redirects to products)
 │   └── templates/               # Login page
 ├── products/                    # Products marketplace app
-│   ├── models.py                # Product model (categories, conditions, pricing)
-│   ├── views.py                 # Product list & detail views
-│   ├── urls.py                  # Product URLs
-│   ├── admin.py                 # Django admin configuration
-│   ├── templates/               # Product list & detail pages
+│   ├── models.py                # Product & BorrowRequest models (with borrow/lend fields)
+│   ├── views.py                 # Product & borrow/lend management views
+│   ├── forms.py                 # ProductForm & BorrowRequestForm
+│   ├── urls.py                  # Product & borrow/lend URLs
+│   ├── admin.py                 # Django admin configuration (Product & BorrowRequest)
+│   ├── templates/               
+│   │   └── products/            
+│   │       ├── product_list.html           # Product listing page
+│   │       ├── product_detail.html         # Product details with borrow/lend UI
+│   │       ├── product_create.html         # Create/List product form
+│   │       ├── my_products.html            # User's product dashboard
+│   │       ├── borrow_request_create.html  # Borrow request form
+│   │       ├── borrow_request_detail.html  # Request details view
+│   │       ├── borrow_request_approve.html # Approve request page
+│   │       ├── borrow_request_reject.html  # Reject request page
+│   │       ├── borrow_request_return.html  # Mark as returned page
+│   │       ├── borrow_request_cancel.html  # Cancel request page
+│   │       ├── my_borrow_requests.html     # Borrower's requests list
+│   │       └── my_lend_requests.html       # Lender's dashboard
+│   ├── migrations/              
+│   │   └── 0003_*.py            # Borrow/lend feature migration
 │   └── management/              
 │       └── commands/            
 │           └── create_sample_products.py  # Generate 10 sample products
@@ -367,6 +400,69 @@ python manage.py test
    - Chat requires login - redirects to login page
    - Each conversation linked to specific product
 
+### Test Borrow/Lend System
+1. **List Product for Lending**:
+   - Login as User A
+   - Click "Upload Product"
+   - Select "Listing Type" → "For Lending" (or "Sale or Lend")
+   - Set "Borrow Price Per Day" (e.g., ₹20)
+   - Set "Security Deposit" (e.g., ₹500) - optional
+   - Set "Maximum Borrow Days" (e.g., 60)
+   - Upload images and complete other fields
+   - Submit - Product shows with lending badge and daily rate
+
+2. **Request to Borrow**:
+   - Login as User B (different from product owner)
+   - Browse products and find a "For Lending" item
+   - Click "Request to Borrow" button
+   - Enter number of days to borrow
+   - Add optional message to lender
+   - See real-time cost calculation
+   - Submit request
+
+3. **Manage Borrow Requests (Borrower)**:
+   - Navigate to "My Borrow Requests" from navigation menu
+   - View all your requests with status badges
+   - See pending, active, returned, and rejected requests
+   - Cancel pending requests if needed
+   - Message lenders about active borrows
+
+4. **Lending Dashboard (Lender)**:
+   - Navigate to "Lending Dashboard" from navigation menu
+   - View statistics: Pending, Active, Completed
+   - See pending requests requiring action
+   - View borrower details and ratings
+   - Read borrower's message
+
+5. **Approve/Reject Requests**:
+   - From Lending Dashboard, click "Approve" on a pending request
+   - Add optional response message
+   - Confirm approval - status changes to "Active"
+   - Item marked as currently borrowed (unavailable to others)
+   - Or click "Reject" with optional reason
+
+6. **Mark Item as Returned**:
+   - When borrower returns the item
+   - From Lending Dashboard, find active loan
+   - Click "Mark as Returned"
+   - Confirm return
+   - Item becomes available for lending again
+   - Transaction marked as completed
+
+7. **Chat Integration**:
+   - From borrow request detail page
+   - Click "Message Borrower" (if lender) or "Message Lender" (if borrower)
+   - Opens chat with correct person about that specific product
+   - Discuss pickup, return, or any issues
+
+8. **View Lending Terms**:
+   - Product detail page shows:
+     - Listing type badge (For Sale, For Lending, or Both)
+     - Daily rental rate
+     - Maximum borrow duration
+     - Security deposit amount
+     - "Request to Borrow" button with cost calculator
+
 ### Test Access Control
 1. Login as regular user
 2. Try accessing http://127.0.0.1:8000/dashboard/
@@ -434,15 +530,52 @@ The `User` model includes 14 fields:
 
 ### Product Model (products app)
 The `Product` model includes:
-- **Basic Info**: `title`, `description`, `price`
+- **Basic Info**: `title`, `description`
 - **Categories**: Books, Notes, Electronics, Stationery, Lab Equipment
 - **Condition**: New, Like New, Good, Fair, Poor
+- **Listing Type**: For Sale, For Lending, or Both
+- **Pricing**:
+  - `price` - Sale price (nullable for lend-only items)
+  - `borrow_price_per_day` - Daily rental rate
+  - `borrow_deposit` - Refundable security deposit
+  - `max_borrow_days` - Maximum borrowing duration
 - **Images**: Up to 5 images per product (`image1` to `image5`)
   - Automatic upload path: `media/products/<seller_id>/<filename>`
   - Support for primary image and thumbnail gallery
   - Methods: `get_primary_image()`, `get_all_images()`, `has_images()`
-- **Status**: `is_available`, `views` (counter)
+- **Status**: 
+  - `is_available` - Product availability
+  - `is_currently_borrowed` - Borrowing status
+  - `views` - View counter
 - **Relationships**: `seller` (ForeignKey to User)
+- **Methods**:
+  - `can_be_borrowed()` - Check if available for lending
+  - `can_be_purchased()` - Check if available for sale
+- **Timestamps**: `created_at`, `updated_at`
+
+### BorrowRequest Model (products app)
+The `BorrowRequest` model manages lending transactions:
+- **Relationships**:
+  - `product` (ForeignKey to Product)
+  - `borrower` (ForeignKey to User)
+  - `lender` (ForeignKey to User)
+- **Request Details**:
+  - `requested_days` - Number of days to borrow
+  - `status` - Pending, Approved, Active, Returned, Rejected, Cancelled, Overdue
+  - `message` - Optional message from borrower
+  - `lender_response` - Optional response from lender
+- **Financial**:
+  - `total_cost` - Calculated rental cost (daily rate × days)
+  - `deposit_amount` - Security deposit amount
+- **Dates**:
+  - `request_date` - When request was created
+  - `approved_date` - When lender approved
+  - `start_date` - When borrowing started
+  - `expected_return_date` - When item should be returned
+  - `actual_return_date` - When item was actually returned
+- **Methods**:
+  - `is_overdue()` - Check if past expected return date
+  - `calculate_total_cost()` - Calculate total rental cost
 - **Timestamps**: `created_at`, `updated_at`
 
 ### Chat Models (chat app)
@@ -600,11 +733,12 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 
 ## 📊 Project Status
 
-**Current Version**: 1.8 (Real-Time Chat & Notifications)  
-**Status**: ✅ Complete chat system with notifications, unread badges, and modern UI  
-**Last Updated**: October 20, 2025
+**Current Version**: 1.9 (Borrow/Lend System)  
+**Status**: ✅ Complete borrow/lend marketplace with rental workflows, request management, and lender dashboard  
+**Last Updated**: January 2025
 
 ### Version History
+- **v1.9** (Jan 2025) - Borrow/lend system, rental workflows, deposit management, request tracking, lender dashboard
 - **v1.8** (Oct 2025) - Real-time chat system, notification preferences, unread badges, mobile chat optimization
 - **v1.7** (Oct 2025) - Global navbar with Alpine.js, smart navigation, pagination (12/page), global message system
 - **v1.6** (Oct 2025) - Product image upload, CRUD operations, owner controls, My Products dashboard
@@ -621,6 +755,7 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 - **[UI_UX_IMPROVEMENTS.md](UI_UX_IMPROVEMENTS.md)** - UI/UX changelog and design decisions
 - **[ADMIN_USER_SETUP.md](ADMIN_USER_SETUP.md)** - Admin account setup guide
 - **[PRODUCT_UPLOAD_SYSTEM.md](PRODUCT_UPLOAD_SYSTEM.md)** - Product upload system documentation
+- **[BORROW_LEND_FEATURE.md](BORROW_LEND_FEATURE.md)** - Borrow/Lend system documentation
 - **[CHAT_SYSTEM_SUMMARY.md](CHAT_SYSTEM_SUMMARY.md)** - Chat system architecture and features
 - **[CHAT_NOTIFICATIONS_GUIDE.md](CHAT_NOTIFICATIONS_GUIDE.md)** - Notification preferences guide
 - **[REALTIME_CHAT_GUIDE.md](REALTIME_CHAT_GUIDE.md)** - Real-time chat implementation details
