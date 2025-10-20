@@ -172,6 +172,20 @@
                                 My Products
                             </a>
                             
+                            <a href="{% url 'products:my_borrow_requests' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                                My Borrow Requests
+                            </a>
+                            
+                            <a href="{% url 'products:my_lend_requests' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                </svg>
+                                Lending Dashboard
+                            </a>
+                            
                             <a href="{% url 'chat:conversation_list' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                 <svg class="w-4 h-4 mr-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
@@ -283,6 +297,18 @@
                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
                    @click="mobileMenuOpen = false">
                     My Products
+                </a>
+                
+                <a href="{% url 'products:my_borrow_requests' %}" 
+                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                   @click="mobileMenuOpen = false">
+                    My Borrow Requests
+                </a>
+                
+                <a href="{% url 'products:my_lend_requests' %}" 
+                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                   @click="mobileMenuOpen = false">
+                    Lending Dashboard
                 </a>
                 
                 <a href="{% url 'chat:conversation_list' %}" 

@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Borrow Request Details</h1>
+            <p class="mt-2 text-gray-600">Request #{{ borrow_request.id }}</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="mb-6 p-4 rounded-lg {% if borrow_request.status == 'pending' %}bg-yellow-50 border border-yellow-200{% elif borrow_request.status == 'approved' or borrow_request.status == 'active' %}bg-green-50 border border-green-200{% elif borrow_request.status == 'rejected' or borrow_request.status == 'cancelled' %}bg-red-50 border border-red-200{% else %}bg-gray-50 border border-gray-200{% endif %}">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center {% if borrow_request.status == 'pending' %}bg-yellow-100{% elif borrow_request.status == 'approved' or borrow_request.status == 'active' %}bg-green-100{% elif borrow_request.status == 'rejected' or borrow_request.status == 'cancelled' %}bg-red-100{% else %}bg-gray-100{% endif %}">
+                        <svg class="w-6 h-6 {% if borrow_request.status == 'pending' %}text-yellow-600{% elif borrow_request.status == 'approved' or borrow_request.status == 'active' %}text-green-600{% elif borrow_request.status == 'rejected' or borrow_request.status == 'cancelled' %}text-red-600{% else %}text-gray-600{% endif %}" fill="currentColor" viewBox="0 0 20 20">
+                            {% if borrow_request.status == 'pending' %}
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                            {% elif borrow_request.status == 'active' %}
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            {% else %}
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            {% endif %}
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold {% if borrow_request.status == 'pending' %}text-yellow-800{% elif borrow_request.status == 'approved' or borrow_request.status == 'active' %}text-green-800{% elif borrow_request.status == 'rejected' or borrow_request.status == 'cancelled' %}text-red-800{% else %}text-gray-800{% endif %}">
+                            Status: {{ borrow_request.get_status_display }}
+                        </p>
+                        <p class="text-sm {% if borrow_request.status == 'pending' %}text-yellow-600{% elif borrow_request.status == 'approved' or borrow_request.status == 'active' %}text-green-600{% elif borrow_request.status == 'rejected' or borrow_request.status == 'cancelled' %}text-red-600{% else %}text-gray-600{% endif %}">
+                            {% if borrow_request.status == 'pending' %}Waiting for lender approval
+                            {% elif borrow_request.status == 'approved' %}Approved! You can collect the item
+                            {% elif borrow_request.status == 'active' %}Item is currently borrowed
+                            {% elif borrow_request.status == 'returned' %}Item has been returned
+                            {% elif borrow_request.status == 'rejected' %}Request was rejected
+                            {% elif borrow_request.status == 'cancelled' %}Request was cancelled
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-2">
+                    {% if is_lender and borrow_request.status == 'pending' %}
+                    <a href="{% url 'products:borrow_request_approve' borrow_request.id %}" 
+                       class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                        Approve
+                    </a>
+                    <a href="{% url 'products:borrow_request_reject' borrow_request.id %}" 
+                       class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                        Reject
+                    </a>
+                    {% elif is_lender and borrow_request.status == 'active' %}
+                    <a href="{% url 'products:borrow_request_return' borrow_request.id %}" 
+                       class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                        Mark as Returned
+                    </a>
+                    {% elif is_borrower and borrow_request.status == 'pending' %}
+                    <a href="{% url 'products:borrow_request_cancel' borrow_request.id %}" 
+                       class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors">
+                        Cancel Request
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Product Information -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Product Information</h3>
+                    <div class="flex gap-4">
+                        {% if borrow_request.product.get_primary_image %}
+                        <img src="{{ borrow_request.product.get_primary_image.url }}" 
+                             alt="{{ borrow_request.product.title }}" 
+                             class="w-24 h-24 object-cover rounded-lg">
+                        {% else %}
+                        <div class="w-24 h-24 bg-indigo-100 rounded-lg flex items-center justify-center text-4xl">
+                            📦
+                        </div>
+                        {% endif %}
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-lg text-gray-900">{{ borrow_request.product.title }}</h4>
+                            <p class="text-sm text-gray-600 mt-1">{{ borrow_request.product.get_category_display }} • {{ borrow_request.product.get_condition_display }}</p>
+                            <a href="{% url 'products:product_detail' borrow_request.product.id %}" 
+                               class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 mt-2">
+                                View Product Details
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request Details -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Borrowing Details</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Duration</p>
+                            <p class="text-base font-semibold text-gray-900">{{ borrow_request.requested_days }} days</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Daily Rate</p>
+                            <p class="text-base font-semibold text-gray-900">₹{{ borrow_request.product.borrow_price_per_day }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Total Cost</p>
+                            <p class="text-base font-semibold text-indigo-600">₹{{ borrow_request.total_cost }}</p>
+                        </div>
+                        {% if borrow_request.deposit_amount %}
+                        <div>
+                            <p class="text-sm text-gray-500">Security Deposit</p>
+                            <p class="text-base font-semibold text-gray-900">₹{{ borrow_request.deposit_amount }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if borrow_request.message %}
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-sm text-gray-500 mb-2">Message from Borrower:</p>
+                        <p class="text-gray-700">{{ borrow_request.message }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if borrow_request.lender_response %}
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-sm text-gray-500 mb-2">Response from Lender:</p>
+                        <p class="text-gray-700">{{ borrow_request.lender_response }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Timeline -->
+                {% if borrow_request.status != 'pending' %}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Timeline</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Request Submitted</p>
+                                <p class="text-sm text-gray-600">{{ borrow_request.request_date|date:"F d, Y g:i A" }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if borrow_request.approved_date %}
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Request Approved</p>
+                                <p class="text-sm text-gray-600">{{ borrow_request.approved_date|date:"F d, Y g:i A" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if borrow_request.start_date %}
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Borrowing Started</p>
+                                <p class="text-sm text-gray-600">{{ borrow_request.start_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if borrow_request.expected_return_date %}
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Expected Return Date</p>
+                                <p class="text-sm text-gray-600">{{ borrow_request.expected_return_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if borrow_request.actual_return_date %}
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Item Returned</p>
+                                <p class="text-sm text-gray-600">{{ borrow_request.actual_return_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- Borrower Info -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Borrower</h3>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span class="text-indigo-600 font-semibold text-lg">
+                                {{ borrow_request.borrower.name.0|default:borrow_request.borrower.email.0|upper }}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ borrow_request.borrower.name|default:"Student" }}</p>
+                            <p class="text-sm text-gray-600">{{ borrow_request.borrower.college_name|truncatewords:3 }}</p>
+                        </div>
+                    </div>
+                    {% if is_lender %}
+                    <p class="text-sm text-gray-600">{{ borrow_request.borrower.email }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Lender Info -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Lender (Owner)</h3>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-green-600 font-semibold text-lg">
+                                {{ borrow_request.lender.name.0|default:borrow_request.lender.email.0|upper }}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ borrow_request.lender.name|default:"Student" }}</p>
+                            <p class="text-sm text-gray-600">{{ borrow_request.lender.college_name|truncatewords:3 }}</p>
+                        </div>
+                    </div>
+                    {% if is_borrower %}
+                    <p class="text-sm text-gray-600">{{ borrow_request.lender.email }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-indigo-900 mb-2">Need Help?</h4>
+                    <p class="text-sm text-indigo-700 mb-3">Contact the {% if is_lender %}borrower{% else %}lender{% endif %} if you have questions.</p>
+                    {% if is_lender %}
+                    <a href="{% url 'chat:start_conversation_with_user' borrow_request.product.id borrow_request.borrower.id %}" 
+                       class="block w-full text-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                        Message Borrower
+                    </a>
+                    {% else %}
+                    <a href="{% url 'chat:start_conversation_with_user' borrow_request.product.id borrow_request.lender.id %}" 
+                       class="block w-full text-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                        Message Lender
+                    </a>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

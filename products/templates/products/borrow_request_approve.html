@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Approve Borrow Request</h2>
+                <p class="text-gray-600">Confirm that you want to lend this item</p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p class="font-semibold text-gray-900 mb-2">{{ borrow_request.product.title }}</p>
+                <div class="text-sm text-gray-700 space-y-1">
+                    <p>Borrower: <span class="font-medium">{{ borrow_request.borrower.name }}</span></p>
+                    <p>Duration: <span class="font-medium">{{ borrow_request.requested_days }} days</span></p>
+                    <p>Total Cost: <span class="font-medium text-indigo-600">₹{{ borrow_request.total_cost }}</span></p>
+                </div>
+            </div>
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="response_message" class="block text-sm font-medium text-gray-700 mb-2">
+                        Add a message (optional)
+                    </label>
+                    <textarea name="response_message" id="response_message" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              placeholder="e.g., 'Please collect the item from my dorm room...'"></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" 
+                            class="flex-1 bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                        Approve Request
+                    </button>
+                    <a href="{% url 'products:borrow_request_detail' borrow_request.id %}" 
+                       class="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

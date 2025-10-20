@@ -141,7 +141,14 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                ₹{{ product.price }}
+                                {% if product.listing_type == 'lend' %}
+                                    <span class="text-green-600">₹{{ product.borrow_price_per_day }}/day</span>
+                                {% elif product.listing_type == 'both' %}
+                                    {% if product.price %}₹{{ product.price }}{% endif %}
+                                    {% if product.borrow_price_per_day %}<br><span class="text-green-600 text-xs">₹{{ product.borrow_price_per_day }}/day</span>{% endif %}
+                                {% else %}
+                                    {% if product.price %}₹{{ product.price }}{% else %}-{% endif %}
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 👁️ {{ product.views }}

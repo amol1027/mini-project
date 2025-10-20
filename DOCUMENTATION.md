@@ -11,13 +11,14 @@
 7. [Authentication & Authorization](#authentication--authorization)
 8. [User Registration System](#user-registration-system)
 9. [Products Marketplace System](#products-marketplace-system)
-10. [Real-Time Chat System](#real-time-chat-system)
-11. [File Structure](#file-structure)
-12. [Configuration](#configuration)
-13. [Deployment Guide](#deployment-guide)
-14. [Troubleshooting](#troubleshooting)
-15. [Development Workflow](#development-workflow)
-16. [Recent UI/UX Enhancements (v1.8)](#16-recent-uiux-enhancements-v18)
+10. [Borrow/Lend System](#borrow-lend-system)
+11. [Real-Time Chat System](#real-time-chat-system)
+12. [File Structure](#file-structure)
+13. [Configuration](#configuration)
+14. [Deployment Guide](#deployment-guide)
+15. [Troubleshooting](#troubleshooting)
+16. [Development Workflow](#development-workflow)
+17. [Recent UI/UX Enhancements (v1.9)](#17-recent-uiux-enhancements-v19)
 
 ---
 
@@ -27,13 +28,17 @@
 
 Student Resource Exchange (SRE) is a Django-based web platform designed to facilitate the sharing and exchange of educational resources among students. The platform provides a secure, user-friendly interface for posting, browsing, borrowing, and lending academic materials.
 
-**Current Version**: 1.8.0  
-**Last Updated**: October 20, 2025  
-**Status**: Production-ready with real-time chat, notifications, and complete product lifecycle management
+**Current Version**: 1.9.0  
+**Last Updated**: January 2025  
+**Status**: Production-ready with borrow/lend system, real-time chat, and complete product lifecycle management
 
-### Key Highlights (v1.8)
+### Key Highlights (v1.9)
 
-- ✅ **Real-Time Chat System** - Messaging between buyers and sellers with product context
+- ✅ **Borrow/Lend System** - Rental marketplace with deposit management and request workflows
+- ✅ **Flexible Listings** - Sell, lend, or both options for each product
+- ✅ **Rental Management** - Complete workflow from request to approval to return
+- ✅ **Lender Dashboard** - Statistics and request management interface
+- ✅ **Real-Time Chat System** - Messaging between buyers/sellers/borrowers/lenders
 - ✅ **Smart Notifications** - Unread message badges with auto-polling updates
 - ✅ **Notification Preferences** - Customizable sound, desktop, and email notifications
 - ✅ **Modern Chat UI** - Clean light theme with message bubbles and smooth animations
@@ -1838,7 +1843,306 @@ class ProductModelTest(TestCase):
 
 ---
 
-## 10. Real-Time Chat System
+## 10. Borrow/Lend System
+
+### 10.1 Overview
+
+The Borrow/Lend System extends the marketplace to support both selling and rental transactions. Students can list items for lending, request to borrow items, and manage rental workflows including approval, returns, and deposits.
+
+**Key Features**:
+- Flexible listing types (sell, lend, or both)
+- Daily rental pricing with security deposits
+- Configurable maximum borrow duration (1-90 days)
+- Real-time cost calculator
+- Complete request workflow (pending → approved → active → returned)
+- Lender dashboard with statistics
+- Borrower request tracking
+- Overdue detection
+- Direct borrower-lender messaging
+- Product availability tracking
+
+### 10.2 Database Models
+
+#### Product Model Extensions
+**Location**: `products/models.py`
+
+```python
+class Product(models.Model):
+    # ... existing fields ...
+    
+    # Listing type
+    LISTING_TYPE_CHOICES = [
+        ('sell', 'For Sale'),
+        ('lend', 'For Lending'),
+        ('both', 'For Sale or Lending'),
+    ]
+    listing_type = models.CharField(
+        max_length=10,
+        choices=LISTING_TYPE_CHOICES,
+        default='sell'
+    )
+    
+    # Lending-specific fields
+    borrow_price_per_day = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0.01)]
+    )
+    borrow_deposit = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)]
+    )
+    max_borrow_days = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1), MaxValueValidator(90)]
+    )
+    is_currently_borrowed = models.BooleanField(default=False)
+    
+    # Helper methods
+    def can_be_borrowed(self):
+        return self.listing_type in ['lend', 'both'] and not self.is_currently_borrowed
+    
+    def can_be_purchased(self):
+        return self.listing_type in ['sell', 'both']
+```
+
+#### BorrowRequest Model
+**Location**: `products/models.py`
+
+```python
+class BorrowRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('active', 'Active'),
+        ('returned', 'Returned'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+        ('overdue', 'Overdue'),
+    ]
+    
+    # Relationships
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    borrower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='borrow_requests_made')
+    lender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='borrow_requests_received')
+    
+    # Request details
+    requested_days = models.IntegerField(validators=[MinValueValidator(1)])
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    message = models.TextField(blank=True)
+    lender_response = models.TextField(blank=True)
+    
+    # Financial
+    total_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    deposit_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Dates
+    request_date = models.DateTimeField(auto_now_add=True)
+    approved_date = models.DateTimeField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    expected_return_date = models.DateField(null=True, blank=True)
+    actual_return_date = models.DateField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def is_overdue(self):
+        if self.status == 'active' and self.expected_return_date:
+            return date.today() > self.expected_return_date
+        return False
+    
+    def calculate_total_cost(self):
+        if self.product.borrow_price_per_day:
+            return self.requested_days * self.product.borrow_price_per_day
+        return 0
+```
+
+### 10.3 Views and Workflows
+
+#### Borrow Request Creation
+**Location**: `products/views.py`
+
+```python
+@login_required
+def borrow_request_create(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    
+    # Validation
+    if not product.can_be_borrowed():
+        messages.error(request, 'This product is not available for borrowing.')
+        return redirect('products:product_detail', product_id=product.id)
+    
+    if request.user == product.seller:
+        messages.error(request, 'You cannot borrow your own product.')
+        return redirect('products:product_detail', product_id=product.id)
+    
+    if request.method == 'POST':
+        form = BorrowRequestForm(request.POST, product=product)
+        if form.is_valid():
+            borrow_request = form.save(commit=False)
+            borrow_request.product = product
+            borrow_request.borrower = request.user
+            borrow_request.lender = product.seller
+            borrow_request.total_cost = borrow_request.calculate_total_cost()
+            borrow_request.deposit_amount = product.borrow_deposit or 0
+            borrow_request.save()
+            
+            messages.success(request, 'Borrow request submitted!')
+            return redirect('products:borrow_request_detail', request_id=borrow_request.id)
+```
+
+#### Request Approval
+**Location**: `products/views.py`
+
+```python
+@login_required
+def borrow_request_approve(request, request_id):
+    borrow_request = get_object_or_404(BorrowRequest, id=request_id)
+    
+    # Authorization check
+    if borrow_request.lender != request.user:
+        messages.error(request, 'You are not authorized to approve this request.')
+        return redirect('products:borrow_request_detail', request_id=request_id)
+    
+    if borrow_request.status != 'pending':
+        messages.error(request, 'This request cannot be approved.')
+        return redirect('products:borrow_request_detail', request_id=request_id)
+    
+    if request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        
+        borrow_request.status = 'approved'
+        borrow_request.approved_date = timezone.now()
+        borrow_request.start_date = start_date
+        borrow_request.expected_return_date = (
+            datetime.strptime(start_date, '%Y-%m-%d').date() +
+            timedelta(days=borrow_request.requested_days)
+        )
+        borrow_request.product.is_currently_borrowed = True
+        borrow_request.product.save()
+        borrow_request.save()
+        
+        messages.success(request, 'Borrow request approved!')
+```
+
+### 10.4 Templates
+
+#### Borrow Request Form
+**Location**: `products/templates/products/borrow_request_create.html`
+
+**Features**:
+- Product details display
+- Number of days selector
+- Real-time cost calculator using Alpine.js
+- Deposit information
+- Optional message to lender
+- Cost breakdown: daily rate × days + deposit
+
+**JavaScript Cost Calculator**:
+```javascript
+x-data="{
+    days: 1,
+    dailyRate: {{ product.borrow_price_per_day }},
+    deposit: {{ product.borrow_deposit|default:0 }},
+    get totalCost() {
+        return (this.days * this.dailyRate) + this.deposit;
+    }
+}"
+```
+
+#### Lender Dashboard
+**Location**: `products/templates/products/my_lend_requests.html`
+
+**Features**:
+- Statistics cards: Total requests, Active borrows, Completed, Pending
+- Color-coded status badges
+- Quick action buttons (Approve/Reject)
+- Request filtering by status
+- Borrower information with contact link
+- Date tracking
+
+### 10.5 URL Patterns
+
+**Location**: `products/urls.py`
+
+```python
+urlpatterns = [
+    # ... existing patterns ...
+    
+    # Borrow/Lend routes
+    path('products/<int:product_id>/borrow/', borrow_request_create, name='borrow_request_create'),
+    path('products/borrow-requests/<int:request_id>/', borrow_request_detail, name='borrow_request_detail'),
+    path('products/borrow-requests/<int:request_id>/approve/', borrow_request_approve, name='borrow_request_approve'),
+    path('products/borrow-requests/<int:request_id>/reject/', borrow_request_reject, name='borrow_request_reject'),
+    path('products/borrow-requests/<int:request_id>/return/', borrow_request_return, name='borrow_request_return'),
+    path('products/borrow-requests/<int:request_id>/cancel/', borrow_request_cancel, name='borrow_request_cancel'),
+    path('products/my-borrow-requests/', my_borrow_requests, name='my_borrow_requests'),
+    path('products/my-lend-requests/', my_lend_requests, name='my_lend_requests'),
+]
+```
+
+### 10.6 Business Logic
+
+**Workflow States**:
+1. **Pending**: Initial state when borrower submits request
+2. **Approved**: Lender approves with start date
+3. **Active**: Borrowing period in progress (product marked as borrowed)
+4. **Returned**: Item returned by borrower (product becomes available)
+5. **Rejected**: Lender declines the request
+6. **Cancelled**: Borrower cancels pending request
+7. **Overdue**: Active borrow past expected return date
+
+**Validation Rules**:
+- Borrower cannot be the product owner
+- Product must have `can_be_borrowed()` return True
+- Requested days cannot exceed `max_borrow_days`
+- Product cannot be borrowed if `is_currently_borrowed` is True
+- Only lender can approve/reject requests
+- Only borrower can cancel pending requests
+- Only active requests can be marked as returned
+
+**Financial Calculations**:
+- Total Cost = (Daily Rate × Number of Days) + Deposit
+- Deposit is separate from rental cost
+- Cost calculated on request creation and displayed to borrower
+
+### 10.7 Integration with Chat
+
+Borrowers and lenders can start conversations directly from request detail pages:
+
+```python
+# In borrow_request_detail.html
+<a href="{% url 'chat:start_conversation_with_user' product_id=request.product.id other_user_id=other_user.id %}">
+    Contact {{ other_user.first_name }}
+</a>
+```
+
+**Chat Integration**:
+- Direct messaging between borrower and lender
+- Product context maintained in conversation
+- Intelligent role detection (buyer/seller based on ownership)
+
+### 10.8 Future Enhancements
+
+- Payment integration for deposits and rental fees
+- Automated overdue reminders
+- Rating system for borrowers and lenders
+- Insurance options for high-value items
+- Calendar view for availability
+- Recurring rental patterns
+- Damage reporting workflow
+- Dispute resolution system
+
+---
+
+## 11. Real-Time Chat System
 
 ### 10.1 Overview
 
