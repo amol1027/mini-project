@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-6">
+            <a href="{% url 'chat:conversation_list' %}" 
+               class="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-4 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Conversations
+            </a>
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Notification Settings
+            </h1>
+            <p class="text-gray-600">Customize how you receive chat notifications</p>
+        </div>
+
+        <!-- Settings Form -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <form method="post" id="settings-form">
+                {% csrf_token %}
+                
+                <div class="p-6 space-y-6">
+                    <!-- Sound Notifications -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="enable_sound" 
+                                   name="enable_sound" 
+                                   type="checkbox" 
+                                   {% if preferences.enable_sound %}checked{% endif %}
+                                   class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-4">
+                            <label for="enable_sound" class="font-medium text-gray-900 cursor-pointer">
+                                Sound Notifications
+                            </label>
+                            <p class="text-sm text-gray-500">
+                                Play a sound when you receive new messages
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Notifications -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="enable_desktop" 
+                                   name="enable_desktop" 
+                                   type="checkbox" 
+                                   {% if preferences.enable_desktop %}checked{% endif %}
+                                   class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-4">
+                            <label for="enable_desktop" class="font-medium text-gray-900 cursor-pointer">
+                                Desktop Notifications
+                            </label>
+                            <p class="text-sm text-gray-500">
+                                Show desktop notifications for new messages (requires browser permission)
+                            </p>
+                            <button type="button" 
+                                    id="test-notification" 
+                                    class="mt-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                                Test Desktop Notification
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Email Notifications -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="enable_email" 
+                                   name="enable_email" 
+                                   type="checkbox" 
+                                   {% if preferences.enable_email %}checked{% endif %}
+                                   class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-4">
+                            <label for="enable_email" class="font-medium text-gray-900 cursor-pointer">
+                                Email Notifications
+                            </label>
+                            <p class="text-sm text-gray-500">
+                                Receive email alerts for new messages when you're offline
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                    <a href="{% url 'chat:conversation_list' %}" 
+                       class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Notification Info -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="w-6 h-6 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">About Notifications</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Sound and desktop notifications only work when the chat tab is in the background</li>
+                            <li>You may need to grant browser permission for desktop notifications</li>
+                            <li>Email notifications are sent after 5 minutes if messages remain unread</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const testButton = document.getElementById('test-notification');
+    const form = document.getElementById('settings-form');
+    
+    // Test notification
+    testButton.addEventListener('click', function() {
+        if (!('Notification' in window)) {
+            alert('This browser does not support desktop notifications');
+            return;
+        }
+        
+        if (Notification.permission === 'granted') {
+            new Notification('Student Resource Exchange', {
+                body: 'This is a test notification!',
+                icon: '/static/icon.png',
+                badge: '/static/badge.png'
+            });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification('Student Resource Exchange', {
+                        body: 'This is a test notification!',
+                        icon: '/static/icon.png',
+                        badge: '/static/badge.png'
+                    });
+                }
+            });
+        } else {
+            alert('Notification permission has been denied. Please enable it in your browser settings.');
+        }
+    });
+    
+    // Handle form submission with AJAX
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        
+        fetch('{% url "chat:notification_settings" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                showSuccessMessage();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to save settings. Please try again.');
+        });
+    });
+    
+    function showSuccessMessage() {
+        const successDiv = document.createElement('div');
+        successDiv.className = 'fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50';
+        successDiv.innerHTML = `
+            <div class="flex items-center">
+                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="ml-3 text-sm font-medium text-green-800">Settings saved successfully!</span>
+            </div>
+        `;
+        
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => {
+            successDiv.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

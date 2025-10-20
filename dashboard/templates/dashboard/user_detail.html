@@ -3,27 +3,6 @@
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <nav class="flex items-center justify-between p-4 sm:p-6 lg:px-8 max-w-7xl mx-auto">
-            <div class="flex items-center gap-4">
-                <a href="{% url 'landing:landing' %}" class="flex items-center gap-2">
-                    <span class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">SRE</span>
-                </a>
-                <span class="text-gray-400">|</span>
-                <a href="{% url 'dashboard:dashboard' %}" class="text-sm text-gray-600 hover:text-indigo-600">Dashboard</a>
-                <span class="text-gray-400">/</span>
-                <a href="{% url 'dashboard:user_list' %}" class="text-sm text-gray-600 hover:text-indigo-600">Users</a>
-                <span class="text-gray-400">/</span>
-                <h1 class="text-lg font-semibold text-gray-900">Details</h1>
-            </div>
-            <div class="flex items-center gap-x-4">
-                <a href="{% url 'dashboard:user_list' %}" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600">← Back to List</a>
-                <a href="{% url 'login:logout' %}" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Logout</a>
-            </div>
-        </nav>
-    </header>
-
     <!-- Main Content -->
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header Section -->

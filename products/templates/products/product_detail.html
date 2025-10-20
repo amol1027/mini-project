@@ -2,88 +2,6 @@
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-4">
-                    <a href="{% url 'products:product_list' %}" class="text-gray-600 hover:text-gray-900">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                    </a>
-                    <h1 class="text-base sm:text-lg font-semibold text-gray-900">Product Details</h1>
-                </div>
-                
-                <!-- Right: User Actions -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    {% if request.session.user_id %}
-                    <!-- User logged in -->
-                    <a href="{% url 'landing:landing' %}" 
-                       class="px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                        Home
-                    </a>
-                    
-                    <!-- User Info Dropdown -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <span class="text-indigo-600 font-semibold text-xs">
-                                    {{ request.session.user_name.0|upper }}
-                                </span>
-                            </div>
-                            <span class="hidden md:inline">{{ request.session.user_name }}</span>
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div x-show="open" 
-                             @click.away="open = false"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="transform opacity-100 scale-100"
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
-                             style="display: none;">
-                            <a href="{% url 'profile:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
-                                My Profile
-                            </a>
-                            {% if request.session.is_admin %}
-                            <a href="{% url 'dashboard:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-                                </svg>
-                                Dashboard
-                            </a>
-                            {% endif %}
-                            <hr class="my-1">
-                            <a href="{% url 'login:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-                                </svg>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <!-- User not logged in -->
-                    <a href="{% url 'login:login' %}" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
-                        Login
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -249,9 +167,9 @@
                     </div>
                     {% elif product.is_available %}
                     <!-- Non-owner: Show Contact Seller button -->
-                    <button class="w-full mt-4 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                    <a href="{% url 'chat:start_conversation' product.id %}" class="block w-full mt-4 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors text-center">
                         Contact Seller
-                    </button>
+                    </a>
                     {% else %}
                     <!-- Product not available -->
                     <button class="w-full mt-4 px-4 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed" disabled>
@@ -262,14 +180,14 @@
                     {% else %}
                     <!-- Not logged in - Show limited information with login prompt -->
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                            <span class="text-indigo-600 font-semibold text-lg">
-                                {{ product.seller.name.0|default:product.seller.email.0|upper }}
-                            </span>
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
                         </div>
                         <div>
-                            <p class="font-semibold text-gray-900">{{ product.seller.name|default:"Student Seller" }}</p>
-                            <p class="text-sm text-gray-600">{{ product.seller.college_name|default:"College Student" }}</p>
+                            <p class="font-semibold text-gray-900">Verified Seller</p>
+                            <p class="text-sm text-gray-600">Login to view details</p>
                         </div>
                     </div>
                     
