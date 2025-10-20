@@ -113,6 +113,10 @@
                     {% endif %}
                     {% else %}
                     <!-- Not Logged In User Navigation - Only Browse Products -->
+                     <a href="{% url 'landing:landing' %}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if request.path == '/' or '/landing/' in request.path and '/my-products' not in request.path and '/create' not in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                        Home
+                    </a>
                     <a href="{% url 'products:product_list' %}" 
                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if '/products/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                         Browse Products
@@ -126,7 +130,6 @@
                     <!-- User Dropdown Menu (Desktop) -->
                     <div class="hidden md:block relative">
                         <button @click="userMenuOpen = !userMenuOpen" 
-                                @click.away="userMenuOpen = false"
                                 class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                                 <span class="text-white font-semibold text-sm">
@@ -167,6 +170,21 @@
                                     <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
                                 </svg>
                                 My Products
+                            </a>
+                            
+                            <a href="{% url 'chat:conversation_list' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+                                    <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                                </svg>
+                                <span class="flex items-center gap-2">
+                                    Messages
+                                    {% if unread_message_count > 0 %}
+                                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full" id="nav-unread-badge">
+                                        {{ unread_message_count }}
+                                    </span>
+                                    {% endif %}
+                                </span>
                             </a>
                             
                             {% if request.session.is_admin %}
@@ -261,6 +279,29 @@
                     My Profile
                 </a>
                 
+                <a href="{% url 'products:my_products' %}" 
+                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                   @click="mobileMenuOpen = false">
+                    My Products
+                </a>
+                
+                <a href="{% url 'chat:conversation_list' %}" 
+                   class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium {% if '/chat/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                   @click="mobileMenuOpen = false">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+                            <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                        </svg>
+                        Messages
+                    </span>
+                    {% if unread_message_count > 0 %}
+                    <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full animate-pulse mobile-unread-badge">
+                        {{ unread_message_count }}
+                    </span>
+                    {% endif %}
+                </a>
+                
                 {% if request.session.is_admin %}
                 <a href="{% url 'dashboard:dashboard' %}" 
                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
@@ -278,6 +319,11 @@
                 </a>
                 {% else %}
                 <!-- Not Logged In - Mobile Menu - Only Browse Products -->
+                 <a href="{% url 'landing:landing' %}" 
+                   class="block px-3 py-2 rounded-lg text-base font-medium {% if '/landing/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                   @click="mobileMenuOpen = false">
+                    Home
+                </a>
                 <a href="{% url 'products:product_list' %}" 
                    class="block px-3 py-2 rounded-lg text-base font-medium {% if '/products/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
                    @click="mobileMenuOpen = false">
@@ -300,8 +346,8 @@
         </div>
     </nav>
 
-    <!-- Global Messages Display -->
-    {% if messages %}
+    <!-- Global Messages Display (hidden on chat pages) -->
+    {% if messages and '/chat/' not in request.path %}
     <div class="fixed top-20 right-4 z-50 space-y-2 max-w-md">
         {% for message in messages %}
         <div role="alert" 
@@ -479,6 +525,59 @@
             });
         });
     </script>
+    
+    <!-- Unread Message Count Polling -->
+    {% if request.session.user_id %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Poll for unread message count every 15 seconds
+        async function updateUnreadCount() {
+            try {
+                const response = await fetch('{% url "chat:get_unread_count" %}');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const badges = document.querySelectorAll('#nav-unread-badge, .mobile-unread-badge');
+                        
+                        if (data.unread_count > 0) {
+                            badges.forEach(badge => {
+                                if (badge) {
+                                    badge.textContent = data.unread_count;
+                                    badge.style.display = 'inline-flex';
+                                }
+                            });
+                            
+                            // Update page title if there are unread messages
+                            if (!document.title.startsWith('(')) {
+                                document.title = '(' + data.unread_count + ') ' + document.title;
+                            } else {
+                                document.title = document.title.replace(/\(\d+\)/, '(' + data.unread_count + ')');
+                            }
+                        } else {
+                            badges.forEach(badge => {
+                                if (badge) {
+                                    badge.style.display = 'none';
+                                }
+                            });
+                            
+                            // Remove unread count from title
+                            document.title = document.title.replace(/^\(\d+\)\s*/, '');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating unread count:', error);
+            }
+            
+            // Schedule next update
+            setTimeout(updateUnreadCount, 15000);
+        }
+        
+        // Start polling after 5 seconds
+        setTimeout(updateUnreadCount, 5000);
+    });
+    </script>
+    {% endif %}
 
 </body>
 </html>

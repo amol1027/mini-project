@@ -167,9 +167,9 @@
                     </div>
                     {% elif product.is_available %}
                     <!-- Non-owner: Show Contact Seller button -->
-                    <button class="w-full mt-4 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                    <a href="{% url 'chat:start_conversation' product.id %}" class="block w-full mt-4 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors text-center">
                         Contact Seller
-                    </button>
+                    </a>
                     {% else %}
                     <!-- Product not available -->
                     <button class="w-full mt-4 px-4 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed" disabled>

@@ -11,12 +11,13 @@
 7. [Authentication & Authorization](#authentication--authorization)
 8. [User Registration System](#user-registration-system)
 9. [Products Marketplace System](#products-marketplace-system)
-10. [File Structure](#file-structure)
-11. [Configuration](#configuration)
-12. [Deployment Guide](#deployment-guide)
-13. [Troubleshooting](#troubleshooting)
-14. [Development Workflow](#development-workflow)
-15. [Recent UI/UX Enhancements (v1.7)](#15-recent-uiux-enhancements-v17)
+10. [Real-Time Chat System](#real-time-chat-system)
+11. [File Structure](#file-structure)
+12. [Configuration](#configuration)
+13. [Deployment Guide](#deployment-guide)
+14. [Troubleshooting](#troubleshooting)
+15. [Development Workflow](#development-workflow)
+16. [Recent UI/UX Enhancements (v1.8)](#16-recent-uiux-enhancements-v18)
 
 ---
 
@@ -26,19 +27,23 @@
 
 Student Resource Exchange (SRE) is a Django-based web platform designed to facilitate the sharing and exchange of educational resources among students. The platform provides a secure, user-friendly interface for posting, browsing, borrowing, and lending academic materials.
 
-**Current Version**: 1.7.0  
-**Last Updated**: October 19, 2025  
-**Status**: Production-ready with full product lifecycle management and enhanced navigation
+**Current Version**: 1.8.0  
+**Last Updated**: October 20, 2025  
+**Status**: Production-ready with real-time chat, notifications, and complete product lifecycle management
 
-### Key Highlights (v1.7)
+### Key Highlights (v1.8)
 
+- ✅ **Real-Time Chat System** - Messaging between buyers and sellers with product context
+- ✅ **Smart Notifications** - Unread message badges with auto-polling updates
+- ✅ **Notification Preferences** - Customizable sound, desktop, and email notifications
+- ✅ **Modern Chat UI** - Clean light theme with message bubbles and smooth animations
+- ✅ **Mobile Chat Optimization** - Touch-friendly interface with responsive design
 - ✅ **Global Navigation System** - Unified navbar with Alpine.js-powered dropdowns
 - ✅ **Smart Pagination** - 12 products per page with filter preservation
 - ✅ **Enhanced Privacy** - Seller information completely hidden for guests
 - ✅ **Auto-Dismiss Messages** - Floating notifications with 5-second auto-hide
 - ✅ **Product Management** - Full CRUD with image upload (up to 5 images)
 - ✅ **Role-Based Access** - Admin dashboard with comprehensive analytics
-- ✅ **Modern UI/UX** - Responsive design with smooth animations
 
 ### Technology Stack
 
@@ -237,6 +242,14 @@ Conditions:
 User ──┐
        │ 1:N
        ├──────> Product (as seller)
+       │ 1:N
+       ├──────> Conversation (as user1)
+       │ 1:N
+       ├──────> Conversation (as user2)
+       │ 1:N
+       ├──────> Message (as sender)
+       │ 1:1
+       ├──────> NotificationPreference
        │
        │ (Future Relationships)
        │ 1:N
@@ -245,15 +258,80 @@ User ──┐
        ├──────> Transaction (as seller)
        │ 1:N
        └──────> Review (as reviewer/reviewee)
-       └──────> Review (as reviewer/reviewee) (planned)
+
+Product ──┐
+          │ 1:N
+          └──────> Conversation (product context)
+
+Conversation ──┐
+               │ 1:N
+               └──────> Message
 
 Resource ──> Transaction (1:N) (planned)
 Transaction ──> Review (1:1 or 1:2) (planned)
 ```
 
+### Chat Models
+
+#### Conversation Model
+**Location**: `chat/models.py`
+
+```python
+Conversation (Table: chat_conversation)
+├── id (Primary Key, AutoField)
+├── user1 (ForeignKey → User, on_delete=CASCADE, related_name='conversations_as_user1')
+├── user2 (ForeignKey → User, on_delete=CASCADE, related_name='conversations_as_user2')
+├── product (ForeignKey → Product, on_delete=CASCADE, related_name='conversations')
+├── user1_unread_count (IntegerField, default=0)
+├── user2_unread_count (IntegerField, default=0)
+├── created_at (DateTimeField, auto_now_add)
+└── updated_at (DateTimeField, auto_now)
+
+Constraints:
+└── unique_together = ['user1', 'user2', 'product']
+
+Methods:
+├── get_other_user(user) - Returns other participant
+├── get_unread_count(user) - Returns unread count for user
+├── mark_as_read(user) - Resets unread count to 0
+└── get_total_unread_count(user) [static] - Total unread across all conversations
+```
+
+#### Message Model
+**Location**: `chat/models.py`
+
+```python
+Message (Table: chat_message)
+├── id (Primary Key, AutoField)
+├── conversation (ForeignKey → Conversation, on_delete=CASCADE, related_name='messages')
+├── sender (ForeignKey → User, on_delete=CASCADE)
+├── content (TextField)
+├── is_read (BooleanField, default=False)
+└── timestamp (DateTimeField, auto_now_add)
+
+Meta:
+└── ordering = ['-timestamp']
+```
+
+#### NotificationPreference Model
+**Location**: `chat/models.py`
+
+```python
+NotificationPreference (Table: chat_notificationpreference)
+├── id (Primary Key, AutoField)
+├── user (OneToOneField → User, on_delete=CASCADE, related_name='notification_preference')
+├── enable_sound (BooleanField, default=True)
+├── enable_desktop (BooleanField, default=False)
+├── enable_email (BooleanField, default=False)
+├── created_at (DateTimeField, auto_now_add)
+└── updated_at (DateTimeField, auto_now)
+```
+
 ### Database Indexes
 
 - **user.email** - B-tree index for fast email lookups and uniqueness enforcement
+- **conversation (user1, user2, product)** - Unique constraint to prevent duplicates
+- **message.timestamp** - Index for ordering messages efficiently
 
 ---
 
@@ -430,6 +508,51 @@ Transaction ──> Review (1:1 or 1:2) (planned)
 - **GET** `/admin/` - Django admin interface
   - Manage users, view registrations
   - Authentication: Admin user required
+
+#### Chat System
+- **GET** `/chat/conversations/` - List all user conversations
+  - Template: `chat/conversation_list.html`
+  - Context: `{'conversations': QuerySet}` with unread counts and last messages
+  - Authentication: Required (session)
+  - Features: Shows product context, online status, unread badges
+
+- **GET** `/chat/chat/<int:user_id>/<int:product_id>/` - View or create conversation
+  - Template: `chat/chat_detail.html`
+  - Context: `{'conversation': obj, 'messages': QuerySet, 'other_user': User, 'product': Product}`
+  - Authentication: Required (session)
+  - Side Effects: Marks messages as read for current user
+
+- **POST** `/chat/send_message/<int:conversation_id>/` - Send message (AJAX)
+  - Form Data: `content` (required)
+  - Response: JSON with message data
+  - Authentication: Required (session)
+  - Side Effects: Increments unread count for other user
+
+- **GET** `/chat/get_messages/<int:conversation_id>/` - Get new messages (AJAX)
+  - Query Parameters: `since` - Last message ID received
+  - Response: JSON with array of new messages
+  - Authentication: Required (session)
+  - Used by: Auto-polling script (2s interval)
+
+- **GET** `/chat/unread-count/` - Get total unread count (AJAX)
+  - Response: JSON `{'unread_count': int}`
+  - Authentication: Required (session)
+  - Used by: Navbar badge polling script (15s interval)
+
+- **GET** `/chat/notification-settings/` - View notification preferences
+  - Template: `chat/notification_settings.html`
+  - Context: `{'preference': NotificationPreference}`
+  - Authentication: Required (session)
+
+- **POST** `/chat/notification-settings/` - Update notification preferences
+  - Form Data: `enable_sound`, `enable_desktop`, `enable_email` (checkboxes)
+  - Success: Redirect with success message
+  - Authentication: Required (session)
+
+- **GET** `/chat/notification-preferences/` - Get preferences (AJAX)
+  - Response: JSON with notification settings
+  - Authentication: Required (session)
+  - Used by: Chat UI to determine notification behavior
 
 ### Planned API Endpoints
 
@@ -1700,12 +1823,12 @@ class ProductModelTest(TestCase):
 ### 9.11 Future Enhancements
 
 **Planned Features**:
-- Image uploads for products
-- User ability to post products
-- Edit and delete own products
+- Image uploads for products ✅ (Completed in v1.6)
+- User ability to post products ✅ (Completed in v1.6)
+- Edit and delete own products ✅ (Completed in v1.6)
+- Direct messaging between buyers and sellers ✅ (Completed in v1.8)
 - Favorites/wishlist functionality
 - Product reviews and ratings
-- Direct messaging between buyers and sellers
 - Transaction history
 - Payment integration
 - Product status (sold, reserved, available)
@@ -1715,7 +1838,441 @@ class ProductModelTest(TestCase):
 
 ---
 
-## 10. File Structure
+## 10. Real-Time Chat System
+
+### 10.1 Overview
+
+The chat system enables real-time communication between buyers and sellers, with each conversation linked to a specific product. The system includes notification preferences, unread message tracking, and automatic polling for updates.
+
+**Key Features**:
+- Real-time messaging with 2-second polling intervals
+- Unread message badges with 15-second global polling
+- Customizable notification preferences (sound, desktop, email)
+- Product-context conversations
+- Modern light theme UI with message bubbles
+- Mobile-optimized responsive design
+- Online status indicators
+- Automatic message read tracking
+
+### 10.2 Database Models
+
+#### Conversation Model
+**Location**: `chat/models.py`
+
+```python
+Conversation (Table: chat_conversation)
+├── id (Primary Key, AutoField)
+├── user1 (ForeignKey → User, on_delete=CASCADE, related_name='conversations_as_user1')
+├── user2 (ForeignKey → User, on_delete=CASCADE, related_name='conversations_as_user2')
+├── product (ForeignKey → Product, on_delete=CASCADE, related_name='conversations')
+├── user1_unread_count (IntegerField, default=0)
+├── user2_unread_count (IntegerField, default=0)
+├── created_at (DateTimeField, auto_now_add)
+└── updated_at (DateTimeField, auto_now)
+
+Methods:
+├── get_other_user(user) - Returns the other participant in the conversation
+├── get_unread_count(user) - Returns unread count for the specified user
+├── mark_as_read(user) - Resets unread count to 0 for the user
+├── get_total_unread_count(user) [static] - Returns total unread across all user's conversations
+└── __str__() - Returns "Conversation between {user1} and {user2} about {product}"
+
+Unique Constraint: (user1, user2, product) - Prevents duplicate conversations
+```
+
+#### Message Model
+**Location**: `chat/models.py`
+
+```python
+Message (Table: chat_message)
+├── id (Primary Key, AutoField)
+├── conversation (ForeignKey → Conversation, on_delete=CASCADE, related_name='messages')
+├── sender (ForeignKey → User, on_delete=CASCADE)
+├── content (TextField)
+├── is_read (BooleanField, default=False)
+└── timestamp (DateTimeField, auto_now_add)
+
+Meta:
+└── ordering = ['-timestamp']  # Latest messages first
+
+Methods:
+└── __str__() - Returns "{sender} at {timestamp}"
+```
+
+#### NotificationPreference Model
+**Location**: `chat/models.py`
+
+```python
+NotificationPreference (Table: chat_notificationpreference)
+├── id (Primary Key, AutoField)
+├── user (OneToOneField → User, on_delete=CASCADE, related_name='notification_preference')
+├── enable_sound (BooleanField, default=True)
+├── enable_desktop (BooleanField, default=False)
+├── enable_email (BooleanField, default=False)
+├── created_at (DateTimeField, auto_now_add)
+└── updated_at (DateTimeField, auto_now)
+
+Methods:
+└── __str__() - Returns "Notification preferences for {user}"
+```
+
+### 10.3 URL Patterns
+
+**Location**: `chat/urls.py`
+
+```python
+urlpatterns = [
+    # Conversation list
+    path('conversations/', views.conversation_list, name='conversation_list'),
+    
+    # Start or view chat with user about product
+    path('chat/<int:user_id>/<int:product_id>/', views.chat_detail, name='chat_detail'),
+    
+    # Send message (POST only)
+    path('send_message/<int:conversation_id>/', views.send_message, name='send_message'),
+    
+    # Get new messages (AJAX)
+    path('get_messages/<int:conversation_id>/', views.get_messages, name='get_messages'),
+    
+    # Get unread count (AJAX)
+    path('unread-count/', views.get_unread_count, name='get_unread_count'),
+    
+    # Notification settings page
+    path('notification-settings/', views.notification_settings, name='notification_settings'),
+    
+    # Get notification preferences (AJAX)
+    path('notification-preferences/', views.get_notification_preferences, name='get_notification_preferences'),
+]
+```
+
+### 10.4 Views and Logic
+
+#### conversation_list View
+**Purpose**: Display all user's conversations with unread counts
+
+```python
+@login_required
+def conversation_list(request):
+    """
+    Display all conversations for the logged-in user
+    Shows unread counts, last message, and product context
+    """
+    conversations = Conversation.objects.filter(
+        Q(user1=request.user) | Q(user2=request.user)
+    ).select_related('user1', 'user2', 'product').order_by('-updated_at')
+    
+    # Annotate with last message
+    for conv in conversations:
+        conv.other_user = conv.get_other_user(request.user)
+        conv.unread_count = conv.get_unread_count(request.user)
+        conv.last_message = conv.messages.first()  # Due to ordering
+    
+    return render(request, 'chat/conversation_list.html', {
+        'conversations': conversations
+    })
+```
+
+#### chat_detail View
+**Purpose**: Display or create conversation and show messages
+
+```python
+@login_required
+def chat_detail(request, user_id, product_id):
+    """
+    Get or create conversation between users about a product
+    Mark messages as read for current user
+    """
+    other_user = get_object_or_404(User, id=user_id)
+    product = get_object_or_404(Product, id=product_id)
+    
+    # Get or create conversation (handles user1/user2 ordering)
+    conversation, created = get_or_create_conversation(
+        request.user, other_user, product
+    )
+    
+    # Mark as read for current user
+    conversation.mark_as_read(request.user)
+    
+    # Get all messages
+    messages = conversation.messages.order_by('timestamp')  # Oldest first for display
+    
+    return render(request, 'chat/chat_detail.html', {
+        'conversation': conversation,
+        'messages': messages,
+        'other_user': other_user,
+        'product': product,
+    })
+```
+
+#### send_message View
+**Purpose**: Handle message sending via AJAX
+
+```python
+@login_required
+@require_POST
+def send_message(request, conversation_id):
+    """
+    Send a message in a conversation
+    Increment unread count for other user
+    """
+    conversation = get_object_or_404(Conversation, id=conversation_id)
+    content = request.POST.get('content', '').strip()
+    
+    if not content:
+        return JsonResponse({'error': 'Empty message'}, status=400)
+    
+    # Create message
+    message = Message.objects.create(
+        conversation=conversation,
+        sender=request.user,
+        content=content
+    )
+    
+    # Increment unread count for other user
+    other_user = conversation.get_other_user(request.user)
+    if conversation.user1 == other_user:
+        conversation.user1_unread_count += 1
+    else:
+        conversation.user2_unread_count += 1
+    conversation.save()
+    
+    return JsonResponse({
+        'id': message.id,
+        'content': message.content,
+        'sender_id': message.sender.id,
+        'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    })
+```
+
+#### get_unread_count View
+**Purpose**: Return total unread messages for navbar badge
+
+```python
+@login_required
+def get_unread_count(request):
+    """
+    Return total unread message count across all conversations
+    Used by navbar polling script
+    """
+    count = Conversation.get_total_unread_count(request.user)
+    return JsonResponse({'unread_count': count})
+```
+
+#### notification_settings View
+**Purpose**: Display and save notification preferences
+
+```python
+@login_required
+def notification_settings(request):
+    """
+    Display and update notification preferences
+    Creates preference object if doesn't exist
+    """
+    preference, created = NotificationPreference.objects.get_or_create(
+        user=request.user
+    )
+    
+    if request.method == 'POST':
+        preference.enable_sound = request.POST.get('enable_sound') == 'on'
+        preference.enable_desktop = request.POST.get('enable_desktop') == 'on'
+        preference.enable_email = request.POST.get('enable_email') == 'on'
+        preference.save()
+        
+        messages.success(request, 'Notification preferences updated!')
+        return redirect('chat:notification_settings')
+    
+    return render(request, 'chat/notification_settings.html', {
+        'preference': preference
+    })
+```
+
+### 10.5 Context Processor
+
+**Location**: `chat/context_processors.py`
+
+```python
+def unread_messages(request):
+    """
+    Add unread message count to all template contexts
+    Enables navbar badge to display count globally
+    """
+    if request.user.is_authenticated:
+        from chat.models import Conversation
+        count = Conversation.get_total_unread_count(request.user)
+        return {'unread_message_count': count}
+    return {'unread_message_count': 0}
+```
+
+**Configuration**: Added to `settings.py`:
+```python
+TEMPLATES = [
+    {
+        'OPTIONS': {
+            'context_processors': [
+                # ... other processors
+                'chat.context_processors.unread_messages',
+            ],
+        },
+    },
+]
+```
+
+### 10.6 Frontend Implementation
+
+#### Auto-Polling for New Messages
+**Location**: `chat/templates/chat/chat_detail.html`
+
+```javascript
+// Poll for new messages every 2 seconds
+let lastMessageId = {{ last_message_id|default:0 }};
+setInterval(async function() {
+    const response = await fetch('{% url "chat:get_messages" conversation.id %}?since=' + lastMessageId);
+    const data = await response.json();
+    
+    if (data.messages && data.messages.length > 0) {
+        data.messages.forEach(msg => {
+            appendMessage(msg);
+            lastMessageId = msg.id;
+        });
+        scrollToBottom();
+    }
+}, 2000);
+```
+
+#### Unread Badge Polling
+**Location**: `theme/templates/base.html`
+
+```javascript
+// Update unread count every 15 seconds
+setInterval(async function() {
+    const response = await fetch('/chat/unread-count/');
+    const data = await response.json();
+    
+    // Update desktop badge
+    const badge = document.getElementById('unread-badge');
+    if (data.unread_count > 0) {
+        badge.textContent = data.unread_count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+    
+    // Update mobile badge
+    const mobileBadge = document.querySelector('.mobile-unread-badge');
+    if (mobileBadge) {
+        if (data.unread_count > 0) {
+            mobileBadge.textContent = data.unread_count;
+            mobileBadge.classList.remove('hidden');
+        } else {
+            mobileBadge.classList.add('hidden');
+        }
+    }
+    
+    // Update page title
+    if (data.unread_count > 0) {
+        document.title = `(${data.unread_count}) SRE - Messages`;
+    }
+}, 15000);
+```
+
+### 10.7 UI/UX Design
+
+**Design Principles**:
+- Clean light theme matching base template
+- White cards on light gray backgrounds
+- Minimal shadows and subtle borders
+- Indigo accents for branding
+- Smooth animations and transitions
+
+**Message Bubbles**:
+- Sent messages: Right-aligned, indigo background
+- Received messages: Left-aligned, gray background
+- Rounded corners with padding
+- Timestamps below each message
+
+**Conversation List**:
+- Product thumbnail on left
+- User avatar with online indicator
+- Last message preview
+- Unread badge on right
+- Hover effects for interactivity
+
+**Mobile Optimization**:
+- Touch-friendly tap targets (min 44px)
+- Responsive message bubbles
+- Mobile menu with Messages icon
+- Sticky message input at bottom
+- Optimized scrolling behavior
+
+### 10.8 Admin Interface
+
+**Location**: `chat/admin.py`
+
+```python
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user1', 'user2', 'product', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user1__email', 'user2__email', 'product__title']
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'sender', 'conversation', 'timestamp', 'is_read']
+    list_filter = ['timestamp', 'is_read']
+    search_fields = ['content', 'sender__email']
+
+@admin.register(NotificationPreference)
+class NotificationPreferenceAdmin(admin.ModelAdmin):
+    list_display = ['user', 'enable_sound', 'enable_desktop', 'enable_email']
+    list_filter = ['enable_sound', 'enable_desktop', 'enable_email']
+    search_fields = ['user__email']
+```
+
+### 10.9 Security Considerations
+
+1. **Authentication**: All chat views require `@login_required` decorator
+2. **Authorization**: Users can only access their own conversations
+3. **CSRF Protection**: All POST requests include CSRF tokens
+4. **XSS Prevention**: Message content escaped in templates
+5. **SQL Injection**: Protected by Django ORM parameterization
+6. **Privacy**: Conversations private to two participants only
+
+### 10.10 Performance Optimization
+
+1. **Database Queries**:
+   - `select_related()` for foreign keys to reduce queries
+   - Indexes on frequently queried fields
+   - Efficient unread count calculation
+
+2. **Frontend**:
+   - Polling intervals balanced for UX vs server load (2s in chat, 15s global)
+   - Only fetch new messages since last ID
+   - Batch DOM updates for multiple messages
+
+3. **Caching Opportunities** (Future):
+   - Cache unread counts with invalidation on new messages
+   - Cache conversation lists with TTL
+   - Redis for real-time features
+
+### 10.11 Future Enhancements
+
+**Planned Features**:
+- WebSocket implementation for true real-time messaging
+- Typing indicators
+- Message reactions/emojis
+- File/image sharing in chat
+- Voice/video calling
+- Email notification backend implementation
+- Push notifications for mobile
+- Message search functionality
+- Conversation archiving
+- Block/report users
+- Read receipts with timestamps
+- Message editing/deletion
+
+---
+
+## 11. File Structure
 
 ```
 mini project/
@@ -1832,7 +2389,7 @@ mini project/
 
 ---
 
-## 9. Configuration
+## 12. Configuration
 
 ### Environment-Specific Settings
 
@@ -1939,7 +2496,7 @@ if settings.DEBUG:
 
 ---
 
-## 10. Deployment Guide
+## 13. Deployment Guide
 
 ### Deployment Checklist
 
@@ -2045,7 +2602,7 @@ CMD ["gunicorn", "Student_Resource_Exchange.wsgi:application", \
 
 ---
 
-## 11. Troubleshooting
+## 14. Troubleshooting
 
 ### Common Issues
 
@@ -2164,7 +2721,7 @@ python manage.py createsuperuser
 
 ---
 
-## 12. Development Workflow
+## 15. Development Workflow
 
 ### Git Workflow
 
@@ -2263,7 +2820,36 @@ mypy .
 
 ---
 
-## 15. Recent UI/UX Enhancements (v1.7)
+## 16. Recent UI/UX Enhancements (v1.8)
+
+### Chat System Release (v1.8 - October 20, 2025)
+
+**Real-Time Chat Implementation**:
+- ✅ Complete messaging system between buyers and sellers
+- ✅ Product-context conversations
+- ✅ Unread message tracking and badges
+- ✅ Auto-polling for real-time updates (2s in chat, 15s globally)
+- ✅ Modern light theme UI with message bubbles
+- ✅ Mobile-optimized responsive design
+- ✅ Notification preferences (sound, desktop, email)
+- ✅ Online status indicators
+- ✅ Context processor for global unread count
+
+**Technical Implementation**:
+- New models: `Conversation`, `Message`, `NotificationPreference`
+- AJAX-based polling for real-time feel
+- Context processor for navbar badge updates
+- Mobile menu enhancement with icon and active states
+- Django messages hidden on chat pages to avoid conflicts
+
+**UI/UX Improvements**:
+- Clean message bubbles (indigo for sent, gray for received)
+- Smooth scrolling and animations
+- Pulsing unread badges
+- Touch-friendly mobile interface
+- Conversation list with product context and last message preview
+
+### Navigation Enhancement (v1.7 - October 19, 2025)
 
 ### Global Navigation System
 

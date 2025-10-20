@@ -27,6 +27,7 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('profile/', include('user_profile.urls')),
     path('products/', include('products.urls')),
+    path('chat/', include('chat.urls')),
 ]
 
 # Serve media files in development

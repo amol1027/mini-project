@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div class="max-w-5xl mx-auto px-2 sm:px-4 lg:px-8">
+        <!-- Header -->
+        <div class="mb-4 sm:mb-6 px-2">
+            <a href="{% url 'chat:conversation_list' %}" 
+               class="inline-flex items-center text-indigo-600 hover:text-indigo-700 transition-colors font-medium group">
+                <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Messages
+            </a>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <!-- Chat Header -->
+            <div class="bg-white border-b border-gray-200 p-4 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3 sm:gap-4">
+                        <div class="relative">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-semibold text-lg sm:text-xl border-2 border-white shadow-sm">
+                                {{ other_user.name|default:other_user.email|slice:":1"|upper }}
+                            </div>
+                            <!-- Online indicator -->
+                            <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                                {{ other_user.name|default:other_user.email }}
+                            </h2>
+                            <p class="text-gray-600 text-xs sm:text-sm flex items-center gap-1">
+                                <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ other_user.college_name|default:"Student" }}
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{% url 'products:product_detail' product.id %}" 
+                       class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors border border-gray-200">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        <span class="text-gray-700">View Product</span>
+                    </a>
+                </div>
+
+                <!-- Product Summary -->
+                <div class="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-100">
+                    <div class="flex items-center gap-3">
+                        {% if product.image1 %}
+                        <img src="{{ product.image1.url }}" alt="{{ product.title }}" 
+                             class="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg border border-gray-200 shadow-sm">
+                        {% else %}
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gray-200 rounded-lg flex items-center justify-center border border-gray-300">
+                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-medium text-gray-900 truncate text-sm sm:text-base">{{ product.title }}</h3>
+                            <div class="flex items-center gap-2 text-xs sm:text-sm">
+                                <span class="font-semibold text-indigo-600">₹{{ product.price }}</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">{{ product.get_condition_display }}</span>
+                            </div>
+                        </div>
+                        <a href="{% url 'products:product_detail' product.id %}" 
+                           class="sm:hidden p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div id="messages-container" class="h-[450px] sm:h-[500px] overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4 bg-white scroll-smooth custom-scrollbar" style="scroll-behavior: smooth;">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="flex {% if message.sender.id == user.id %}justify-end{% else %}justify-start{% endif %} animate-fadeIn" data-message-id="{{ message.id }}">
+                        <div class="flex items-end gap-2 max-w-[85%] sm:max-w-[70%]">
+                            {% if message.sender.id != user.id %}
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs sm:text-sm flex-shrink-0 border border-gray-200">
+                                {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="group relative">
+                                <div class="{% if message.sender.id == user.id %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-900 border border-gray-200{% endif %} rounded-2xl px-4 py-2.5 sm:py-3 shadow-sm">
+                                    <p class="text-sm break-words leading-relaxed">{{ message.content }}</p>
+                                    <div class="flex items-center gap-1 mt-1">
+                                        <p class="text-xs {% if message.sender.id == user.id %}text-indigo-200{% else %}text-gray-500{% endif %}">
+                                            {{ message.created_at|date:"g:i A" }}
+                                        </p>
+                                        {% if message.sender.id == user.id %}
+                                        <svg class="w-3 h-3 text-indigo-200" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if message.sender.id == user.id %}
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-medium text-xs sm:text-sm flex-shrink-0 border border-indigo-200">
+                                {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-16 sm:py-20">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                    </div>
+                    <p class="text-gray-600 text-sm sm:text-base font-medium">No messages yet</p>
+                    <p class="text-gray-400 text-xs sm:text-sm mt-1">Start the conversation below!</p>
+                </div>
+                {% endif %}
+                
+                <!-- Scroll to bottom indicator -->
+                <div id="scroll-indicator" class="hidden fixed bottom-28 right-8 z-10">
+                    <button onclick="document.getElementById('messages-container').scrollTo({top: document.getElementById('messages-container').scrollHeight, behavior: 'smooth'})" 
+                            class="p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Message Input -->
+            <div class="border-t border-gray-200 p-3 sm:p-4 bg-white">
+                <form id="message-form" class="flex gap-2 sm:gap-3">
+                    {% csrf_token %}
+                    <input type="text" 
+                           id="message-input" 
+                           name="content"
+                           placeholder="Type your message..." 
+                           class="flex-1 px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm sm:text-base"
+                           required
+                           autocomplete="off">
+                    <button type="submit" 
+                            class="px-4 sm:px-6 py-2.5 sm:py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                            id="send-button">
+                        <span class="hidden sm:inline">Send</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f9fafb;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Fade in animation for messages */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.getElementById('messages-container');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    
+    // Notification preferences
+    let notificationPreferences = {
+        enable_sound: true,
+        enable_desktop: true,
+        enable_email: false
+    };
+    
+    // Load notification preferences
+    fetch('{% url "chat:get_notification_preferences" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                notificationPreferences = data.preferences;
+                console.log('Notification preferences loaded:', notificationPreferences);
+            }
+        })
+        .catch(error => console.error('Error loading preferences:', error));
+    
+    // Get the initial last message ID when page loads (passed from view) and cross-check with DOM
+    const initialLastMessageId = Number('{{ last_message_id|default:0 }}') || 0;
+    const getMaxDomMessageId = () => {
+        let maxId = 0;
+        const nodes = messagesContainer.querySelectorAll('[data-message-id]');
+        nodes.forEach(n => {
+            const id = Number(n.getAttribute('data-message-id')) || 0;
+            if (id > maxId) maxId = id;
+        });
+        return maxId;
+    };
+    const baselineId = Math.max(initialLastMessageId, getMaxDomMessageId());
+    let lastMessageId = baselineId;
+    let lastNotifiedMessageId = baselineId; // prevent duplicate/batch notifications
+    let isPolling = true;
+    let notificationsArmed = false; // will arm after first real new-message batch
+    
+    // Scroll to bottom on load
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    console.log('Chat loaded. Initial last message ID:', initialLastMessageId, 'DOM max id:', getMaxDomMessageId(), 'baselineId:', baselineId);
+    
+    // Real-time polling for new messages
+    async function pollForNewMessages() {
+        if (!isPolling) return;
+        
+        try {
+            const response = await fetch(
+                `{% url "chat:get_new_messages" conversation.id %}?last_message_id=${lastMessageId}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
+            );
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.messages && data.messages.length > 0) {
+                    // Check if user was at bottom before adding messages
+                    const wasAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
+                    
+                    // Add new messages to UI (skip if already present to avoid duplicates)
+                    data.messages.forEach(msg => {
+                        if (msg.is_current_user) {
+                            // This shouldn't happen in polling, but just in case
+                            return;
+                        }
+                        if (document.querySelector(`[data-message-id="${msg.id}"]`)) {
+                            // Already in DOM, skip
+                            return;
+                        }
+                        
+                        const messageHtml = `
+                            <div class="flex justify-start" data-message-id="${msg.id}">
+                                <div class="flex items-end gap-2 max-w-[70%]">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                        ${msg.sender_initial}
+                                    </div>
+                                    <div class="bg-white rounded-2xl px-4 py-3 shadow-md">
+                                        <p class="text-sm break-words">${escapeHtml(msg.content)}</p>
+                                        <p class="text-xs text-gray-500 mt-1">${msg.created_at}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+                        
+                        // Update last message ID
+                        if (msg.id > lastMessageId) {
+                            lastMessageId = msg.id;
+                        }
+                    });
+                    
+                    // Auto-scroll if user was at bottom
+                    if (wasAtBottom) {
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }
+                    
+                    // Show notification only for messages newer than both baseline and last-notified
+                    const eligible = data.messages.filter(m => !m.is_current_user && m.id > baselineId && m.id > lastNotifiedMessageId);
+                    if (eligible.length > 0) {
+                        // Update lastNotifiedMessageId to the newest message we've seen
+                        lastNotifiedMessageId = Math.max.apply(null, eligible.map(m => m.id));
+                        // If not armed yet, arm and skip notifying this first batch
+                        if (!notificationsArmed) {
+                            notificationsArmed = true;
+                        } else {
+                            // Notifications disabled - messages appear silently in the chat
+                            // Users will see new messages when they scroll or check the conversation
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
+        
+        // Poll again after 2 seconds
+        setTimeout(pollForNewMessages, 2000);
+    }
+    
+    // Start polling after initial load
+    setTimeout(pollForNewMessages, 2000);
+    
+    // Stop polling when user leaves the page
+    window.addEventListener('beforeunload', function() {
+        isPolling = false;
+    });
+    
+    // Handle form submission
+    messageForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const content = messageInput.value.trim();
+        if (!content) return;
+        
+        // Disable form while sending
+        sendButton.disabled = true;
+        messageInput.disabled = true;
+        
+        try {
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            const response = await fetch('{% url "chat:send_message" conversation.id %}', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Add message to UI
+                const messageHtml = `
+                    <div class="flex justify-end" data-message-id="${data.message.id}">
+                        <div class="flex items-end gap-2 max-w-[70%]">
+                            <div class="bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-md">
+                                <p class="text-sm break-words">${escapeHtml(data.message.content)}</p>
+                                <p class="text-xs text-indigo-200 mt-1">${data.message.created_at}</p>
+                            </div>
+                            <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                {{ user.name|default:user.email|slice:":1"|upper }}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+                
+                // Smooth scroll to bottom
+                messagesContainer.scrollTo({
+                    top: messagesContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+                
+                // Update last message ID
+                if (data.message.id > lastMessageId) {
+                    lastMessageId = data.message.id;
+                }
+                
+                // Clear input
+                messageInput.value = '';
+            } else {
+                alert('Failed to send message. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        } finally {
+            sendButton.disabled = false;
+            messageInput.disabled = false;
+            messageInput.focus();
+        }
+    });
+    
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+});
+</script>
+{% endblock %}

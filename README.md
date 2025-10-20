@@ -53,6 +53,18 @@ A modern web platform built with Django that enables students to share, exchange
 - ⭐ **Account Stats** - View rating, verification status, and activity
 - 🔄 **Quick Actions** - Easy navigation and profile management
 
+### 💬 Real-Time Chat System
+- 🔴 **Live Conversations** - Real-time messaging between buyers and sellers
+- 🔔 **Smart Notifications** - Unread message badges in navigation (desktop & mobile)
+- 📊 **Conversation Management** - View all conversations with unread counts
+- 👤 **User Presence** - Online status indicators for active users
+- 🎯 **Product Context** - Chat linked to specific product listings
+- 🔕 **Notification Preferences** - Customizable sound, desktop, and email notifications
+- 📱 **Mobile Optimized** - Fully responsive chat interface with touch-friendly controls
+- 🔄 **Auto-Refresh** - Automatic message polling (2s in chat, 15s for unread counts)
+- 🎨 **Modern UI** - Clean light theme with message bubbles and smooth animations
+- 📍 **Active States** - Visual indicators for current chat and navigation context
+
 ### 🎨 Design & UI/UX
 - 📱 **Fully Responsive** - Mobile-first design with adaptive layouts
 - 🌈 **Modern Light Theme** - Clean white cards on light gray backgrounds with indigo accents
@@ -60,9 +72,9 @@ A modern web platform built with Django that enables students to share, exchange
 - 💬 **Global Message System** - Floating top-right notifications with auto-dismiss (5 seconds)
 - 🎯 **Smart Navigation** - Context-aware navbar (logged-in vs guest users)
 - 🍔 **User Dropdown Menu** - Alpine.js-powered navigation with avatar
-- � **Smart Home Button** - Routes logged-in users to products, guests to landing page
+- 🏠 **Smart Home Button** - Routes logged-in users to products, guests to landing page
 - 📄 **Pagination** - Clean pagination UI with 12 products per page
-- �🎯 **Consistent Branding** - Unified design across all pages with global navbar
+- 🎯 **Consistent Branding** - Unified design across all pages with global navbar
 - 🔐 **Login Prompts** - Beautiful gradient CTA boxes for restricted content
 
 ## 🚀 Quick Start
@@ -192,6 +204,14 @@ mini project/
 │   ├── views.py                 # Profile view logic (14-field completion tracking)
 │   ├── templates/               # Profile page with circular progress
 │   └── urls.py                  # Profile URLs
+├── chat/                        # Real-time chat app
+│   ├── models.py                # Conversation, Message, NotificationPreference models
+│   ├── views.py                 # Chat views, messaging, notification settings
+│   ├── urls.py                  # Chat URLs (/conversations/, /chat/<id>/, /settings/)
+│   ├── context_processors.py   # Global unread message count for navbar
+│   ├── templates/               # Chat UI (conversation list, chat detail, settings)
+│   ├── migrations/              # Database migrations (0002_add_notification_preferences)
+│   └── admin.py                 # Django admin configuration
 ├── theme/                       # Tailwind CSS theme
 │   ├── static/                  # Compiled CSS
 │   ├── static_src/              # Source files & config
@@ -299,6 +319,54 @@ python manage.py test
 4. Search and filter users
 5. View user details including college and university info
 
+### Test Real-Time Chat System
+1. **Initiate Chat from Product**:
+   - Login as User A
+   - View any product from User B
+   - Click "Contact Seller" button
+   - Should redirect to chat with User B about that product
+
+2. **View Conversations**:
+   - Navigate to http://127.0.0.1:8000/chat/conversations/
+   - See all active conversations with unread counts
+   - Notice product context and last message preview
+   - Observe online status indicators (green dot for online users)
+
+3. **Send Messages**:
+   - Click on a conversation
+   - Type message in input box and press Enter or click Send
+   - Messages appear instantly with auto-scroll
+   - Your messages appear on right (indigo), received on left (gray)
+
+4. **Real-Time Updates**:
+   - Open same conversation in two different browsers (different users)
+   - Send message from one browser
+   - See message appear in other browser within 2 seconds (auto-polling)
+
+5. **Unread Message Badge**:
+   - Login and navigate anywhere in the site
+   - Notice "Messages" link in navbar shows unread count badge
+   - Badge updates automatically every 15 seconds
+   - Badge pulses when there are unread messages
+
+6. **Mobile Chat Experience**:
+   - Access chat on mobile device or resize browser
+   - Mobile menu shows Messages with icon and unread badge
+   - Chat interface adapts to mobile screen
+   - Touch-friendly message bubbles and input
+
+7. **Notification Settings**:
+   - Navigate to http://127.0.0.1:8000/chat/notification-settings/
+   - Toggle sound notifications on/off
+   - Toggle desktop notifications on/off
+   - Toggle email notifications on/off
+   - Settings save automatically with success message
+
+8. **Chat Privacy**:
+   - Anonymous users cannot access chat
+   - Chat requires login - redirects to login page
+   - Each conversation linked to specific product
+
 ### Test Access Control
 1. Login as regular user
 2. Try accessing http://127.0.0.1:8000/dashboard/
@@ -375,6 +443,37 @@ The `Product` model includes:
   - Methods: `get_primary_image()`, `get_all_images()`, `has_images()`
 - **Status**: `is_available`, `views` (counter)
 - **Relationships**: `seller` (ForeignKey to User)
+- **Timestamps**: `created_at`, `updated_at`
+
+### Chat Models (chat app)
+
+#### Conversation Model
+The `Conversation` model manages chat sessions:
+- **Participants**: `user1`, `user2` (ForeignKeys to User)
+- **Context**: `product` (ForeignKey to Product) - links chat to specific product
+- **Tracking**: `user1_unread_count`, `user2_unread_count` (IntegerFields)
+- **Timestamps**: `created_at`, `updated_at`
+- **Methods**: 
+  - `get_other_user(user)` - Returns the other participant in conversation
+  - `get_unread_count(user)` - Returns unread count for specific user
+  - `mark_as_read(user)` - Resets unread count for user
+  - `get_total_unread_count(user)` (static) - Returns total unread across all conversations
+
+#### Message Model
+The `Message` model stores individual chat messages:
+- **Relationships**: `conversation` (ForeignKey), `sender` (ForeignKey to User)
+- **Content**: `content` (TextField) - the message text
+- **Status**: `is_read` (BooleanField, default=False)
+- **Timestamps**: `timestamp` (DateTimeField, auto_now_add)
+- **Ordering**: Latest messages first (`-timestamp`)
+
+#### NotificationPreference Model
+The `NotificationPreference` model stores user notification settings:
+- **User**: `user` (OneToOneField to User)
+- **Settings**: 
+  - `enable_sound` (BooleanField, default=True)
+  - `enable_desktop` (BooleanField, default=False)
+  - `enable_email` (BooleanField, default=False)
 - **Timestamps**: `created_at`, `updated_at`
 
 See [DOCUMENTATION.md](DOCUMENTATION.md) for complete schema details.
@@ -473,10 +572,17 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 - [x] **Global message system** - Floating top-right notifications with fadeInUp animation
 - [x] **Auto-dismiss messages** - Messages disappear after 5 seconds automatically
 - [x] **Removed duplicate headers** - Single global navbar replaces individual page headers
+- [x] **Real-time chat system** - Messaging between buyers and sellers with product context
+- [x] **Unread message badges** - Visual indicators in navbar (desktop & mobile)
+- [x] **Chat notifications** - Customizable sound, desktop, and email notification preferences
+- [x] **Auto-polling updates** - Messages refresh every 2s, unread counts every 15s
+- [x] **Modern chat UI** - Light theme with message bubbles and smooth animations
+- [x] **Mobile chat optimization** - Touch-friendly interface with responsive design
+- [x] **Conversation management** - View all chats with unread counts and online status
 
 ### 🚧 In Progress
-- [ ] Real-time chat between buyers and sellers
-- [ ] Email notifications for new products
+- [ ] Email notifications backend implementation
+- [ ] Typing indicators functionality
 
 ### 📋 Planned Features
 - [ ] Advanced product filtering (price range, condition, location)
@@ -494,11 +600,12 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 
 ## 📊 Project Status
 
-**Current Version**: 1.7 (Enhanced Navigation & UX)  
-**Status**: ✅ Global navbar, pagination, and improved message system  
-**Last Updated**: October 19, 2025
+**Current Version**: 1.8 (Real-Time Chat & Notifications)  
+**Status**: ✅ Complete chat system with notifications, unread badges, and modern UI  
+**Last Updated**: October 20, 2025
 
 ### Version History
+- **v1.8** (Oct 2025) - Real-time chat system, notification preferences, unread badges, mobile chat optimization
 - **v1.7** (Oct 2025) - Global navbar with Alpine.js, smart navigation, pagination (12/page), global message system
 - **v1.6** (Oct 2025) - Product image upload, CRUD operations, owner controls, My Products dashboard
 - **v1.5** (Oct 2025) - Products marketplace, privacy controls, auto-dismiss messages, UI improvements
@@ -514,6 +621,9 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 - **[UI_UX_IMPROVEMENTS.md](UI_UX_IMPROVEMENTS.md)** - UI/UX changelog and design decisions
 - **[ADMIN_USER_SETUP.md](ADMIN_USER_SETUP.md)** - Admin account setup guide
 - **[PRODUCT_UPLOAD_SYSTEM.md](PRODUCT_UPLOAD_SYSTEM.md)** - Product upload system documentation
+- **[CHAT_SYSTEM_SUMMARY.md](CHAT_SYSTEM_SUMMARY.md)** - Chat system architecture and features
+- **[CHAT_NOTIFICATIONS_GUIDE.md](CHAT_NOTIFICATIONS_GUIDE.md)** - Notification preferences guide
+- **[REALTIME_CHAT_GUIDE.md](REALTIME_CHAT_GUIDE.md)** - Real-time chat implementation details
 - **[QUICK_ACCESS_REFERENCE.md](QUICK_ACCESS_REFERENCE.md)** - Quick reference guide
 
 ## 🎯 User Roles
@@ -541,6 +651,11 @@ For support, email support@sre-platform.com or create an issue in the GitHub rep
 - **Delete products** - Remove your product listings with confirmation
 - **Upload images** - Add up to 5 images per product
 - **Owner controls** - See Edit/Delete buttons on your own products instead of Contact Seller
+- **Chat with sellers** - Initiate conversations from product pages
+- **Manage conversations** - View all chats at `/chat/conversations/`
+- **Real-time messaging** - Send and receive messages with auto-refresh
+- **Notification settings** - Customize chat notification preferences at `/chat/notification-settings/`
+- **Unread tracking** - See unread message counts in navbar
 
 ### Anonymous Users (Not Logged In)
 - Browse products marketplace
