@@ -21,29 +21,29 @@
                 </form>
                 
                 <!-- Category Filter -->
-                <div class="flex gap-2 overflow-x-auto">
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100" style="-webkit-overflow-scrolling: touch;">
                     <a href="{% url 'products:product_list' %}" 
-                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if not selected_category %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 {% if not selected_category %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                         All
                     </a>
                     <a href="?category=books" 
-                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'books' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 {% if selected_category == 'books' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                         📚 Books
                     </a>
                     <a href="?category=notes" 
-                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'notes' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 {% if selected_category == 'notes' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                         📝 Notes
                     </a>
                     <a href="?category=electronics" 
-                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'electronics' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 {% if selected_category == 'electronics' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                         💻 Electronics
                     </a>
                     <a href="?category=stationery" 
-                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'stationery' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 {% if selected_category == 'stationery' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                         ✏️ Stationery
                     </a>
                     <a href="?category=lab_equipment" 
-                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors {% if selected_category == 'lab_equipment' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                       class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 {% if selected_category == 'lab_equipment' %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                         🔬 Lab Equipment
                     </a>
                 </div>

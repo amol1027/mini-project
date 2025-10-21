@@ -3,6 +3,9 @@ from django.core.validators import MinValueValidator
 from registration.models import User
 import os
 
+# Import ProductHistory model
+from .history_models import ProductHistory
+
 def product_image_upload_path(instance, filename):
     """
     Generate upload path for product images
@@ -143,8 +146,15 @@ class Product(models.Model):
         return self.title
     
     def get_primary_image(self):
-        """Return the primary image or None"""
-        return self.image1 if self.image1 else None
+        """Return the primary image or first available image"""
+        # Try to return image1 first, then fallback to any available image
+        if self.image1:
+            return self.image1
+        for i in range(2, 6):
+            img = getattr(self, f'image{i}')
+            if img:
+                return img
+        return None
     
     def get_all_images(self):
         """Return list of all non-null images"""
@@ -170,6 +180,46 @@ class Product(models.Model):
         return (self.listing_type in ['sell', 'both'] and 
                 self.is_available and 
                 not self.is_currently_borrowed)
+    
+    def save(self, *args, **kwargs):
+        """Override save to track product history"""
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Create history entry
+        if is_new:
+            ProductHistory.objects.create(
+                product_id=self.id,
+                title=self.title,
+                description=self.description,
+                category=self.category,
+                condition=self.condition,
+                listing_type=self.listing_type,
+                price=self.price,
+                user=self.seller,
+                action='created',
+                views_at_action=self.views,
+                was_available=self.is_available
+            )
+    
+    def delete(self, *args, **kwargs):
+        """Override delete to track product history"""
+        # Create history entry before deletion
+        ProductHistory.objects.create(
+            product_id=self.id,
+            title=self.title,
+            description=self.description,
+            category=self.category,
+            condition=self.condition,
+            listing_type=self.listing_type,
+            price=self.price,
+            user=self.seller,
+            action='deleted',
+            views_at_action=self.views,
+            was_available=self.is_available,
+            reason=kwargs.pop('reason', None)
+        )
+        super().delete(*args, **kwargs)
 
 
 class BorrowRequest(models.Model):

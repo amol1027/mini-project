@@ -255,27 +255,27 @@
                         <!-- Image 1 -->
                         <div class="image-upload-box">
                             <label for="image1" class="block cursor-pointer">
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 transition-colors relative bg-white group" style="padding-bottom: 100%;">
                                     {% if is_edit and product.image1 %}
-                                    <img src="{{ product.image1.url }}" alt="Current Image 1" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-1">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
-                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    <img src="{{ product.image1.url }}" alt="Current Image 1" class="absolute inset-0 w-full h-full object-cover" id="existing-preview-1" style="display: block;">
+                                    <div class="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center pointer-events-none" style="z-index: 10;">
+                                        <span class="text-black opacity-0 group-hover:opacity-100 text-xs font-medium">Click to Change</span>
                                     </div>
                                     {% else %}
-                                    <div class="text-center" id="preview-container-1">
-                                        <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        <p class="text-xs text-gray-500 mt-2">Primary</p>
+                                    <div class="absolute inset-0 flex items-center justify-center text-center" id="preview-container-1">
+                                        <div>
+                                            <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            <p class="text-xs text-gray-500 mt-2">Primary</p>
+                                        </div>
                                     </div>
                                     {% endif %}
-                                    <img id="preview-1" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
+                                    <img id="preview-1" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover" style="z-index: 5;">
                                 </div>
                             </label>
                             {{ form.image1 }}
-                            {% if is_edit and product.image1 %}
-                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
-                            {% endif %}
+                            {% comment %} Primary image cannot be deleted, only updated {% endcomment %}
                             {% if form.image1.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image1.errors.0 }}</p>
                             {% endif %}
@@ -284,26 +284,33 @@
                         <!-- Image 2 -->
                         <div class="image-upload-box">
                             <label for="image2" class="block cursor-pointer">
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 transition-colors relative bg-white group" style="padding-bottom: 100%;">
                                     {% if is_edit and product.image2 %}
-                                    <img src="{{ product.image2.url }}" alt="Current Image 2" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-2">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
-                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    <img src="{{ product.image2.url }}" alt="Current Image 2" class="absolute inset-0 w-full h-full object-cover" id="existing-preview-2" style="display: block;">
+                                    <div class="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center pointer-events-none" style="z-index: 10;">
+                                        <span class="text-black opacity-0 group-hover:opacity-100 text-xs font-medium">Click to Change</span>
                                     </div>
                                     {% else %}
-                                    <div class="text-center" id="preview-container-2">
-                                        <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        <p class="text-xs text-gray-500 mt-2">Image 2</p>
+                                    <div class="absolute inset-0 flex items-center justify-center text-center" id="preview-container-2">
+                                        <div>
+                                            <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            <p class="text-xs text-gray-500 mt-2">Image 2</p>
+                                        </div>
                                     </div>
                                     {% endif %}
-                                    <img id="preview-2" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
+                                    <img id="preview-2" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover" style="z-index: 5;">
                                 </div>
                             </label>
                             {{ form.image2 }}
                             {% if is_edit and product.image2 %}
-                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            <div class="mt-2 flex items-center justify-center">
+                                <label class="flex items-center cursor-pointer text-xs text-red-600 hover:text-red-700">
+                                    <input type="checkbox" name="delete_image2" value="1" class="mr-1 rounded border-gray-300">
+                                    <span>Delete this image</span>
+                                </label>
+                            </div>
                             {% endif %}
                             {% if form.image2.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image2.errors.0 }}</p>
@@ -313,26 +320,33 @@
                         <!-- Image 3 -->
                         <div class="image-upload-box">
                             <label for="image3" class="block cursor-pointer">
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 transition-colors relative bg-white group" style="padding-bottom: 100%;">
                                     {% if is_edit and product.image3 %}
-                                    <img src="{{ product.image3.url }}" alt="Current Image 3" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-3">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
-                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    <img src="{{ product.image3.url }}" alt="Current Image 3" class="absolute inset-0 w-full h-full object-cover" id="existing-preview-3" style="display: block;">
+                                    <div class="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center pointer-events-none" style="z-index: 10;">
+                                        <span class="text-black opacity-0 group-hover:opacity-100 text-xs font-medium">Click to Change</span>
                                     </div>
                                     {% else %}
-                                    <div class="text-center" id="preview-container-3">
-                                        <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        <p class="text-xs text-gray-500 mt-2">Image 3</p>
+                                    <div class="absolute inset-0 flex items-center justify-center text-center" id="preview-container-3">
+                                        <div>
+                                            <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            <p class="text-xs text-gray-500 mt-2">Image 3</p>
+                                        </div>
                                     </div>
                                     {% endif %}
-                                    <img id="preview-3" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
+                                    <img id="preview-3" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover" style="z-index: 5;">
                                 </div>
                             </label>
                             {{ form.image3 }}
                             {% if is_edit and product.image3 %}
-                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            <div class="mt-2 flex items-center justify-center">
+                                <label class="flex items-center cursor-pointer text-xs text-red-600 hover:text-red-700">
+                                    <input type="checkbox" name="delete_image3" value="1" class="mr-1 rounded border-gray-300">
+                                    <span>Delete this image</span>
+                                </label>
+                            </div>
                             {% endif %}
                             {% if form.image3.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image3.errors.0 }}</p>
@@ -342,26 +356,33 @@
                         <!-- Image 4 -->
                         <div class="image-upload-box">
                             <label for="image4" class="block cursor-pointer">
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 transition-colors relative bg-white group" style="padding-bottom: 100%;">
                                     {% if is_edit and product.image4 %}
-                                    <img src="{{ product.image4.url }}" alt="Current Image 4" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-4">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
-                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    <img src="{{ product.image4.url }}" alt="Current Image 4" class="absolute inset-0 w-full h-full object-cover" id="existing-preview-4" style="display: block;">
+                                    <div class="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center pointer-events-none" style="z-index: 10;">
+                                        <span class="text-black opacity-0 group-hover:opacity-100 text-xs font-medium">Click to Change</span>
                                     </div>
                                     {% else %}
-                                    <div class="text-center" id="preview-container-4">
-                                        <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        <p class="text-xs text-gray-500 mt-2">Image 4</p>
+                                    <div class="absolute inset-0 flex items-center justify-center text-center" id="preview-container-4">
+                                        <div>
+                                            <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            <p class="text-xs text-gray-500 mt-2">Image 4</p>
+                                        </div>
                                     </div>
                                     {% endif %}
-                                    <img id="preview-4" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
+                                    <img id="preview-4" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover" style="z-index: 5;">
                                 </div>
                             </label>
                             {{ form.image4 }}
                             {% if is_edit and product.image4 %}
-                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            <div class="mt-2 flex items-center justify-center">
+                                <label class="flex items-center cursor-pointer text-xs text-red-600 hover:text-red-700">
+                                    <input type="checkbox" name="delete_image4" value="1" class="mr-1 rounded border-gray-300">
+                                    <span>Delete this image</span>
+                                </label>
+                            </div>
                             {% endif %}
                             {% if form.image4.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image4.errors.0 }}</p>
@@ -371,26 +392,33 @@
                         <!-- Image 5 -->
                         <div class="image-upload-box">
                             <label for="image5" class="block cursor-pointer">
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 transition-colors relative aspect-square flex items-center justify-center group">
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 transition-colors relative bg-white group" style="padding-bottom: 100%;">
                                     {% if is_edit and product.image5 %}
-                                    <img src="{{ product.image5.url }}" alt="Current Image 5" class="absolute inset-0 w-full h-full object-cover rounded-lg" id="existing-preview-5">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
-                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Change Image</span>
+                                    <img src="{{ product.image5.url }}" alt="Current Image 5" class="absolute inset-0 w-full h-full object-cover" id="existing-preview-5" style="display: block;">
+                                    <div class="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center pointer-events-none" style="z-index: 10;">
+                                        <span class="text-black opacity-0 group-hover:opacity-100 text-xs font-medium">Click to Change</span>
                                     </div>
                                     {% else %}
-                                    <div class="text-center" id="preview-container-5">
-                                        <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        <p class="text-xs text-gray-500 mt-2">Image 5</p>
+                                    <div class="absolute inset-0 flex items-center justify-center text-center" id="preview-container-5">
+                                        <div>
+                                            <svg class="w-12 h-12 mx-auto text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            <p class="text-xs text-gray-500 mt-2">Image 5</p>
+                                        </div>
                                     </div>
                                     {% endif %}
-                                    <img id="preview-5" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
+                                    <img id="preview-5" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover" style="z-index: 5;">
                                 </div>
                             </label>
                             {{ form.image5 }}
                             {% if is_edit and product.image5 %}
-                            <p class="text-xs text-gray-500 mt-1 text-center">Current image</p>
+                            <div class="mt-2 flex items-center justify-center">
+                                <label class="flex items-center cursor-pointer text-xs text-red-600 hover:text-red-700">
+                                    <input type="checkbox" name="delete_image5" value="1" class="mr-1 rounded border-gray-300">
+                                    <span>Delete this image</span>
+                                </label>
+                            </div>
                             {% endif %}
                             {% if form.image5.errors %}
                             <p class="mt-1 text-xs text-red-600">{{ form.image5.errors.0 }}</p>
@@ -453,27 +481,80 @@ document.addEventListener('DOMContentLoaded', function() {
         const preview = document.getElementById(`preview-${i}`);
         const container = document.getElementById(`preview-container-${i}`);
         const existingPreview = document.getElementById(`existing-preview-${i}`);
+        const deleteCheckbox = document.querySelector(`input[name="delete_image${i}"]`);
         
         if (input) {
+            // Make the input visible but styled to be hidden
+            input.style.display = 'none';
+            
+            // For image1 (primary), keep it required. For others, remove required in edit mode
+            if (i !== 1) {
+                input.removeAttribute('required');
+            }
+            
+            // Handle delete checkbox changes (only for images 2-5, not primary image)
+            if (deleteCheckbox && i !== 1) {
+                deleteCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        // When deleting, ensure no validation on this field
+                        input.removeAttribute('required');
+                        input.value = '';
+                    }
+                });
+            }
+            
             input.addEventListener('change', function(e) {
                 const file = e.target.files[0];
+                console.log(`Image ${i} selected:`, file?.name);
+                
                 if (file) {
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Please select a valid image file (JPG, PNG, or GIF)');
+                        input.value = '';
+                        return;
+                    }
+                    
+                    // Validate file size (5MB max)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Image size must be less than 5MB');
+                        input.value = '';
+                        return;
+                    }
+                    
                     const reader = new FileReader();
                     reader.onload = function(event) {
                         preview.src = event.target.result;
                         preview.classList.remove('hidden');
+                        preview.style.display = 'block';
                         
                         // Hide the placeholder container
                         if (container) {
-                            container.classList.add('hidden');
+                            container.style.display = 'none';
                         }
                         
                         // Hide existing image if in edit mode
                         if (existingPreview) {
-                            existingPreview.classList.add('hidden');
+                            existingPreview.style.display = 'none';
                         }
+                        
+                        console.log(`Image ${i} preview updated`);
                     };
                     reader.readAsDataURL(file);
+                } else {
+                    // If no file selected, reset preview
+                    preview.src = '';
+                    preview.classList.add('hidden');
+                    preview.style.display = 'none';
+                    
+                    if (container) {
+                        container.style.display = 'block';
+                    }
+                    
+                    if (existingPreview) {
+                        existingPreview.style.display = 'block';
+                    }
                 }
             });
         }

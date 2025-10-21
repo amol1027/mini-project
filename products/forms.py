@@ -132,7 +132,7 @@ class ProductForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Make image1 required
+        # Always require primary image (image1) in both create and edit modes
         self.fields['image1'].required = True
         
         # Set default for is_available to True
@@ -149,6 +149,9 @@ class ProductForm(forms.ModelForm):
     def clean_image1(self):
         """Validate primary image"""
         image = self.cleaned_data.get('image1')
+        
+        # For new products, image1 is required (handled by field.required)
+        # For editing, image1 can be None if being deleted
         
         if image:
             # Only validate if it's a newly uploaded file (has content_type attribute)

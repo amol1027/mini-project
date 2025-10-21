@@ -10,13 +10,22 @@
                 <h1 class="text-3xl font-bold text-gray-900">My Products</h1>
                 <p class="mt-2 text-gray-600">Manage your listed products</p>
             </div>
-            <a href="{% url 'products:product_create' %}" 
-               class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Upload Product
-            </a>
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'products:product_history' %}" 
+                   class="px-4 py-2 bg-white text-gray-700 border border-gray-300 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    History
+                </a>
+                <a href="{% url 'products:product_create' %}" 
+                   class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Upload Product
+                </a>
+            </div>
         </div>
 
         <!-- Stats Cards -->
@@ -83,29 +92,29 @@
         <!-- Products List -->
         {% if products %}
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 Product
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 Category
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 Price
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 Views
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 Status
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 Posted
                             </th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                 Actions
                             </th>
                         </tr>
@@ -113,13 +122,13 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for product in products %}
                         <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="h-12 w-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                                    <div class="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
                                         {% if product.get_primary_image %}
-                                        <img class="h-12 w-12 rounded-lg object-cover" src="{{ product.get_primary_image.url }}" alt="{{ product.title }}">
+                                        <img class="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-cover" src="{{ product.get_primary_image.url }}" alt="{{ product.title }}">
                                         {% else %}
-                                        <span class="text-2xl">
+                                        <span class="text-xl sm:text-2xl">
                                             {% if product.category == 'books' %}📚
                                             {% elif product.category == 'notes' %}📝
                                             {% elif product.category == 'electronics' %}💻
@@ -129,18 +138,18 @@
                                         </span>
                                         {% endif %}
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ product.title|truncatechars:40 }}</div>
-                                        <div class="text-sm text-gray-500">{{ product.condition|title }}</div>
+                                    <div class="ml-2 sm:ml-4">
+                                        <div class="text-xs sm:text-sm font-medium text-gray-900">{{ product.title|truncatechars:30 }}</div>
+                                        <div class="text-xs text-gray-500">{{ product.condition|title }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
                                     {{ product.get_category_display }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                                 {% if product.listing_type == 'lend' %}
                                     <span class="text-green-600">₹{{ product.borrow_price_per_day }}/day</span>
                                 {% elif product.listing_type == 'both' %}
@@ -150,10 +159,10 @@
                                     {% if product.price %}₹{{ product.price }}{% else %}-{% endif %}
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                                 👁️ {{ product.views }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 {% if product.is_available %}
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     Available
@@ -164,10 +173,10 @@
                                 </span>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                                 {{ product.created_at|date:"M d, Y" }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{% url 'products:product_detail' product.id %}" 
                                        class="text-indigo-600 hover:text-indigo-900"
@@ -199,6 +208,101 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            {% if paginator.num_pages > 1 %}
+            <div class="px-3 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
+                <!-- Mobile Pagination -->
+                <div class="flex sm:hidden items-center justify-between mb-2">
+                    <span class="text-xs text-gray-700">
+                        Page {{ products.number }} of {{ paginator.num_pages }}
+                    </span>
+                    <span class="text-xs text-gray-500">
+                        {{ products.start_index }}-{{ products.end_index }} of {{ paginator.count }}
+                    </span>
+                </div>
+                <div class="flex sm:hidden items-center justify-center space-x-2">
+                    {% if products.has_previous %}
+                        <a href="?page=1" class="px-2 py-1 rounded border border-gray-300 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            ⟨⟨
+                        </a>
+                        <a href="?page={{ products.previous_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Prev
+                        </a>
+                    {% else %}
+                        <span class="px-2 py-1 rounded border border-gray-200 text-xs font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                            ⟨⟨
+                        </span>
+                        <span class="px-3 py-1 rounded border border-gray-200 text-xs font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                            Prev
+                        </span>
+                    {% endif %}
+                    
+                    {% if products.has_next %}
+                        <a href="?page={{ products.next_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                        <a href="?page={{ paginator.num_pages }}" class="px-2 py-1 rounded border border-gray-300 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            ⟩⟩
+                        </a>
+                    {% else %}
+                        <span class="px-3 py-1 rounded border border-gray-200 text-xs font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                            Next
+                        </span>
+                        <span class="px-2 py-1 rounded border border-gray-200 text-xs font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                            ⟩⟩
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Desktop Pagination -->
+                <div class="hidden sm:flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Showing <span class="font-medium">{{ products.start_index }}</span>
+                        to <span class="font-medium">{{ products.end_index }}</span>
+                        of <span class="font-medium">{{ paginator.count }}</span> products
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        {% if products.has_previous %}
+                            <a href="?page=1" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                First
+                            </a>
+                            <a href="?page={{ products.previous_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                Previous
+                            </a>
+                        {% else %}
+                            <span class="px-3 py-1 rounded border border-gray-200 text-sm font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                                First
+                            </span>
+                            <span class="px-3 py-1 rounded border border-gray-200 text-sm font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                                Previous
+                            </span>
+                        {% endif %}
+                        
+                        <span class="px-3 py-1 text-sm font-medium text-gray-700 bg-indigo-50 border border-indigo-200 rounded">
+                            Page {{ products.number }} of {{ paginator.num_pages }}
+                        </span>
+                        
+                        {% if products.has_next %}
+                            <a href="?page={{ products.next_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                Next
+                            </a>
+                            <a href="?page={{ paginator.num_pages }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                Last
+                            </a>
+                        {% else %}
+                            <span class="px-3 py-1 rounded border border-gray-200 text-sm font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                                Next
+                            </span>
+                            <span class="px-3 py-1 rounded border border-gray-200 text-sm font-medium text-gray-400 bg-gray-50 cursor-not-allowed">
+                                Last
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% else %}
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
