@@ -49,6 +49,8 @@ A modern web platform built with Django that enables students to share, exchange
 - 📈 **Transaction History** - Complete record of all lending activities
 - 💰 **Cost Calculator** - Real-time calculation of total rental costs
 - 🎯 **User-Friendly UI** - Intuitive interfaces for both borrowers and lenders
+- ⏰ **Automated Overdue Detection** - Celery background task marks overdue items hourly
+- 🔔 **Return Reminders** - Automated reminders sent 2 days before due date
 
 ### �👨‍💼 Admin Dashboard
 - 📊 **User Statistics** - Real-time metrics for total, verified, and recent users
@@ -91,6 +93,15 @@ A modern web platform built with Django that enables students to share, exchange
 - 🎯 **Consistent Branding** - Unified design across all pages with global navbar
 - 🔐 **Login Prompts** - Beautiful gradient CTA boxes for restricted content
 
+### ⚙️ Background Tasks & Automation
+- 🔄 **Celery Integration** - Asynchronous task processing with Redis
+- ⏰ **Scheduled Tasks** - Automated periodic tasks using Celery Beat
+- 📊 **Overdue Detection** - Hourly checks for overdue borrowed items
+- 🔔 **Smart Reminders** - Daily reminders for upcoming return dates
+- 📈 **Task Monitoring** - Database-backed scheduler with admin interface
+- 🛡️ **Login Decorators** - Custom decorators for cleaner authentication code
+- 🔒 **Permission Decorators** - Role-based access control decorators
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -124,17 +135,29 @@ A modern web platform built with Django that enables students to share, exchange
    pip install -r requirements.txt
    ```
 
-4. **Install Tailwind CSS dependencies**
+4. **Install and start Redis** (Required for Celery)
+   ```bash
+   # Windows (using WSL)
+   wsl -e sudo service redis-server start
+   
+   # Or using Docker
+   docker run -d -p 6379:6379 redis:latest
+   
+   # Verify Redis is running
+   redis-cli ping  # Should return PONG
+   ```
+
+5. **Install Tailwind CSS dependencies**
    ```bash
    python manage.py tailwind install
    ```
 
-5. **Run database migrations**
+6. **Run database migrations**
    ```bash
    python manage.py migrate
    ```
 
-6. **Build Tailwind CSS**
+7. **Build Tailwind CSS**
    ```bash
    python manage.py tailwind build
    ```
@@ -149,9 +172,21 @@ A modern web platform built with Django that enables students to share, exchange
    python manage.py create_sample_products
    ```
 
-10. **Run the development server**
+10. **Run the development server** (You need 3 terminals)
+   
+   **Terminal 1 - Django Server:**
    ```bash
    python manage.py runserver
+   ```
+   
+   **Terminal 2 - Celery Worker:**
+   ```bash
+   celery -A Student_Resource_Exchange worker --loglevel=info --pool=solo
+   ```
+   
+   **Terminal 3 - Celery Beat (Scheduler):**
+   ```bash
+   celery -A Student_Resource_Exchange beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
    ```
 
 11. **Access the application**
@@ -186,7 +221,9 @@ For admin users who log in through the regular login page:
 ```
 mini project/
 ├── Student_Resource_Exchange/    # Main project settings
-│   ├── settings.py              # Django settings
+│   ├── settings.py              # Django settings (includes Celery config)
+│   ├── celery.py                # Celery app configuration
+│   ├── __init__.py              # Imports Celery app
 │   ├── urls.py                  # Main URL configuration
 │   └── wsgi.py                  # WSGI configuration
 ├── landing/                     # Landing page app
@@ -205,7 +242,9 @@ mini project/
 │   └── templates/               # Login page
 ├── products/                    # Products marketplace app
 │   ├── models.py                # Product & BorrowRequest models (with borrow/lend fields)
-│   ├── views.py                 # Product & borrow/lend management views
+│   ├── views.py                 # Product & borrow/lend management views (with decorators)
+│   ├── decorators.py            # Custom decorators (@login_required, @owner_required, etc.)
+│   ├── tasks.py                 # Celery background tasks (overdue detection, reminders)
 │   ├── forms.py                 # ProductForm & BorrowRequestForm
 │   ├── urls.py                  # Product & borrow/lend URLs
 │   ├── admin.py                 # Django admin configuration (Product & BorrowRequest)
@@ -251,12 +290,38 @@ mini project/
 │   └── templates/base.html      # Global base template with navbar & messages
 ├── db.sqlite3                   # SQLite database
 ├── manage.py                    # Django management script
+├── requirements.txt             # Python dependencies (includes Celery, Redis)
 ├── README.md                    # This file
 ├── DOCUMENTATION.md             # Detailed technical documentation
+├── BORROW_LEND_FEATURE.md       # Borrow/lend system documentation
+├── CELERY_SETUP.md              # Celery and background tasks guide
+├── CELERY_QUICKSTART.md         # Quick reference for Celery setup
 └── UI_UX_IMPROVEMENTS.md        # UI/UX changelog
 ```
 
-## 🛠️ Development
+## � Documentation
+
+### Quick Reference Guides
+- **[CELERY_QUICKSTART.md](CELERY_QUICKSTART.md)** - Quick start guide for Celery and background tasks
+- **[QUICK_ACCESS_REFERENCE.md](QUICK_ACCESS_REFERENCE.md)** - Project navigation and quick access guide
+
+### Feature Documentation
+- **[BORROW_LEND_FEATURE.md](BORROW_LEND_FEATURE.md)** - Complete borrow/lend system documentation
+- **[CHAT_SYSTEM_SUMMARY.md](CHAT_SYSTEM_SUMMARY.md)** - Real-time chat system overview
+- **[PRODUCT_UPLOAD_SYSTEM.md](PRODUCT_UPLOAD_SYSTEM.md)** - Product listing and management guide
+
+### Setup & Configuration
+- **[CELERY_SETUP.md](CELERY_SETUP.md)** - Comprehensive Celery setup and configuration guide
+- **[ADMIN_USER_SETUP.md](ADMIN_USER_SETUP.md)** - Admin user creation and permissions
+- **[CHAT_NOTIFICATIONS_GUIDE.md](CHAT_NOTIFICATIONS_GUIDE.md)** - Chat notification setup
+
+### Technical Documentation
+- **[DOCUMENTATION.md](DOCUMENTATION.md)** - Detailed technical documentation
+- **[CHAT_ARCHITECTURE.md](CHAT_ARCHITECTURE.md)** - Chat system architecture
+- **[UI_UX_IMPROVEMENTS.md](UI_UX_IMPROVEMENTS.md)** - UI/UX changelog and improvements
+- **[CHANGELOG.md](CHANGELOG.md)** - Project changelog
+
+## �🛠️ Development
 
 ### Running Tailwind in Watch Mode
 

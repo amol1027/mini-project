@@ -4,6 +4,7 @@ from django.db.models import F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Product
 from .forms import ProductForm
+from .decorators import login_required, owner_required, lender_required, borrower_required, request_participant_required
 
 def product_list(request):
     """
@@ -71,15 +72,11 @@ def product_detail(request, product_id):
     
     return render(request, 'products/product_detail.html', context)
 
+@login_required
 def product_create(request):
     """
     Create a new product listing
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to upload a product.')
-        return redirect('login:login')
-    
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         
@@ -106,21 +103,13 @@ def product_create(request):
     
     return render(request, 'products/product_form.html', context)
 
+@login_required
+@owner_required
 def product_edit(request, product_id):
     """
     Edit an existing product
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to edit products.')
-        return redirect('login:login')
-    
     product = get_object_or_404(Product, id=product_id)
-    
-    # Check if user is the owner
-    if product.seller.id != request.session['user_id']:
-        messages.error(request, 'You can only edit your own products.')
-        return redirect('products:product_detail', product_id=product_id)
     
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
@@ -143,21 +132,13 @@ def product_edit(request, product_id):
     
     return render(request, 'products/product_form.html', context)
 
+@login_required
+@owner_required
 def product_delete(request, product_id):
     """
     Delete a product (soft delete by marking as unavailable)
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to delete products.')
-        return redirect('login:login')
-    
     product = get_object_or_404(Product, id=product_id)
-    
-    # Check if user is the owner
-    if product.seller.id != request.session['user_id']:
-        messages.error(request, 'You can only delete your own products.')
-        return redirect('products:product_detail', product_id=product_id)
     
     if request.method == 'POST':
         product_title = product.title
@@ -171,15 +152,11 @@ def product_delete(request, product_id):
     
     return render(request, 'products/product_confirm_delete.html', context)
 
+@login_required
 def my_products(request):
     """
     Display user's own products
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to view your products.')
-        return redirect('login:login')
-    
     from registration.models import User
     user = User.objects.get(id=request.session['user_id'])
     
@@ -189,7 +166,10 @@ def my_products(request):
     total_products = products.count()
     available_count = products.filter(is_available=True).count()
     total_views = sum(product.views for product in products)
-    avg_price = sum(product.price for product in products) // total_products if total_products > 0 else 0
+    
+    # Calculate average price (only for products with a price)
+    prices = [product.price for product in products if product.price is not None]
+    avg_price = sum(prices) // len(prices) if prices else 0
     
     context = {
         'products': products,
@@ -205,15 +185,11 @@ def my_products(request):
 
 # ========== Borrow/Lend Views ==========
 
+@login_required
 def borrow_request_create(request, product_id):
     """
     Create a borrow request for a product
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to borrow items.')
-        return redirect('login:login')
-    
     product = get_object_or_404(Product, id=product_id)
     
     # Check if product is available for borrowing
@@ -281,24 +257,16 @@ def borrow_request_create(request, product_id):
     return render(request, 'products/borrow_request_create.html', context)
 
 
+@login_required
+@request_participant_required
 def borrow_request_detail(request, request_id):
     """
     View details of a borrow request
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to view borrow requests.')
-        return redirect('login:login')
-    
     from .models import BorrowRequest
     borrow_request = get_object_or_404(BorrowRequest, id=request_id)
     
-    # Check if user is involved in this request
     user_id = request.session['user_id']
-    if borrow_request.borrower.id != user_id and borrow_request.lender.id != user_id:
-        messages.error(request, 'You do not have permission to view this request.')
-        return redirect('products:product_list')
-    
     is_lender = borrow_request.lender.id == user_id
     is_borrower = borrow_request.borrower.id == user_id
     
@@ -311,25 +279,17 @@ def borrow_request_detail(request, request_id):
     return render(request, 'products/borrow_request_detail.html', context)
 
 
+@login_required
+@lender_required
 def borrow_request_approve(request, request_id):
     """
     Approve a borrow request (lender only)
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login first.')
-        return redirect('login:login')
-    
     from .models import BorrowRequest
     from datetime import date, timedelta
     from django.utils import timezone
     
     borrow_request = get_object_or_404(BorrowRequest, id=request_id)
-    
-    # Check if user is the lender
-    if borrow_request.lender.id != request.session['user_id']:
-        messages.error(request, 'Only the lender can approve this request.')
-        return redirect('products:borrow_request_detail', request_id=request_id)
     
     # Check if request is pending
     if borrow_request.status != 'pending':
@@ -362,23 +322,15 @@ def borrow_request_approve(request, request_id):
     return render(request, 'products/borrow_request_approve.html', context)
 
 
+@login_required
+@lender_required
 def borrow_request_reject(request, request_id):
     """
     Reject a borrow request (lender only)
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login first.')
-        return redirect('login:login')
-    
     from .models import BorrowRequest
     
     borrow_request = get_object_or_404(BorrowRequest, id=request_id)
-    
-    # Check if user is the lender
-    if borrow_request.lender.id != request.session['user_id']:
-        messages.error(request, 'Only the lender can reject this request.')
-        return redirect('products:borrow_request_detail', request_id=request_id)
     
     # Check if request is pending
     if borrow_request.status != 'pending':
@@ -403,24 +355,16 @@ def borrow_request_reject(request, request_id):
     return render(request, 'products/borrow_request_reject.html', context)
 
 
+@login_required
+@lender_required
 def borrow_request_return(request, request_id):
     """
     Mark an item as returned (lender confirms return)
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login first.')
-        return redirect('login:login')
-    
     from .models import BorrowRequest
     from datetime import date
     
     borrow_request = get_object_or_404(BorrowRequest, id=request_id)
-    
-    # Check if user is the lender
-    if borrow_request.lender.id != request.session['user_id']:
-        messages.error(request, 'Only the lender can mark items as returned.')
-        return redirect('products:borrow_request_detail', request_id=request_id)
     
     # Check if request is active
     if borrow_request.status != 'active':
@@ -448,23 +392,15 @@ def borrow_request_return(request, request_id):
     return render(request, 'products/borrow_request_return.html', context)
 
 
+@login_required
+@borrower_required
 def borrow_request_cancel(request, request_id):
     """
     Cancel a borrow request (borrower only, for pending requests)
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login first.')
-        return redirect('login:login')
-    
     from .models import BorrowRequest
     
     borrow_request = get_object_or_404(BorrowRequest, id=request_id)
-    
-    # Check if user is the borrower
-    if borrow_request.borrower.id != request.session['user_id']:
-        messages.error(request, 'Only the borrower can cancel this request.')
-        return redirect('products:borrow_request_detail', request_id=request_id)
     
     # Check if request is pending
     if borrow_request.status != 'pending':
@@ -485,15 +421,11 @@ def borrow_request_cancel(request, request_id):
     return render(request, 'products/borrow_request_cancel.html', context)
 
 
+@login_required
 def my_borrow_requests(request):
     """
     View all borrow requests made by the user (as borrower)
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to view your borrow requests.')
-        return redirect('login:login')
-    
     from registration.models import User
     from .models import BorrowRequest
     
@@ -509,15 +441,11 @@ def my_borrow_requests(request):
     return render(request, 'products/my_borrow_requests.html', context)
 
 
+@login_required
 def my_lend_requests(request):
     """
     View all borrow requests received by the user (as lender)
     """
-    # Check if user is logged in
-    if 'user_id' not in request.session:
-        messages.error(request, 'Please login to view lend requests.')
-        return redirect('login:login')
-    
     from registration.models import User
     from .models import BorrowRequest
     
