@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',  # Celery beat scheduler for periodic tasks
     'tailwind',
     'theme',
     'landing',
@@ -137,3 +138,46 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TAILWIND_APP_NAME = 'theme'
 NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+
+
+# ========== Celery Configuration ==========
+# Celery broker (message queue) - using Redis
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+
+# Celery result backend (stores task results)
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+# Celery task serialization format
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Celery timezone (should match Django timezone)
+CELERY_TIMEZONE = TIME_ZONE
+
+# Celery beat scheduler (for periodic tasks)
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Task result expiration time (results stored for 1 day)
+CELERY_RESULT_EXPIRES = 86400
+
+# Task time limit (tasks killed after 10 minutes)
+CELERY_TASK_TIME_LIMIT = 600
+
+# Task soft time limit (warning sent after 9 minutes)
+CELERY_TASK_SOFT_TIME_LIMIT = 540
+
+# Acknowledge tasks after execution (prevents message loss)
+CELERY_TASK_ACKS_LATE = True
+
+# Prefetch only 1 task at a time (prevents worker overload)
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# Maximum tasks per worker before restart (prevents memory leaks)
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+
+# Log level for Celery
+CELERY_WORKER_LOG_LEVEL = 'INFO'
+
+# Task result extended mode (stores more details)
+CELERY_RESULT_EXTENDED = True
