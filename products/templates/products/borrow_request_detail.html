@@ -1,13 +1,34 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-8">
+<div class="min-h-screen bg-gray-50 py-4 sm:py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Back Button -->
+        <div class="mb-4">
+            {% if user.id == borrow_request.borrower.id %}
+            <a href="{% url 'products:my_borrow_requests' %}" 
+               class="inline-flex items-center text-sm sm:text-base text-indigo-600 hover:text-indigo-700 transition-colors font-medium group">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to My Requests
+            </a>
+            {% else %}
+            <a href="{% url 'products:my_lend_requests' %}" 
+               class="inline-flex items-center text-sm sm:text-base text-indigo-600 hover:text-indigo-700 transition-colors font-medium group">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Lending Dashboard
+            </a>
+            {% endif %}
+        </div>
         
         <!-- Header -->
         <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Borrow Request Details</h1>
-            <p class="mt-2 text-gray-600">Request #{{ borrow_request.id }}</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Borrow Request Details</h1>
+            <p class="mt-2 text-sm sm:text-base text-gray-600">Request #{{ borrow_request.id }}</p>
         </div>
 
         <!-- Status Banner -->

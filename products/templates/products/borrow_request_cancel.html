@@ -1,10 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-8">
+<div class="min-h-screen bg-gray-50 py-4 sm:py-8">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{% url 'products:borrow_request_detail' borrow_request.id %}" 
+               class="inline-flex items-center text-sm sm:text-base text-indigo-600 hover:text-indigo-700 transition-colors font-medium group">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Request Details
+            </a>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sm:p-8">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

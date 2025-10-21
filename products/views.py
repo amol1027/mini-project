@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.db.models import F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Product
+from .history_models import ProductHistory
 from .forms import ProductForm
 from .decorators import login_required, owner_required, lender_required, borrower_required, request_participant_required
 
@@ -112,14 +113,54 @@ def product_edit(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        
-        if form.is_valid():
-            form.save()
-            messages.success(request, f'Product "{product.title}" updated successfully!')
-            return redirect('products:product_detail', product_id=product.id)
-        else:
-            messages.error(request, 'Please correct the errors below.')
+        try:
+            # Handle image deletions first (but NOT image1 - primary image cannot be deleted)
+            import os
+            deleted_images = []
+            
+            # Start from image2 (i=2) since image1 is the primary and cannot be deleted
+            for i in range(2, 6):
+                delete_field = f'delete_image{i}'
+                # Check if delete checkbox was checked
+                if delete_field in request.POST and request.POST.get(delete_field):
+                    image_field = f'image{i}'
+                    image = getattr(product, image_field, None)
+                    
+                    if image:
+                        # Delete the physical file
+                        try:
+                            if hasattr(image, 'path'):
+                                file_path = image.path
+                                if os.path.isfile(file_path):
+                                    os.remove(file_path)
+                                    print(f"Deleted file: {file_path}")
+                        except Exception as e:
+                            print(f"Error deleting image file for {image_field}: {e}")
+                        
+                        # Clear the field in the database
+                        setattr(product, image_field, None)
+                        deleted_images.append(image_field)
+            
+            # Save the product if any images were deleted
+            if deleted_images:
+                product.save(update_fields=[f'image{i}' for i in range(2, 6)] + ['updated_at'])
+                messages.info(request, f'Deleted {len(deleted_images)} image(s)')
+            
+            # Now process the form with updated product instance
+            form = ProductForm(request.POST, request.FILES, instance=product)
+            
+            if form.is_valid():
+                updated_product = form.save()
+                messages.success(request, f'Product "{updated_product.title}" updated successfully!')
+                return redirect('products:product_detail', product_id=updated_product.id)
+            else:
+                messages.error(request, 'Please correct the errors below.')
+                
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+            print(f"Error in product_edit: {e}")
+            import traceback
+            traceback.print_exc()
     else:
         form = ProductForm(instance=product)
     
@@ -162,7 +203,7 @@ def my_products(request):
     
     products = Product.objects.filter(seller=user).order_by('-created_at')
     
-    # Calculate statistics
+    # Calculate statistics (before pagination)
     total_products = products.count()
     available_count = products.filter(is_available=True).count()
     total_views = sum(product.views for product in products)
@@ -171,13 +212,25 @@ def my_products(request):
     prices = [product.price for product in products if product.price is not None]
     avg_price = sum(prices) // len(prices) if prices else 0
     
+    # Pagination - 12 products per page
+    paginator = Paginator(products, 12)
+    page = request.GET.get('page')
+    
+    try:
+        products_page = paginator.page(page)
+    except PageNotAnInteger:
+        products_page = paginator.page(1)
+    except EmptyPage:
+        products_page = paginator.page(paginator.num_pages)
+    
     context = {
-        'products': products,
+        'products': products_page,
         'user': user,
         'total_products': total_products,
         'available_count': available_count,
         'total_views': total_views,
         'avg_price': avg_price,
+        'paginator': paginator,
     }
     
     return render(request, 'products/my_products.html', context)
@@ -433,9 +486,21 @@ def my_borrow_requests(request):
     
     borrow_requests = BorrowRequest.objects.filter(borrower=user).order_by('-created_at')
     
+    # Pagination - 12 requests per page
+    paginator = Paginator(borrow_requests, 12)
+    page = request.GET.get('page')
+    
+    try:
+        requests_page = paginator.page(page)
+    except PageNotAnInteger:
+        requests_page = paginator.page(1)
+    except EmptyPage:
+        requests_page = paginator.page(paginator.num_pages)
+    
     context = {
-        'borrow_requests': borrow_requests,
+        'borrow_requests': requests_page,
         'user': user,
+        'paginator': paginator,
     }
     
     return render(request, 'products/my_borrow_requests.html', context)
@@ -453,18 +518,76 @@ def my_lend_requests(request):
     
     lend_requests = BorrowRequest.objects.filter(lender=user).order_by('-created_at')
     
-    # Separate by status
+    # Separate by status (before pagination for stats)
     pending_requests = lend_requests.filter(status='pending')
     active_requests = lend_requests.filter(status='active')
     completed_requests = lend_requests.filter(status__in=['returned', 'rejected', 'cancelled'])
     
+    # Pagination - 12 requests per page
+    paginator = Paginator(lend_requests, 12)
+    page = request.GET.get('page')
+    
+    try:
+        requests_page = paginator.page(page)
+    except PageNotAnInteger:
+        requests_page = paginator.page(1)
+    except EmptyPage:
+        requests_page = paginator.page(paginator.num_pages)
+    
     context = {
-        'lend_requests': lend_requests,
+        'lend_requests': requests_page,
         'pending_requests': pending_requests,
         'active_requests': active_requests,
         'completed_requests': completed_requests,
         'user': user,
+        'paginator': paginator,
     }
     
     return render(request, 'products/my_lend_requests.html', context)
+
+
+@login_required
+def product_history(request):
+    """
+    View product listing and deletion history for the current user
+    """
+    from registration.models import User
+    
+    user = User.objects.get(id=request.session['user_id'])
+    
+    # Get all history for this user
+    history = ProductHistory.objects.filter(user=user).order_by('-action_date')
+    
+    # Filter by action if provided
+    action_filter = request.GET.get('action')
+    if action_filter and action_filter in ['created', 'updated', 'deleted', 'sold']:
+        history = history.filter(action=action_filter)
+    
+    # Pagination - 20 items per page
+    paginator = Paginator(history, 20)
+    page = request.GET.get('page')
+    
+    try:
+        history_page = paginator.page(page)
+    except PageNotAnInteger:
+        history_page = paginator.page(1)
+    except EmptyPage:
+        history_page = paginator.page(paginator.num_pages)
+    
+    # Calculate statistics
+    total_created = ProductHistory.objects.filter(user=user, action='created').count()
+    total_deleted = ProductHistory.objects.filter(user=user, action='deleted').count()
+    total_updated = ProductHistory.objects.filter(user=user, action='updated').count()
+    
+    context = {
+        'history': history_page,
+        'user': user,
+        'total_created': total_created,
+        'total_deleted': total_deleted,
+        'total_updated': total_updated,
+        'action_filter': action_filter,
+        'paginator': paginator,
+    }
+    
+    return render(request, 'products/product_history.html', context)
 

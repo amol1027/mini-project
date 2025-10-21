@@ -45,7 +45,7 @@
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 mb-4">
                             <div>
                                 <p class="text-xs text-gray-500">Duration</p>
                                 <p class="text-sm font-medium text-gray-900">{{ request.requested_days }} days</p>
@@ -66,7 +66,7 @@
                             {% endif %}
                         </div>
 
-                        <div class="flex gap-3">
+                        <div class="flex flex-wrap gap-2 sm:gap-3">
                             <a href="{% url 'products:borrow_request_detail' request.id %}" 
                                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                                 View Details
@@ -90,6 +90,41 @@
             </div>
             {% endfor %}
         </div>
+        
+        <!-- Pagination -->
+        {% if paginator.num_pages > 1 %}
+        <div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Showing <span class="font-medium">{{ borrow_requests.start_index }}</span>
+                to <span class="font-medium">{{ borrow_requests.end_index }}</span>
+                of <span class="font-medium">{{ paginator.count }}</span> requests
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if borrow_requests.has_previous %}
+                    <a href="?page=1" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        First
+                    </a>
+                    <a href="?page={{ borrow_requests.previous_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                <span class="px-3 py-1 text-sm text-gray-700">
+                    Page {{ borrow_requests.number }} of {{ paginator.num_pages }}
+                </span>
+                
+                {% if borrow_requests.has_next %}
+                    <a href="?page={{ borrow_requests.next_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </a>
+                    <a href="?page={{ paginator.num_pages }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Last
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         {% else %}
         <!-- Empty State -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">

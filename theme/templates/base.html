@@ -72,24 +72,86 @@
         a, button {
             transition: all 0.2s ease-in-out;
         }
+        
+        /* Custom Scrollbar Styles */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c7d2fe;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a5b4fc;
+        }
+        
+        /* Scrollbar for tables and horizontal scroll areas */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 3px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+        
+        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        /* Prevent text selection on navigation buttons */
+        .pagination-btn {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        /* Fix mobile viewport height issues */
+        @supports (-webkit-touch-callout: none) {
+            .min-h-screen {
+                min-height: -webkit-fill-available;
+            }
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            button, a {
+                min-height: 44px;
+                min-width: 44px;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-white text-gray-800 antialiased">
 
     <!-- Main Navigation Bar -->
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" x-data="{ mobileMenuOpen: false, userMenuOpen: false }">
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" x-data="{ mobileMenuOpen: false, userMenuOpen: false }" @click.away="userMenuOpen = false">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 
                 <!-- Logo and Brand -->
                 <div class="flex items-center">
                     <a href="{% if request.session.user_id %}{% url 'products:product_list' %}{% else %}{% url 'landing:landing' %}{% endif %}" class="flex items-center gap-2 group">
-                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform flex-shrink-0">
                             <span class="text-white font-bold text-xl">SRE</span>
                         </div>
-                        <span class="text-xl font-bold text-gray-900 hidden sm:block">Student Resource Exchange</span>
-                        <span class="text-xl font-bold text-gray-900 sm:hidden">SRE</span>
+                        <span class="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">Student Resource Exchange</span>
+                        <span class="text-base font-bold text-gray-900 sm:hidden truncate">SRE</span>
                     </a>
                 </div>
 
@@ -236,10 +298,12 @@
 
                     <!-- Mobile Menu Button -->
                     <button @click="mobileMenuOpen = !mobileMenuOpen" 
-                            class="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            aria-label="Toggle menu"
+                            :aria-expanded="mobileMenuOpen">
+                        <svg class="w-6 h-6 transition-transform duration-200" :class="{'rotate-90': mobileMenuOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                            <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            <path x-show="mobileMenuOpen" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
@@ -256,7 +320,7 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 transform translate-y-0"
              x-transition:leave-end="opacity-0 transform -translate-y-2"
-             class="md:hidden border-t border-gray-200 bg-white">
+             class="md:hidden border-t border-gray-200 bg-white shadow-lg">
             <div class="px-4 py-3 space-y-1">
                 
                 {% if request.session.user_id %}

@@ -236,6 +236,41 @@
             </div>
         </div>
         {% endif %}
+        
+        <!-- Pagination -->
+        {% if paginator.num_pages > 1 %}
+        <div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Showing <span class="font-medium">{{ lend_requests.start_index }}</span>
+                to <span class="font-medium">{{ lend_requests.end_index }}</span>
+                of <span class="font-medium">{{ paginator.count }}</span> requests
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if lend_requests.has_previous %}
+                    <a href="?page=1" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        First
+                    </a>
+                    <a href="?page={{ lend_requests.previous_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                <span class="px-3 py-1 text-sm text-gray-700">
+                    Page {{ lend_requests.number }} of {{ paginator.num_pages }}
+                </span>
+                
+                {% if lend_requests.has_next %}
+                    <a href="?page={{ lend_requests.next_page_number }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </a>
+                    <a href="?page={{ paginator.num_pages }}" class="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Last
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Empty State -->
         {% if not lend_requests %}

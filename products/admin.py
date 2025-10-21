@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Product, BorrowRequest
+from .history_models import ProductHistory
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -48,6 +49,30 @@ class BorrowRequestAdmin(admin.ModelAdmin):
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(ProductHistory)
+class ProductHistoryAdmin(admin.ModelAdmin):
+    list_display = ['product_id', 'title', 'user', 'action', 'action_date', 'price', 'views_at_action']
+    list_filter = ['action', 'action_date', 'category', 'listing_type']
+    search_fields = ['title', 'description', 'user__email', 'user__name']
+    readonly_fields = ['product_id', 'title', 'description', 'category', 'condition', 
+                      'listing_type', 'price', 'user', 'action', 'action_date', 
+                      'reason', 'views_at_action', 'was_available']
+    date_hierarchy = 'action_date'
+    
+    fieldsets = (
+        ('Product Information', {
+            'fields': ('product_id', 'title', 'description', 'category', 'condition', 'listing_type')
+        }),
+        ('Action Details', {
+            'fields': ('user', 'action', 'action_date', 'reason')
+        }),
+        ('Product Stats at Action', {
+            'fields': ('price', 'views_at_action', 'was_available'),
             'classes': ('collapse',)
         }),
     )

@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q, Max, Count, Prefetch
 from django.utils import timezone
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Conversation, Message, NotificationPreference
 from registration.models import User
 from products.models import Product
@@ -42,9 +43,21 @@ def conversation_list(request):
             'unread_count': unread_count
         })
     
+    # Pagination - 12 conversations per page
+    paginator = Paginator(conversation_data, 12)
+    page = request.GET.get('page')
+    
+    try:
+        conversations_page = paginator.page(page)
+    except PageNotAnInteger:
+        conversations_page = paginator.page(1)
+    except EmptyPage:
+        conversations_page = paginator.page(paginator.num_pages)
+    
     context = {
-        'conversations': conversation_data,
-        'user': user
+        'conversations': conversations_page,
+        'user': user,
+        'paginator': paginator,
     }
     return render(request, 'chat/conversation_list.html', context)
 
