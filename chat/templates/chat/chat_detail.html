@@ -1,37 +1,37 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-4 sm:py-8">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-3 sm:py-6 md:py-8">
     <div class="max-w-5xl mx-auto px-2 sm:px-4 lg:px-8">
         <!-- Header -->
-        <div class="mb-4 sm:mb-6 px-2">
+        <div class="mb-3 sm:mb-4 md:mb-6 px-2">
             <a href="{% url 'chat:conversation_list' %}" 
-               class="inline-flex items-center text-indigo-600 hover:text-indigo-700 transition-colors font-medium group">
-                <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               class="inline-flex items-center text-indigo-600 hover:text-indigo-700 transition-all font-semibold group text-sm sm:text-base">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
                 Back to Messages
             </a>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
             <!-- Chat Header -->
-            <div class="bg-white border-b border-gray-200 p-4 sm:p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3 sm:gap-4">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-indigo-700 p-3 sm:p-4 md:p-6">
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                    <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
                         <div class="relative">
-                            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-semibold text-lg sm:text-xl border-2 border-white shadow-sm">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-600 font-bold text-base sm:text-lg md:text-xl shadow-lg ring-4 ring-white/20">
                                 {{ other_user.name|default:other_user.email|slice:":1"|upper }}
                             </div>
                             <!-- Online indicator -->
-                            <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full"></div>
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 bg-green-400 border-2 sm:border-3 border-white rounded-full animate-pulse shadow-md"></div>
                         </div>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                            <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
                                 {{ other_user.name|default:other_user.email }}
                             </h2>
-                            <p class="text-gray-600 text-xs sm:text-sm flex items-center gap-1">
-                                <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <p class="text-indigo-100 text-xs sm:text-sm flex items-center gap-1">
+                                <svg class="w-3 h-3 text-indigo-200" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                                 </svg>
                                 {{ other_user.college_name|default:"Student" }}
@@ -39,39 +39,45 @@
                         </div>
                     </div>
                     <a href="{% url 'products:product_detail' product.id %}" 
-                       class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors border border-gray-200">
-                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-semibold transition-all border border-white/20 text-white shadow-lg hover:shadow-xl">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                         </svg>
-                        <span class="text-gray-700">View Product</span>
+                        <span>View Product</span>
                     </a>
                 </div>
 
                 <!-- Product Summary -->
-                <div class="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-100">
-                    <div class="flex items-center gap-3">
+                <div class="p-3 sm:p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg">
+                    <div class="flex items-center gap-2 sm:gap-3">
                         {% if product.image1 %}
                         <img src="{{ product.image1.url }}" alt="{{ product.title }}" 
-                             class="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg border border-gray-200 shadow-sm">
+                             class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-cover rounded-xl border-2 border-white/30 shadow-md">
                         {% else %}
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gray-200 rounded-lg flex items-center justify-center border border-gray-300">
-                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center border-2 border-white/30">
+                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white/70" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
                             </svg>
                         </div>
                         {% endif %}
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-medium text-gray-900 truncate text-sm sm:text-base">{{ product.title }}</h3>
+                            <h3 class="font-bold text-white truncate text-sm sm:text-base">{{ product.title }}</h3>
                             <div class="flex items-center gap-2 text-xs sm:text-sm">
-                                <span class="font-semibold text-indigo-600">₹{{ product.price }}</span>
-                                <span class="text-gray-400">•</span>
-                                <span class="text-gray-600">{{ product.get_condition_display }}</span>
+                                {% if product.price %}
+                                    <span class="font-bold text-yellow-300">₹{{ product.price }}</span>
+                                {% elif product.borrow_price_per_day %}
+                                    <span class="font-bold text-green-300">₹{{ product.borrow_price_per_day }}/day</span>
+                                {% else %}
+                                    <span class="text-white/50">-</span>
+                                {% endif %}
+                                <span class="text-white/50">•</span>
+                                <span class="text-indigo-100">{{ product.get_condition_display }}</span>
                             </div>
                         </div>
                         <a href="{% url 'products:product_detail' product.id %}" 
-                           class="sm:hidden p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="sm:hidden p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all border border-white/20">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                         </a>
@@ -80,26 +86,26 @@
             </div>
 
             <!-- Messages Container -->
-            <div id="messages-container" class="h-[400px] sm:h-[450px] md:h-[500px] overflow-y-auto p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4 bg-white scroll-smooth custom-scrollbar" style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
+            <div id="messages-container" class="h-[400px] sm:h-[450px] md:h-[500px] overflow-y-auto p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4 bg-gradient-to-br from-gray-50 to-white scroll-smooth custom-scrollbar" style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
                 {% if messages %}
                     {% for message in messages %}
                     <div class="flex {% if message.sender.id == user.id %}justify-end{% else %}justify-start{% endif %} animate-fadeIn" data-message-id="{{ message.id }}">
                         <div class="flex items-end gap-1.5 sm:gap-2 max-w-[90%] sm:max-w-[85%] md:max-w-[70%]">
                             {% if message.sender.id != user.id %}
-                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs sm:text-sm flex-shrink-0 border border-gray-200">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-purple-100">
                                 {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
                             </div>
                             {% endif %}
                             
                             <div class="group relative">
-                                <div class="{% if message.sender.id == user.id %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-900 border border-gray-200{% endif %} rounded-2xl px-4 py-2.5 sm:py-3 shadow-sm">
-                                    <p class="text-sm break-words leading-relaxed">{{ message.content }}</p>
-                                    <div class="flex items-center gap-1 mt-1">
-                                        <p class="text-xs {% if message.sender.id == user.id %}text-indigo-200{% else %}text-gray-500{% endif %}">
+                                <div class="{% if message.sender.id == user.id %}bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg{% else %}bg-white text-gray-900 border border-gray-200 shadow-md{% endif %} rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 transition-all hover:shadow-xl">
+                                    <p class="text-sm sm:text-base break-words leading-relaxed">{{ message.content }}</p>
+                                    <div class="flex items-center gap-1 mt-1.5">
+                                        <p class="text-xs {% if message.sender.id == user.id %}text-indigo-100{% else %}text-gray-500{% endif %}">
                                             {{ message.created_at|date:"g:i A" }}
                                         </p>
                                         {% if message.sender.id == user.id %}
-                                        <svg class="w-3 h-3 text-indigo-200" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg class="w-3 h-3 text-indigo-100" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                         </svg>
                                         {% endif %}
@@ -108,7 +114,7 @@
                             </div>
                             
                             {% if message.sender.id == user.id %}
-                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-medium text-xs sm:text-sm flex-shrink-0 border border-indigo-200">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-indigo-100">
                                 {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
                             </div>
                             {% endif %}
@@ -116,21 +122,21 @@
                     </div>
                     {% endfor %}
                 {% else %}
-                <div class="text-center py-16 sm:py-20">
-                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                        <svg class="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center py-16 sm:py-20 md:py-24">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center shadow-lg">
+                        <svg class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
                     </div>
-                    <p class="text-gray-600 text-sm sm:text-base font-medium">No messages yet</p>
-                    <p class="text-gray-400 text-xs sm:text-sm mt-1">Start the conversation below!</p>
+                    <p class="text-gray-900 text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2">No messages yet</p>
+                    <p class="text-gray-500 text-xs sm:text-sm">Start the conversation and send your first message!</p>
                 </div>
                 {% endif %}
                 
                 <!-- Scroll to bottom indicator -->
-                <div id="scroll-indicator" class="hidden fixed bottom-28 right-8 z-10">
+                <div id="scroll-indicator" class="hidden fixed bottom-28 sm:bottom-32 right-4 sm:right-8 z-10">
                     <button onclick="document.getElementById('messages-container').scrollTo({top: document.getElementById('messages-container').scrollHeight, behavior: 'smooth'})" 
-                            class="p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-all">
+                            class="p-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 ring-4 ring-indigo-100">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
                         </svg>
@@ -139,19 +145,18 @@
             </div>
 
             <!-- Message Input -->
-            <div class="border-t border-gray-200 p-2 sm:p-3 md:p-4 bg-white sticky bottom-0">
-                <form id="message-form" class="flex gap-2">
+            <div class="border-t border-gray-200 p-3 sm:p-4 md:p-5 bg-gradient-to-r from-gray-50 to-white sticky bottom-0 shadow-lg">
+                <form id="message-form" class="flex gap-2 sm:gap-3">
                     {% csrf_token %}
                     <input type="text" 
                            id="message-input" 
                            name="content"
                            placeholder="Type your message..." 
-                           class="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm sm:text-base"
+                           class="flex-1 min-w-0 px-3 py-2.5 sm:px-4 sm:py-3 md:py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm sm:text-base shadow-sm hover:shadow-md bg-white"
                            autocomplete="off"
-                           required
-                           autocomplete="off">
+                           required>
                     <button type="submit" 
-                            class="px-4 sm:px-6 py-2.5 sm:py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                            class="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                             id="send-button">
                         <span class="hidden sm:inline">Send</span>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,17 +172,45 @@
 <style>
 /* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f9fafb;
+    background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+    border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: linear-gradient(to bottom, #c7d2fe, #a5b4fc);
     border-radius: 10px;
+    transition: background 0.3s ease;
 }
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #a5b4fc, #818cf8);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Message input focus effect */
+#message-input:focus {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;

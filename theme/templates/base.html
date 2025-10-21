@@ -245,7 +245,14 @@
                                 <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                                 </svg>
-                                Lending Dashboard
+                                <span class="flex items-center gap-2">
+                                    Lending Dashboard
+                                    {% if pending_borrow_requests_count > 0 %}
+                                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full animate-pulse" id="nav-pending-requests-badge">
+                                        {{ pending_borrow_requests_count }}
+                                    </span>
+                                    {% endif %}
+                                </span>
                             </a>
                             
                             <a href="{% url 'chat:conversation_list' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
@@ -370,9 +377,19 @@
                 </a>
                 
                 <a href="{% url 'products:my_lend_requests' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                   class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
                    @click="mobileMenuOpen = false">
-                    Lending Dashboard
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        Lending Dashboard
+                    </span>
+                    {% if pending_borrow_requests_count > 0 %}
+                    <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full animate-pulse mobile-pending-requests-badge">
+                        {{ pending_borrow_requests_count }}
+                    </span>
+                    {% endif %}
                 </a>
                 
                 <a href="{% url 'chat:conversation_list' %}" 
@@ -665,6 +682,47 @@
         
         // Start polling after 5 seconds
         setTimeout(updateUnreadCount, 5000);
+    });
+    </script>
+    
+    <!-- Pending Borrow Requests Count Polling -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Poll for pending borrow requests count every 20 seconds
+        async function updatePendingRequestsCount() {
+            try {
+                const response = await fetch('{% url "products:get_pending_requests_count" %}');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const badges = document.querySelectorAll('#nav-pending-requests-badge, .mobile-pending-requests-badge');
+                        
+                        if (data.pending_count > 0) {
+                            badges.forEach(badge => {
+                                if (badge) {
+                                    badge.textContent = data.pending_count;
+                                    badge.style.display = 'inline-flex';
+                                }
+                            });
+                        } else {
+                            badges.forEach(badge => {
+                                if (badge) {
+                                    badge.style.display = 'none';
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating pending requests count:', error);
+            }
+            
+            // Schedule next update
+            setTimeout(updatePendingRequestsCount, 20000);
+        }
+        
+        // Start polling after 7 seconds (slightly offset from messages)
+        setTimeout(updatePendingRequestsCount, 7000);
     });
     </script>
     {% endif %}

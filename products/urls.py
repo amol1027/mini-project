@@ -21,4 +21,7 @@ urlpatterns = [
     path('borrow-requests/<int:request_id>/cancel/', views.borrow_request_cancel, name='borrow_request_cancel'),
     path('my-borrow-requests/', views.my_borrow_requests, name='my_borrow_requests'),
     path('my-lend-requests/', views.my_lend_requests, name='my_lend_requests'),
+    
+    # AJAX endpoints
+    path('pending-requests-count/', views.get_pending_requests_count, name='get_pending_requests_count'),
 ]

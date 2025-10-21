@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import F
+from django.db import transaction
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Product
+from django.http import JsonResponse
+from .models import Product, BorrowRequest
 from .history_models import ProductHistory
 from .forms import ProductForm
 from .decorators import login_required, owner_required, lender_required, borrower_required, request_participant_required
@@ -113,54 +115,73 @@ def product_edit(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
     if request.method == 'POST':
-        try:
-            # Handle image deletions first (but NOT image1 - primary image cannot be deleted)
-            import os
-            deleted_images = []
-            
-            # Start from image2 (i=2) since image1 is the primary and cannot be deleted
-            for i in range(2, 6):
-                delete_field = f'delete_image{i}'
-                # Check if delete checkbox was checked
-                if delete_field in request.POST and request.POST.get(delete_field):
-                    image_field = f'image{i}'
-                    image = getattr(product, image_field, None)
-                    
-                    if image:
-                        # Delete the physical file
-                        try:
-                            if hasattr(image, 'path'):
-                                file_path = image.path
-                                if os.path.isfile(file_path):
-                                    os.remove(file_path)
-                                    print(f"Deleted file: {file_path}")
-                        except Exception as e:
-                            print(f"Error deleting image file for {image_field}: {e}")
-                        
-                        # Clear the field in the database
-                        setattr(product, image_field, None)
-                        deleted_images.append(image_field)
-            
-            # Save the product if any images were deleted
-            if deleted_images:
-                product.save(update_fields=[f'image{i}' for i in range(2, 6)] + ['updated_at'])
-                messages.info(request, f'Deleted {len(deleted_images)} image(s)')
-            
-            # Now process the form with updated product instance
-            form = ProductForm(request.POST, request.FILES, instance=product)
-            
-            if form.is_valid():
-                updated_product = form.save()
-                messages.success(request, f'Product "{updated_product.title}" updated successfully!')
-                return redirect('products:product_detail', product_id=updated_product.id)
-            else:
-                messages.error(request, 'Please correct the errors below.')
+        import os
+        
+        # First, validate the form before making any changes
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        
+        if form.is_valid():
+            try:
+                # Collect file paths to delete and image fields to update
+                files_to_delete = []
+                deleted_image_fields = []
                 
-        except Exception as e:
-            messages.error(request, f'An error occurred: {str(e)}')
-            print(f"Error in product_edit: {e}")
-            import traceback
-            traceback.print_exc()
+                # Check which images are marked for deletion (image2-5 only, not primary image1)
+                for i in range(2, 6):
+                    delete_field = f'delete_image{i}'
+                    if delete_field in request.POST and request.POST.get(delete_field):
+                        image_field = f'image{i}'
+                        image = getattr(product, image_field, None)
+                        
+                        if image:
+                            # Collect the file path for later deletion
+                            try:
+                                if hasattr(image, 'path') and os.path.isfile(image.path):
+                                    files_to_delete.append(image.path)
+                            except Exception as e:
+                                print(f"Error checking file path for {image_field}: {e}")
+                            
+                            # Mark field for clearing
+                            setattr(product, image_field, None)
+                            deleted_image_fields.append(image_field)
+                
+                # Use transaction to ensure atomicity
+                with transaction.atomic():
+                    # Save the form (updates all modified fields)
+                    updated_product = form.save()
+                    
+                    # If images were deleted, save those fields explicitly
+                    if deleted_image_fields:
+                        product.save(update_fields=deleted_image_fields + ['updated_at'])
+                    
+                    # Schedule file deletion only after successful DB commit
+                    if files_to_delete:
+                        def delete_files():
+                            for file_path in files_to_delete:
+                                try:
+                                    if os.path.isfile(file_path):
+                                        os.remove(file_path)
+                                        print(f"Deleted file: {file_path}")
+                                except Exception as e:
+                                    print(f"Error deleting file {file_path}: {e}")
+                        
+                        transaction.on_commit(delete_files)
+                
+                # Success message
+                if deleted_image_fields:
+                    messages.success(request, f'Product "{updated_product.title}" updated successfully! Deleted {len(deleted_image_fields)} image(s).')
+                else:
+                    messages.success(request, f'Product "{updated_product.title}" updated successfully!')
+                
+                return redirect('products:product_detail', product_id=updated_product.id)
+                
+            except Exception as e:
+                messages.error(request, f'An error occurred while updating the product: {str(e)}')
+                print(f"Error in product_edit transaction: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = ProductForm(instance=product)
     
@@ -590,4 +611,22 @@ def product_history(request):
     }
     
     return render(request, 'products/product_history.html', context)
+
+
+@login_required
+def get_pending_requests_count(request):
+    """
+    AJAX endpoint to get pending borrow requests count
+    Used by navbar polling script
+    """
+    from registration.models import User
+    from django.http import JsonResponse
+    
+    user = User.objects.get(id=request.session['user_id'])
+    count = BorrowRequest.objects.filter(lender=user, status='pending').count()
+    
+    return JsonResponse({
+        'success': True,
+        'pending_count': count
+    })
 

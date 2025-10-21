@@ -317,7 +317,7 @@ def notification_settings(request):
                 'message': 'Notification preferences updated successfully'
             })
         
-        return redirect('chat:notification_settings')
+        return redirect('products:product_list')
     
     context = {
         'user': user,
