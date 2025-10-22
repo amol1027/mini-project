@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 // Show success message and redirect
                 showSuccessMessage();
-                // Redirect to home after 1.5 seconds
+                // Redirect to home after 0.5 seconds
                 setTimeout(() => {
                     window.location.href = '{% url "products:product_list" %}';
                 }, 500);

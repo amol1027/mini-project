@@ -210,27 +210,6 @@
 #message-input:focus {
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
-
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
-}
-
-/* Fade in animation for messages */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fadeIn {
-    animation: fadeIn 0.3s ease-out;
-}
 </style>
 
 <script>
@@ -254,9 +233,19 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 notificationPreferences = data.preferences;
                 console.log('Notification preferences loaded:', notificationPreferences);
+                
+                // Request notification permission if desktop notifications are enabled
+                if (notificationPreferences.enable_desktop && 'Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission().then(permission => {
+                        console.log('Notification permission:', permission);
+                    });
+                }
             }
         })
-        .catch(error => console.error('Error loading preferences:', error));
+        .catch(error => {
+            console.error('Error loading preferences:', error);
+            // Keep default preferences if loading fails
+        });
     
     // Get the initial last message ID when page loads (passed from view) and cross-check with DOM
     const initialLastMessageId = Number('{{ last_message_id|default:0 }}') || 0;
@@ -349,11 +338,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (eligible.length > 0) {
                         // Update lastNotifiedMessageId to the newest message we've seen
                         lastNotifiedMessageId = Math.max.apply(null, eligible.map(m => m.id));
-                        // If not armed yet, arm and skip notifying this first batch
+                        // Arm notifications after first poll completes, then notify immediately on subsequent messages
                         if (!notificationsArmed) {
                             notificationsArmed = true;
+                            console.log('Notifications armed. Future messages will trigger notifications.');
                         } else {
                             // Dispatch notifications based on user preferences
+                            console.log('Dispatching notifications for', eligible.length, 'messages');
                             dispatchNotifications(eligible);
                         }
                     }
@@ -380,9 +371,12 @@ document.addEventListener('DOMContentLoaded', function() {
             ? latestMessage.content.substring(0, 97) + '...'
             : latestMessage.content;
         
+        console.log('Notification preferences:', notificationPreferences);
+        
         // Desktop notification
         if (notificationPreferences.enable_desktop && 'Notification' in window) {
             try {
+                console.log('Desktop notifications enabled. Permission:', Notification.permission);
                 // Check current permission
                 if (Notification.permission === 'granted') {
                     const notification = new Notification(notificationTitle, {
@@ -392,8 +386,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         tag: 'chat-message-{{ conversation.id }}', // Replace notifications for same conversation
                         renotify: false,
                         requireInteraction: false,
-                        silent: notificationPreferences.enable_sound ? false : true
+                        silent: !notificationPreferences.enable_sound // Silent if sound is disabled
                     });
+                    
+                    console.log('Desktop notification created');
                     
                     // Close notification after 5 seconds
                     setTimeout(() => notification.close(), 5000);
@@ -406,15 +402,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                 } else if (Notification.permission === 'default') {
                     // Request permission
+                    console.log('Requesting notification permission...');
                     const permission = await Notification.requestPermission();
+                    console.log('Permission result:', permission);
                     if (permission === 'granted') {
                         // Retry notification after permission granted
                         dispatchNotifications(messages);
                     }
+                } else {
+                    console.log('Notification permission denied');
                 }
             } catch (error) {
                 console.error('Desktop notification error:', error);
             }
+        } else {
+            console.log('Desktop notifications disabled or not supported');
         }
         
         // Sound notification

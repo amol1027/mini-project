@@ -1,0 +1,35 @@
+**Core Technologies:**
+
+*   **Python:** A high-level, interpreted programming language known for its readability and versatility, widely used for web development, data analysis, AI, and more.
+
+**Backend (Python/Django):**
+
+*   **Django (>=5.2.7):** A high-level Python web framework that encourages rapid development and clean, pragmatic design.
+*   **Pillow (>=10.0.0):** The friendly PIL (Python Imaging Library) fork, adding image processing capabilities to Python.
+*   **Celery (>=5.3.4):** An asynchronous task queue/job queue based on distributed message passing, used for executing tasks outside the main application flow.
+*   **Redis (>=5.0.0):** An open-source, in-memory data structure store used as a database, cache, and message broker.
+*   **django-celery-beat (>=2.5.0):** A Django application that provides a periodic task scheduler for Celery, managed through the Django admin interface.
+
+**Standard Python Libraries:**
+
+*   **datetime:** Provides classes for working with dates and times.
+*   **os:** Provides a way of using operating system dependent functionality.
+*   **traceback:** Provides a standard interface to extract, format and print stack traces of Python programs.
+
+**Frontend (CSS/JavaScript Tooling):**
+
+*   **Tailwind CSS:** A utility-first CSS framework for rapidly building custom user interfaces directly in your markup.
+*   **DaisyUI:** A free and open-source Tailwind CSS component library that provides pre-built, customizable UI components.
+*   **PostCSS:** A tool for transforming CSS with JavaScript plugins, used to automate CSS operations like autoprefixing and minification.
+*   **cross-env:** A utility that provides a single command to set environment variables across different operating systems.
+*   **rimraf:** A command-line tool for recursively deleting files and folders, similar to `rm -rf`.
+*   **npm:** The default package manager for the JavaScript runtime environment Node.js, used for installing and managing frontend dependencies.
+
+**Database:**
+
+*   **SQLite:** A C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine. It's often used for local development or small-scale applications.
+
+**Other Tools:**
+
+*   **ngrok:** A tool that creates a secure, inspectable tunnel to your localhost, exposing local servers to the internet. Useful for testing webhooks or sharing local development with others.
+*   **GitHub:** A web-based platform for version control and collaboration, primarily used for hosting source code and managing software development projects using Git.

@@ -637,7 +637,7 @@
     {% if request.session.user_id %}
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Poll for unread message count every 15 seconds
+        // Poll for unread message count every 5 seconds for faster updates
         async function updateUnreadCount() {
             try {
                 const response = await fetch('{% url "chat:get_unread_count" %}');
@@ -676,12 +676,12 @@
                 console.error('Error updating unread count:', error);
             }
             
-            // Schedule next update
-            setTimeout(updateUnreadCount, 15000);
+            // Schedule next update in 5 seconds
+            setTimeout(updateUnreadCount, 5000);
         }
         
-        // Start polling after 5 seconds
-        setTimeout(updateUnreadCount, 5000);
+        // Start polling immediately
+        setTimeout(updateUnreadCount, 1000);
     });
     </script>
     

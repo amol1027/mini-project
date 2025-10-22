@@ -4,6 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import Q, Max, Count, Prefetch
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.cache import cache
 from .models import Conversation, Message, NotificationPreference
 from registration.models import User
 from products.models import Product
@@ -83,9 +84,14 @@ def chat_detail(request, conversation_id):
         return redirect('chat:conversation_list')
     
     # Mark all messages from the other party as read
-    Message.objects.filter(
+    updated_count = Message.objects.filter(
         conversation=conversation
     ).exclude(sender=user).filter(is_read=False).update(is_read=True)
+    
+    # Invalidate cache for current user's unread count if messages were marked as read
+    if updated_count > 0:
+        cache_key = f'unread_message_count_{user.id}'
+        cache.delete(cache_key)
     
     # Get all messages in the conversation
     messages = conversation.messages.select_related('sender').order_by('created_at')
@@ -209,6 +215,11 @@ def send_message(request, conversation_id):
     conversation.updated_at = timezone.now()
     conversation.save(update_fields=['updated_at'])
     
+    # Invalidate cache for the recipient's unread count
+    recipient = conversation.seller if conversation.buyer.id == user.id else conversation.buyer
+    cache_key = f'unread_message_count_{recipient.id}'
+    cache.delete(cache_key)
+    
     return JsonResponse({
         'success': True,
         'message': {
@@ -248,7 +259,12 @@ def get_new_messages(request, conversation_id):
     ).select_related('sender').order_by('created_at')
     
     # Mark messages from other user as read
-    new_messages.exclude(sender=user).filter(is_read=False).update(is_read=True)
+    updated_count = new_messages.exclude(sender=user).filter(is_read=False).update(is_read=True)
+    
+    # Invalidate cache for current user's unread count if messages were marked as read
+    if updated_count > 0:
+        cache_key = f'unread_message_count_{user.id}'
+        cache.delete(cache_key)
     
     # Format messages for JSON response
     messages_data = []
@@ -274,15 +290,26 @@ def get_new_messages(request, conversation_id):
 def get_unread_count(request):
     """
     Get total unread message count for current user (AJAX endpoint)
+    Uses Django's cache framework to reduce database queries
     """
     if 'user_id' not in request.session:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     
     user_id = request.session['user_id']
-    user = get_object_or_404(User, id=user_id)
     
-    # Get total unread count
-    unread_count = Conversation.get_total_unread_count(user)
+    # Generate cache key for this user's unread message count
+    cache_key = f'unread_message_count_{user_id}'
+    
+    # Try to get the count from cache first
+    unread_count = cache.get(cache_key)
+    
+    if unread_count is None:
+        # Cache miss - query the database
+        user = get_object_or_404(User, id=user_id)
+        unread_count = Conversation.get_total_unread_count(user)
+        
+        # Store in cache for 30 seconds (for faster updates)
+        cache.set(cache_key, unread_count, 30)
     
     return JsonResponse({
         'success': True,

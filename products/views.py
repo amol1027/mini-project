@@ -4,6 +4,7 @@ from django.db.models import F
 from django.db import transaction
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
+from django.core.cache import cache
 from .models import Product, BorrowRequest
 from .history_models import ProductHistory
 from .forms import ProductForm
@@ -316,6 +317,10 @@ def borrow_request_create(request, product_id):
                 status='pending'
             )
             
+            # Invalidate cache for lender's pending requests count
+            cache_key = f'pending_borrow_requests_count_{product.seller.id}'
+            cache.delete(cache_key)
+            
             messages.success(request, f'Borrow request sent! Total cost: ₹{total_cost}')
             return redirect('products:borrow_request_detail', request_id=borrow_request.id)
         else:
@@ -386,6 +391,10 @@ def borrow_request_approve(request, request_id):
         product.is_currently_borrowed = True
         product.save()
         
+        # Invalidate cache for lender's pending requests count
+        cache_key = f'pending_borrow_requests_count_{borrow_request.lender.id}'
+        cache.delete(cache_key)
+        
         messages.success(request, 'Borrow request approved! The borrower can now collect the item.')
         return redirect('products:borrow_request_detail', request_id=request_id)
     
@@ -418,6 +427,10 @@ def borrow_request_reject(request, request_id):
         borrow_request.status = 'rejected'
         borrow_request.lender_response = response_message
         borrow_request.save()
+        
+        # Invalidate cache for lender's pending requests count
+        cache_key = f'pending_borrow_requests_count_{borrow_request.lender.id}'
+        cache.delete(cache_key)
         
         messages.success(request, 'Borrow request rejected.')
         return redirect('products:borrow_request_detail', request_id=request_id)
@@ -484,6 +497,10 @@ def borrow_request_cancel(request, request_id):
     if request.method == 'POST':
         borrow_request.status = 'cancelled'
         borrow_request.save()
+        
+        # Invalidate cache for lender's pending requests count
+        cache_key = f'pending_borrow_requests_count_{borrow_request.lender.id}'
+        cache.delete(cache_key)
         
         messages.success(request, 'Borrow request cancelled.')
         return redirect('products:product_detail', product_id=borrow_request.product.id)
@@ -618,12 +635,33 @@ def get_pending_requests_count(request):
     """
     AJAX endpoint to get pending borrow requests count
     Used by navbar polling script
+    Uses Django's cache framework to reduce database queries
     """
-    from registration.models import User
-    from django.http import JsonResponse
+    # Get user_id from session (login_required decorator ensures this exists)
+    user_id = request.session.get('user_id')
     
-    user = User.objects.get(id=request.session['user_id'])
-    count = BorrowRequest.objects.filter(lender=user, status='pending').count()
+    if not user_id:
+        return JsonResponse({
+            'success': False,
+            'pending_count': 0,
+            'error': 'User not authenticated'
+        })
+    
+    # Generate cache key for this user's pending requests count
+    cache_key = f'pending_borrow_requests_count_{user_id}'
+    
+    # Try to get the count from cache first
+    count = cache.get(cache_key)
+    
+    if count is None:
+        # Cache miss - query the database
+        count = BorrowRequest.objects.filter(
+            lender_id=user_id,
+            status='pending'
+        ).count()
+        
+        # Store in cache for 5 minutes (300 seconds)
+        cache.set(cache_key, count, 300)
     
     return JsonResponse({
         'success': True,
