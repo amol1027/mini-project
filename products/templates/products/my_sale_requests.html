@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Back Button -->
+        <div class="mb-4 sm:mb-6">
+            <a href="{% url 'products:product_list' %}" 
+               class="inline-flex items-center text-sm sm:text-base text-gray-600 hover:text-gray-900 transition-colors group">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Products
+            </a>
+        </div>
+        
+        <!-- Header with Stats -->
+        <div class="mb-6 sm:mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Sales Dashboard</h1>
+            <p class="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Manage purchase requests for your products</p>
+            
+            <!-- Status Stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-gray-600 truncate">Pending</p>
+                            <p class="text-xl sm:text-2xl font-bold text-yellow-600">{{ pending_count|default:0 }}</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-gray-600 truncate">Approved</p>
+                            <p class="text-xl sm:text-2xl font-bold text-green-600">{{ approved_count|default:0 }}</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-gray-600 truncate">Completed</p>
+                            <p class="text-xl sm:text-2xl font-bold text-blue-600">{{ completed_count|default:0 }}</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm text-gray-600 truncate">Total</p>
+                            <p class="text-xl sm:text-2xl font-bold text-indigo-600">{{ purchase_requests.count }}</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if purchase_requests %}
+        <div class="grid grid-cols-1 gap-4 sm:gap-6">
+            {% for request in purchase_requests %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all">
+                <div class="p-4 sm:p-6">
+                    <div class="flex flex-col lg:flex-row lg:items-start gap-4">
+                        <!-- Product Image -->
+                        <div class="flex-shrink-0">
+                            {% if request.product.get_primary_image %}
+                            <img src="{{ request.product.get_primary_image.url }}" 
+                                 alt="{{ request.product.title }}" 
+                                 class="w-full lg:w-32 h-32 object-cover rounded-lg">
+                            {% else %}
+                            <div class="w-full lg:w-32 h-32 bg-indigo-100 rounded-lg flex items-center justify-center text-3xl sm:text-4xl">
+                                📦
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Request Details -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900 truncate">{{ request.product.title }}</h3>
+                                    <p class="text-sm text-gray-600 truncate mt-1">Buyer: {{ request.buyer.name|default:request.buyer.email }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium self-start flex-shrink-0
+                                    {% if request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif request.status == 'approved' %}bg-green-100 text-green-800
+                                    {% elif request.status == 'completed' %}bg-blue-100 text-blue-800
+                                    {% elif request.status == 'rejected' or request.status == 'cancelled' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ request.get_status_display }}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                                <div>
+                                    <p class="text-xs text-gray-500">Sale Price</p>
+                                    <p class="text-base sm:text-lg font-bold text-indigo-600">₹{{ request.purchase_price }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Requested</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ request.request_date|date:"M d, Y" }}</p>
+                                </div>
+                                {% if request.completed_date %}
+                                <div>
+                                    <p class="text-xs text-gray-500">Completed</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ request.completed_date|date:"M d, Y" }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if request.status == 'pending' %}
+                            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p class="text-xs sm:text-sm text-yellow-800">
+                                    <strong>⏳ Action Required:</strong> Review and approve or reject this purchase request.
+                                </p>
+                            </div>
+                            {% elif request.status == 'approved' and not request.handover_otp_verified %}
+                            <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p class="text-xs sm:text-sm text-green-800">
+                                    <strong>✅ Approved:</strong> Ready for handover. Ask buyer for OTP to complete sale.
+                                </p>
+                            </div>
+                            {% endif %}
+
+                            <div class="flex flex-wrap gap-2">
+                                <a href="{% url 'products:purchase_request_detail' request.id %}" 
+                                   class="inline-flex items-center px-3 sm:px-4 py-2 bg-indigo-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    <span class="hidden xs:inline">View Details</span>
+                                    <span class="xs:hidden">View</span>
+                                </a>
+                                {% if request.status == 'pending' %}
+                                <a href="{% url 'products:purchase_request_approve' request.id %}" 
+                                   class="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Approve
+                                </a>
+                                <a href="{% url 'products:purchase_request_reject' request.id %}" 
+                                   class="inline-flex items-center px-3 sm:px-4 py-2 bg-red-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Reject
+                                </a>
+                                {% elif request.status == 'approved' and not request.handover_otp_verified %}
+                                <a href="{% url 'products:verify_purchase_handover_otp' request.id %}" 
+                                   class="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                    <span class="hidden xs:inline">Verify OTP</span>
+                                    <span class="xs:hidden">OTP</span>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'chat:start_conversation_with_user' request.product.id request.buyer.id %}" 
+                                   class="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                    <span class="hidden xs:inline">Message</span>
+                                    <span class="xs:hidden">Chat</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if request.message %}
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-xs text-gray-500 mb-1">Buyer's message:</p>
+                        <p class="text-xs sm:text-sm text-gray-700 break-words">{{ request.message }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-12 text-center">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No Sale Requests Yet</h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-6">You haven't received any purchase requests for your products yet.</p>
+            <a href="{% url 'products:product_list' %}" 
+               class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                View My Products
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

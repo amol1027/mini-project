@@ -21,7 +21,8 @@ EMAIL = "amolsolse2127@gmail.com"
 try:
     # Get the user
     user = User.objects.get(email=EMAIL)
-    print(f"Found user: {user.email}")
+    # Use user ID instead of email to avoid logging PII
+    print(f"Found user: User ID {user.id}")
     
     # Sample products data for all categories
     sample_products = [

@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+      crossorigin=""/>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+        crossorigin=""></script>
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-4 sm:py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,7 +74,7 @@
                 </div>
                 
                 <!-- Action Buttons -->
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
                     {% if is_lender and borrow_request.status == 'pending' %}
                     <a href="{% url 'products:borrow_request_approve' borrow_request.id %}" 
                        class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
@@ -73,20 +84,172 @@
                        class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors">
                         Reject
                     </a>
-                    {% elif is_lender and borrow_request.status == 'active' %}
-                    <a href="{% url 'products:borrow_request_return' borrow_request.id %}" 
+                    {% elif is_lender and borrow_request.status == 'approved' and not borrow_request.acceptance_otp_verified %}
+                    <a href="{% url 'products:verify_acceptance_otp' borrow_request.id %}" 
                        class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                        Mark as Returned
+                        🔑 Verify Pickup OTP
+                    </a>
+                    {% elif is_lender and borrow_request.status == 'active' and not borrow_request.return_otp_verified %}
+                    <a href="{% url 'products:verify_return_otp' borrow_request.id %}" 
+                       class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors">
+                        🔑 Verify Return OTP
                     </a>
                     {% elif is_borrower and borrow_request.status == 'pending' %}
                     <a href="{% url 'products:borrow_request_cancel' borrow_request.id %}" 
                        class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors">
                         Cancel Request
                     </a>
+                    {% elif is_borrower and borrow_request.status == 'active' and not borrow_request.return_otp_verified %}
+                    <a href="{% url 'products:generate_return_otp' borrow_request.id %}" 
+                       class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                        📱 Generate Return OTP
+                    </a>
                     {% endif %}
                 </div>
             </div>
         </div>
+
+        <!-- OTP Status Section -->
+        {% if borrow_request.status == 'approved' or borrow_request.status == 'active' %}
+        <div class="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg shadow-sm border-2 border-indigo-200 p-6">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    {% if borrow_request.status == 'approved' and not borrow_request.acceptance_otp_verified %}
+                        <h3 class="text-lg font-bold text-indigo-900 mb-2">🔑 Pickup Verification Required</h3>
+                        {% if is_borrower %}
+                            <p class="text-indigo-800 mb-3">
+                                <strong>Your Pickup OTP has been sent to your chat!</strong><br>
+                                Show this OTP to {{ borrow_request.lender.name }} when picking up the item.
+                            </p>
+                            <div class="bg-white rounded-lg p-4 border-2 border-indigo-300 inline-block">
+                                <p class="text-sm text-gray-600 mb-1">Check your chat messages for the OTP</p>
+                                <a href="{% url 'chat:start_conversation_with_user' borrow_request.product.id borrow_request.lender.id %}" 
+                                   class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-semibold">
+                                    Open Chat 
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        {% elif is_lender %}
+                            <p class="text-indigo-800 mb-3">
+                                <strong>Ready to hand over the item?</strong><br>
+                                Ask {{ borrow_request.borrower.name }} to show you their pickup OTP, then verify it to confirm handover.
+                            </p>
+                            <a href="{% url 'products:verify_acceptance_otp' borrow_request.id %}" 
+                               class="inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Verify Pickup OTP
+                            </a>
+                        {% endif %}
+                    {% elif borrow_request.status == 'active' and not borrow_request.return_otp_verified %}
+                        <h3 class="text-lg font-bold text-purple-900 mb-2">🔙 Return Verification Required</h3>
+                        {% if is_borrower %}
+                            <p class="text-purple-800 mb-3">
+                                <strong>Ready to return the item?</strong><br>
+                                Generate your return OTP and show it to {{ borrow_request.lender.name }} when returning.
+                            </p>
+                            <a href="{% url 'products:generate_return_otp' borrow_request.id %}" 
+                               class="inline-flex items-center px-5 py-2.5 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors shadow-md">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                                Generate Return OTP
+                            </a>
+                            <p class="text-sm text-purple-700 mt-2">💬 The OTP will be sent to your chat</p>
+                        {% elif is_lender %}
+                            <p class="text-purple-800 mb-3">
+                                <strong>Waiting for item return...</strong><br>
+                                When {{ borrow_request.borrower.name }} returns the item, they will show you a return OTP. Verify it to complete the transaction.
+                            </p>
+                            <div class="bg-white rounded-lg p-4 border-2 border-purple-300 inline-block">
+                                <p class="text-sm text-gray-600">Once borrower generates return OTP:</p>
+                                <a href="{% url 'products:verify_return_otp' borrow_request.id %}" 
+                                   class="inline-flex items-center text-purple-600 hover:text-purple-800 font-semibold mt-1">
+                                    Verify Return OTP
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Location Sharing Section -->
+        {% if borrow_request.status == 'approved' or borrow_request.status == 'active' %}
+        <div class="mb-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg shadow-sm border-2 border-blue-200 p-6" 
+             data-toggle-location-url="{% url 'products:toggle_location_sharing' borrow_request.id 'borrow' %}"
+             data-meeting-point-url="{% url 'products:meeting_point_api' borrow_request.id 'borrow' %}"
+             x-data="locationSharing('{{ borrow_request.id }}', 'borrow', {{ is_lender|yesno:'true,false' }}, {{ borrow_request.lender_shares_location|yesno:'true,false' }}, {{ borrow_request.borrower_shares_location|yesno:'true,false' }})">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">📍 Location Sharing</h3>
+                    
+                    <!-- Your Location Sharing Toggle -->
+                    <div class="bg-white rounded-lg p-4 border-2 border-blue-300 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">Share your precise location</p>
+                                <p class="text-sm text-gray-600 mt-1">Allow the other party to see your exact location for this transaction</p>
+                            </div>
+                            <button @click="toggleLocation()" 
+                                    :class="sharesLocation ? 'bg-green-600' : 'bg-gray-300'"
+                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+                                <span :class="sharesLocation ? 'translate-x-5' : 'translate-x-0'"
+                                      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                            </button>
+                        </div>
+                        <p x-show="sharesLocation" class="text-sm text-green-700 mt-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Location sharing enabled
+                        </p>
+                        <p x-show="!sharesLocation" class="text-sm text-gray-600 mt-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            Only approximate location visible
+                        </p>
+                    </div>
+                    
+                    <!-- Meeting Point -->
+                    <div class="bg-white rounded-lg p-4 border-2 border-blue-300">
+                        <p class="font-semibold text-gray-900 mb-2">🗺️ Suggested Meeting Point</p>
+                        <div x-show="!mapLoaded" class="text-center py-4">
+                            <button @click="loadMeetingPoint()" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                </svg>
+                                Show Meeting Point
+                            </button>
+                        </div>
+                        <div x-show="mapLoaded" class="space-y-3">
+                            <div id="meeting-map-{{ borrow_request.id }}" style="height: 300px; border-radius: 0.5rem;"></div>
+                            <div class="text-sm text-gray-700" x-html="meetingInfo"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
@@ -240,6 +403,79 @@
             <!-- Sidebar -->
             <div class="lg:col-span-1 space-y-6">
                 
+                <!-- Actions -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
+                    <h3 class="font-semibold text-gray-900 mb-3">Actions</h3>
+                    <div class="space-y-2">
+                        {% if is_lender and borrow_request.status == 'pending' %}
+                        <a href="{% url 'products:borrow_request_approve' borrow_request.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Approve Request
+                        </a>
+                        <a href="{% url 'products:borrow_request_reject' borrow_request.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Reject Request
+                        </a>
+                        {% elif is_lender and borrow_request.status == 'approved' and not borrow_request.acceptance_otp_verified %}
+                        <a href="{% url 'products:verify_acceptance_otp' borrow_request.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            Verify Pickup OTP
+                        </a>
+                        {% elif is_lender and borrow_request.status == 'active' and not borrow_request.return_otp_verified %}
+                        <a href="{% url 'products:verify_return_otp' borrow_request.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            Verify Return OTP
+                        </a>
+                        {% elif is_borrower and borrow_request.status == 'pending' %}
+                        <a href="{% url 'products:borrow_request_cancel' borrow_request.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Cancel Request
+                        </a>
+                        {% elif is_borrower and borrow_request.status == 'active' and not borrow_request.return_otp_verified %}
+                        <a href="{% url 'products:generate_return_otp' borrow_request.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            Generate Return OTP
+                        </a>
+                        {% endif %}
+                        
+                        {% if is_lender %}
+                        <a href="{% url 'chat:start_conversation_with_user' borrow_request.product.id borrow_request.borrower.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            Message Borrower
+                        </a>
+                        {% else %}
+                        <a href="{% url 'chat:start_conversation_with_user' borrow_request.product.id borrow_request.lender.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            Message Lender
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
                 <!-- Borrower Info -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Borrower</h3>
@@ -278,26 +514,197 @@
                     {% endif %}
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                    <h4 class="font-semibold text-indigo-900 mb-2">Need Help?</h4>
-                    <p class="text-sm text-indigo-700 mb-3">Contact the {% if is_lender %}borrower{% else %}lender{% endif %} if you have questions.</p>
-                    {% if is_lender %}
-                    <a href="{% url 'chat:start_conversation_with_user' borrow_request.product.id borrow_request.borrower.id %}" 
-                       class="block w-full text-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
-                        Message Borrower
-                    </a>
-                    {% else %}
-                    <a href="{% url 'chat:start_conversation_with_user' borrow_request.product.id borrow_request.lender.id %}" 
-                       class="block w-full text-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
-                        Message Lender
-                    </a>
-                    {% endif %}
-                </div>
-
             </div>
         </div>
 
     </div>
 </div>
+
+<script>
+function locationSharing(requestId, requestType, isLender, lenderShares, borrowerShares) {
+    return {
+        requestId: requestId,
+        requestType: requestType,
+        isLender: isLender,
+        sharesLocation: isLender ? lenderShares : borrowerShares,
+        mapLoaded: false,
+        meetingInfo: '',
+        map: null,
+        
+        async toggleLocation() {
+            try {
+                // Get CSRF token from cookie or meta tag
+                const csrfToken = this.getCsrfToken();
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    return;
+                }
+                
+                // Get URL from data attribute injected by Django
+                const toggleUrl = this.$root.dataset.toggleLocationUrl;
+                
+                const response = await fetch(toggleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.sharesLocation = data.shares_location;
+                    if (this.mapLoaded) {
+                        await this.loadMeetingPoint();
+                    }
+                } else {
+                    alert(data.error || 'Failed to toggle location sharing');
+                }
+            } catch (error) {
+                console.error('Error toggling location:', error);
+                alert('Network error. Please check your connection and try again.');
+            }
+        },
+        
+        async loadMeetingPoint() {
+            try {
+                // Get URL from data attribute injected by Django
+                const meetingPointUrl = this.$root.dataset.meetingPointUrl;
+                
+                const response = await fetch(meetingPointUrl);
+                const data = await response.json();
+                
+                if (data.error) {
+                    this.meetingInfo = `<div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                        <p class="text-yellow-800 font-semibold">⚠️ ${data.error}</p>
+                        ${!this.$root.querySelector('a[href*="edit"]') ? '<a href="/profile/edit/" class="text-blue-600 hover:underline text-sm">→ Update your profile</a>' : ''}
+                    </div>`;
+                    this.mapLoaded = true;
+                    return;
+                }
+                
+                this.mapLoaded = true;
+                
+                // Wait for next tick to ensure DOM is ready
+                await this.$nextTick();
+                
+                // Initialize map
+                const mapId = `meeting-map-${this.requestId}`;
+                const mapElement = document.getElementById(mapId);
+                
+                if (!mapElement) {
+                    console.error('Map element not found');
+                    return;
+                }
+                
+                // Clean up existing map instance to prevent memory leaks
+                if (this.map) {
+                    try {
+                        this.map.remove();
+                        this.map = null;
+                    } catch (e) {
+                        console.warn('Error removing existing map:', e);
+                    }
+                }
+                
+                this.map = L.map(mapId).setView([data.meeting_point.latitude, data.meeting_point.longitude], 14);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(this.map);
+                
+                // Add meeting point marker
+                L.marker([data.meeting_point.latitude, data.meeting_point.longitude], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(this.map).bindPopup(`<strong>📍 Meeting Point</strong><br>${data.meeting_point.address}`);
+                
+                // Add user location marker
+                L.marker([data.user1.latitude, data.user1.longitude], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(this.map).bindPopup(`<strong>You</strong><br>${data.user1.name}`);
+                
+                // Add other user location marker if they share location
+                if (data.user2.shares_location && data.user2.latitude && data.user2.longitude) {
+                    L.marker([data.user2.latitude, data.user2.longitude], {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        })
+                    }).addTo(this.map).bindPopup(`<strong>${data.user2.name}</strong><br>Exact location`);
+                }
+                
+                // Show meeting info
+                this.meetingInfo = `
+                    <div class="space-y-2">
+                        <p><strong>📍 Suggested Meeting Point:</strong><br>${data.meeting_point.address}</p>
+                        <p><strong>📏 Distance:</strong> ${data.meeting_point.distance_km.toFixed(2)} km from you</p>
+                        ${data.user2.shares_location 
+                            ? `<p class="text-green-700">✅ Other party is sharing their exact location</p>` 
+                            : `<p class="text-gray-600">ℹ️ Other party location (approximate): ${data.user2.approximate_location}</p>`
+                        }
+                    </div>
+                `;
+                
+                // Fit map to show all markers
+                const bounds = L.latLngBounds([
+                    [data.user1.latitude, data.user1.longitude],
+                    [data.meeting_point.latitude, data.meeting_point.longitude]
+                ]);
+                if (data.user2.shares_location && data.user2.latitude) {
+                    bounds.extend([data.user2.latitude, data.user2.longitude]);
+                }
+                this.map.fitBounds(bounds, { padding: [50, 50] });
+                
+            } catch (error) {
+                console.error('Error loading meeting point:', error);
+                this.meetingInfo = '<p class="text-red-600">Error loading meeting point. Please ensure both users have set their location in their profile.</p>';
+            }
+        },
+        
+        getCsrfToken() {
+            // Try to get from cookie first
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            
+            // Fallback to form input
+            if (!cookieValue) {
+                const input = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (input) {
+                    cookieValue = input.value;
+                }
+            }
+            
+            return cookieValue;
+        }
+    };
+}
+</script>
 {% endblock %}

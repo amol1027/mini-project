@@ -175,3 +175,49 @@ def request_participant_required(view_func):
         
         return view_func(request, *args, **kwargs)
     return wrapper
+
+
+def rate_limit(max_requests=10, window_seconds=60):
+    """
+    Simple rate limiting decorator using Django cache.
+    Limits requests per user per time window.
+    
+    Usage:
+        @login_required
+        @rate_limit(max_requests=10, window_seconds=60)
+        def my_api_view(request):
+            # view logic here
+    
+    Args:
+        max_requests: Maximum number of requests allowed in the time window
+        window_seconds: Time window in seconds
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            from django.core.cache import cache
+            from django.http import JsonResponse
+            
+            # Get user ID from session
+            user_id = request.session.get('user_id')
+            if not user_id:
+                return JsonResponse({'error': 'Authentication required'}, status=401)
+            
+            # Create cache key for this user and endpoint
+            cache_key = f"rate_limit:{view_func.__name__}:user_{user_id}"
+            
+            # Get current request count
+            request_count = cache.get(cache_key, 0)
+            
+            if request_count >= max_requests:
+                return JsonResponse({
+                    'error': 'Rate limit exceeded. Please try again later.',
+                    'retry_after': window_seconds
+                }, status=429)
+            
+            # Increment request count
+            cache.set(cache_key, request_count + 1, window_seconds)
+            
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator

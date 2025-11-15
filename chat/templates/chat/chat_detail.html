@@ -3,43 +3,28 @@
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-3 sm:py-6 md:py-8">
     <div class="max-w-5xl mx-auto px-2 sm:px-4 lg:px-8">
-        <!-- Header -->
-        <div class="mb-3 sm:mb-4 md:mb-6 px-2">
-            <a href="{% url 'chat:conversation_list' %}" 
-               class="inline-flex items-center text-indigo-600 hover:text-indigo-700 transition-all font-semibold group text-sm sm:text-base">
-                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                Back to Messages
-            </a>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-            <!-- Chat Header -->
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-indigo-700 p-3 sm:p-4 md:p-6">
-                <div class="flex items-center justify-between mb-3 sm:mb-4">
-                    <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
-                        <div class="relative">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-600 font-bold text-base sm:text-lg md:text-xl shadow-lg ring-4 ring-white/20">
-                                {{ other_user.name|default:other_user.email|slice:":1"|upper }}
-                            </div>
-                            <!-- Online indicator -->
-                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 bg-green-400 border-2 sm:border-3 border-white rounded-full animate-pulse shadow-md"></div>
-                        </div>
-                        <div>
-                            <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                                {{ other_user.name|default:other_user.email }}
-                            </h2>
-                            <p class="text-indigo-100 text-xs sm:text-sm flex items-center gap-1">
-                                <svg class="w-3 h-3 text-indigo-200" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-                                </svg>
-                                {{ other_user.college_name|default:"Student" }}
-                            </p>
-                        </div>
+        <!-- Chat Card -->
+        <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm border border-white/20">
+            
+            <!-- Header -->
+            <div class="bg-white/10 backdrop-blur-md border-b border-white/20 p-3 sm:p-4 md:p-5">
+                <div class="flex items-center justify-between gap-2 sm:gap-3">
+                    <a href="{% url 'chat:conversation_list' %}" 
+                       class="p-1.5 sm:p-2 hover:bg-white/10 rounded-xl transition-all border border-white/20 flex-shrink-0">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    
+                    <div class="flex-1 min-w-0 text-center">
+                        <h2 class="text-base sm:text-lg md:text-xl font-bold text-white truncate">
+                            {{ other_user.name|default:other_user.email }}
+                        </h2>
+                        <p class="text-xs sm:text-sm text-indigo-100">{{ product.title }}</p>
                     </div>
+                    
                     <a href="{% url 'products:product_detail' product.id %}" 
-                       class="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-xs sm:text-sm font-semibold transition-all border border-white/20 text-white shadow-lg hover:shadow-xl">
+                       class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/20 text-white text-sm font-medium">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -49,7 +34,7 @@
                 </div>
 
                 <!-- Product Summary -->
-                <div class="p-3 sm:p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg">
+                <div class="mt-3 p-3 sm:p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg">
                     <div class="flex items-center gap-2 sm:gap-3">
                         {% if product.image1 %}
                         <img src="{{ product.image1.url }}" alt="{{ product.title }}" 
@@ -89,37 +74,21 @@
             <div id="messages-container" class="h-[400px] sm:h-[450px] md:h-[500px] overflow-y-auto p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4 bg-gradient-to-br from-gray-50 to-white scroll-smooth custom-scrollbar" style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
                 {% if messages %}
                     {% for message in messages %}
-                    <div class="flex {% if message.sender.id == user.id %}justify-end{% else %}justify-start{% endif %} animate-fadeIn" data-message-id="{{ message.id }}">
-                        <div class="flex items-end gap-1.5 sm:gap-2 max-w-[90%] sm:max-w-[85%] md:max-w-[70%]">
-                            {% if message.sender.id != user.id %}
-                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-purple-100">
-                                {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
-                            </div>
+                    {# Show OTP system messages only to their intended recipient using the recipient field #}
+                    {% if message.is_system_message %}
+                        {% if message.message_type == 'otp_handover' or message.message_type == 'otp_return' %}
+                            {% if message.recipient and message.recipient.id == user.id %}
+                            {# Render system OTP message for intended recipient #}
+                            {% include "chat/_message_bubble.html" with message=message user=user %}
                             {% endif %}
-                            
-                            <div class="group relative">
-                                <div class="{% if message.sender.id == user.id %}bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg{% else %}bg-white text-gray-900 border border-gray-200 shadow-md{% endif %} rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 transition-all hover:shadow-xl">
-                                    <p class="text-sm sm:text-base break-words leading-relaxed">{{ message.content }}</p>
-                                    <div class="flex items-center gap-1 mt-1.5">
-                                        <p class="text-xs {% if message.sender.id == user.id %}text-indigo-100{% else %}text-gray-500{% endif %}">
-                                            {{ message.created_at|date:"g:i A" }}
-                                        </p>
-                                        {% if message.sender.id == user.id %}
-                                        <svg class="w-3 h-3 text-indigo-100" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {% if message.sender.id == user.id %}
-                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-indigo-100">
-                                {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
+                        {% else %}
+                            {# Other system messages (non-OTP) render normally #}
+                            {% include "chat/_message_bubble.html" with message=message user=user %}
+                        {% endif %}
+                    {% else %}
+                        {# Regular (non-system) messages render normally #}
+                        {% include "chat/_message_bubble.html" with message=message user=user %}
+                    {% endif %}
                     {% endfor %}
                 {% else %}
                 <div class="text-center py-16 sm:py-20 md:py-24">

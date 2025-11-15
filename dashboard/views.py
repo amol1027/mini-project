@@ -17,14 +17,14 @@ def dashboard_view(request):
     # Check if user is admin
     if not request.session.get('is_admin', False):
         messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('profile:profile')  # Redirect non-admins to profile
+        return redirect('user_profile:profile')  # Redirect non-admins to profile
     
     # Get current user
     try:
         current_user = User.objects.get(id=request.session['user_id'])
         if not current_user.is_admin:
             messages.error(request, 'Access denied. Admin privileges required.')
-            return redirect('profile:profile')
+            return redirect('user_profile:profile')
     except User.DoesNotExist:
         messages.error(request, 'User not found. Please log in again.')
         request.session.flush()
@@ -84,7 +84,7 @@ def user_list_view(request):
     # Check if user is admin
     if not request.session.get('is_admin', False):
         messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('profile:profile')
+        return redirect('user_profile:profile')
     
     # Get all users
     users = User.objects.order_by('-created_at')
@@ -117,7 +117,7 @@ def user_detail_view(request, user_id):
     # Check if user is admin
     if not request.session.get('is_admin', False):
         messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('profile:profile')
+        return redirect('user_profile:profile')
     
     try:
         user = User.objects.get(id=user_id)

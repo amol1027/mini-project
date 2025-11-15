@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, BorrowRequest
+from .models import Product, BorrowRequest, PurchaseRequest, BorrowOTP, PurchaseOTP
 from .history_models import ProductHistory
 
 @admin.register(Product)
@@ -52,6 +52,52 @@ class BorrowRequestAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(PurchaseRequest)
+class PurchaseRequestAdmin(admin.ModelAdmin):
+    list_display = ['id', 'product', 'buyer', 'seller', 'status', 'purchase_price', 'request_date', 'completed_date', 'handover_otp_verified']
+    list_filter = ['status', 'handover_otp_verified', 'request_date', 'completed_date']
+    search_fields = ['product__title', 'buyer__email', 'buyer__name', 'seller__email', 'seller__name']
+    readonly_fields = ['request_date', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Request Details', {
+            'fields': ('product', 'buyer', 'seller', 'status')
+        }),
+        ('Purchase Terms', {
+            'fields': ('purchase_price', 'message')
+        }),
+        ('Dates', {
+            'fields': ('request_date', 'approved_date', 'completed_date')
+        }),
+        ('Seller Response', {
+            'fields': ('seller_response',)
+        }),
+        ('OTP Verification', {
+            'fields': ('handover_otp_verified', 'handover_otp_verified_at'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(BorrowOTP)
+class BorrowOTPAdmin(admin.ModelAdmin):
+    list_display = ['id', 'borrow_request', 'otp_type', 'otp_code', 'is_verified', 'verified_by', 'created_at', 'expires_at', 'attempts']
+    list_filter = ['otp_type', 'is_verified', 'created_at']
+    search_fields = ['otp_code', 'borrow_request__product__title', 'verified_by__email']
+    readonly_fields = ['created_at', 'verified_at', 'attempts']
+
+
+@admin.register(PurchaseOTP)
+class PurchaseOTPAdmin(admin.ModelAdmin):
+    list_display = ['id', 'purchase_request', 'otp_code', 'is_verified', 'verified_by', 'created_at', 'expires_at', 'attempts']
+    list_filter = ['is_verified', 'created_at']
+    search_fields = ['otp_code', 'purchase_request__product__title', 'verified_by__email']
+    readonly_fields = ['created_at', 'verified_at', 'attempts']
 
 
 @admin.register(ProductHistory)

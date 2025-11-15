@@ -7,6 +7,7 @@ def landing_page(request):
         if request.session.get('is_admin', False):
             return redirect('dashboard:dashboard')  # Redirect admin to dashboard
         else:
-            return redirect('profile:profile')  # Redirect regular user to profile
+            # Regular user - redirect to their profile
+            return redirect('user_profile:profile')  # Redirect regular user to profile
     
     return render(request, 'landing/landing.html')
