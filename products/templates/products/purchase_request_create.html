@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="mb-6">
+            <a href="{% url 'products:product_detail' product.id %}" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-4">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Product
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">Request to Purchase</h1>
+            <p class="mt-2 text-gray-600">Send a purchase request to the seller</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Main Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <form method="post" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Product Summary -->
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+                            <div class="flex gap-4">
+                                {% if product.get_primary_image %}
+                                <img src="{{ product.get_primary_image.url }}" 
+                                     alt="{{ product.title }}" 
+                                     class="w-20 h-20 object-cover rounded-lg">
+                                {% else %}
+                                <div class="w-20 h-20 bg-indigo-100 rounded-lg flex items-center justify-center text-3xl">
+                                    📦
+                                </div>
+                                {% endif %}
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900">{{ product.title }}</h3>
+                                    <p class="text-sm text-gray-600 mt-1">{{ product.get_category_display }} • {{ product.get_condition_display }}</p>
+                                    <p class="text-lg font-bold text-indigo-600 mt-2">₹{{ product.price }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message -->
+                        <div>
+                            <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
+                                Message to Seller (Optional)
+                            </label>
+                            <textarea id="message" 
+                                      name="message" 
+                                      rows="4" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                      placeholder="Any questions or special requests for the seller..."></textarea>
+                            <p class="mt-1 text-sm text-gray-500">You can ask about the product condition, meetup location, or negotiation.</p>
+                        </div>
+
+                        <!-- Purchase Details -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <p class="text-sm font-medium text-gray-700 mb-2">Purchase Summary:</p>
+                            <div class="space-y-1 text-sm text-gray-600">
+                                <div class="flex justify-between">
+                                    <span>Item Price:</span>
+                                    <span class="font-medium">₹{{ product.price }}</span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>Posted by:</span>
+                                    <span>{{ product.seller.name|default:product.seller.email }}</span>
+                                </div>
+                                <div class="border-t border-gray-300 my-2"></div>
+                                <div class="flex justify-between text-base font-semibold text-gray-900">
+                                    <span>Total Amount:</span>
+                                    <span>₹{{ product.price }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="flex gap-3">
+                            <button type="submit" 
+                                    class="flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Send Purchase Request
+                            </button>
+                            <a href="{% url 'products:product_detail' product.id %}" 
+                               class="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sidebar - Purchase Info -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Purchase Process</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-xs">
+                                1
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Send Request</p>
+                                <p class="text-gray-600">Submit your purchase interest</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-xs">
+                                2
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Seller Reviews</p>
+                                <p class="text-gray-600">Wait for seller approval</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-xs">
+                                3
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">OTP Verification</p>
+                                <p class="text-gray-600">Verify handover with OTP</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-xs">
+                                4
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Complete Purchase</p>
+                                <p class="text-gray-600">Transaction finalized</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <h4 class="font-semibold text-gray-900 mb-2">Important Notes:</h4>
+                        <ul class="text-xs text-gray-600 space-y-1.5">
+                            <li>• The seller must approve your request</li>
+                            <li>• An OTP will be generated upon approval</li>
+                            <li>• Verify OTP during item handover</li>
+                            <li>• Inspect the item before finalizing</li>
+                            <li>• Once complete, the item is yours</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

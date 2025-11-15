@@ -25,8 +25,15 @@ SECRET_KEY = 'django-insecure-s9lt$btrj5x8w-w__=%celxv5l3sywasnpa#r6vndth__b1q26
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok-free.app', '.ngrok.io','.ngrok-free.dev']
 
+# CSRF trusted origins for ngrok
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.io',
+    'https://*.ngrok-free.dev',
+    'https://luz-unregainable-karly.ngrok-free.dev',
+]
 
 # Application definition
 
@@ -72,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'chat.context_processors.unread_messages',
+                'products.context_processors.pending_borrow_requests',
             ],
         },
     },
@@ -115,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 

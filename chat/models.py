@@ -93,6 +93,13 @@ class Message(models.Model):
     """
     Individual messages within a conversation
     """
+    MESSAGE_TYPE_CHOICES = [
+        ('regular', 'Regular Message'),
+        ('otp_handover', 'Handover OTP'),
+        ('otp_return', 'Return OTP'),
+        ('system', 'System Notification'),
+    ]
+    
     conversation = models.ForeignKey(
         Conversation,
         on_delete=models.CASCADE,
@@ -107,6 +114,24 @@ class Message(models.Model):
     )
     content = models.TextField(help_text="Message content")
     is_read = models.BooleanField(default=False, help_text="Whether the message has been read")
+    is_system_message = models.BooleanField(
+        default=False,
+        help_text="Whether this is a system-generated message (e.g., OTP)"
+    )
+    message_type = models.CharField(
+        max_length=20,
+        choices=MESSAGE_TYPE_CHOICES,
+        default='regular',
+        help_text="Type of message"
+    )
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='received_messages',
+        help_text="Intended recipient for system messages (optional)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

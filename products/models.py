@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from registration.models import User
+from django.utils import timezone
+from django.db import transaction, IntegrityError
+from datetime import timedelta
 import os
 
 # Import ProductHistory model
@@ -296,6 +299,36 @@ class BorrowRequest(models.Model):
         help_text="Response message from lender"
     )
     
+    # OTP Verification Status (Uber-style)
+    acceptance_otp_verified = models.BooleanField(
+        default=False,
+        help_text="Whether acceptance OTP has been verified (item pickup confirmed)"
+    )
+    acceptance_otp_verified_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When acceptance OTP was verified"
+    )
+    return_otp_verified = models.BooleanField(
+        default=False,
+        help_text="Whether return OTP has been verified (item return confirmed)"
+    )
+    return_otp_verified_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When return OTP was verified"
+    )
+    
+    # Location Sharing (NEW)
+    lender_shares_location = models.BooleanField(
+        default=False,
+        help_text="Whether lender has agreed to share precise location for this request"
+    )
+    borrower_shares_location = models.BooleanField(
+        default=False,
+        help_text="Whether borrower has agreed to share precise location for this request"
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -321,4 +354,391 @@ class BorrowRequest(models.Model):
         if self.product.borrow_price_per_day:
             return self.product.borrow_price_per_day * self.requested_days
         return 0
+
+
+class BorrowOTP(models.Model):
+    """
+    OTP model for Uber-style verification during borrow acceptance and return
+    Similar to how Uber uses OTP to verify rider pickup and drop-off
+    """
+    OTP_TYPE_CHOICES = [
+        ('acceptance', 'Acceptance OTP'),  # When borrower picks up item
+        ('return', 'Return OTP'),          # When borrower returns item
+    ]
+    
+    # Relationships
+    borrow_request = models.ForeignKey(
+        BorrowRequest,
+        on_delete=models.CASCADE,
+        related_name='otps'
+    )
+    
+    # OTP Details
+    otp_type = models.CharField(
+        max_length=20,
+        choices=OTP_TYPE_CHOICES,
+        help_text="Type of OTP - acceptance or return"
+    )
+    otp_code = models.CharField(
+        max_length=6,
+        help_text="6-digit OTP code"
+    )
+    
+    # Verification Status
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether OTP has been successfully verified"
+    )
+    verified_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When OTP was verified"
+    )
+    verified_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_otps',
+        help_text="User who verified the OTP"
+    )
+    
+    # Expiry and Attempts
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(
+        help_text="OTP expiry time (default 15 minutes)"
+    )
+    attempts = models.IntegerField(
+        default=0,
+        help_text="Number of verification attempts"
+    )
+    max_attempts = models.IntegerField(
+        default=5,
+        help_text="Maximum allowed verification attempts"
+    )
+    
+    class Meta:
+        db_table = 'borrow_otps'
+        ordering = ['-created_at']
+        verbose_name = 'Borrow OTP'
+        verbose_name_plural = 'Borrow OTPs'
+        indexes = [
+            models.Index(fields=['borrow_request', 'otp_type', '-created_at']),
+            models.Index(fields=['otp_code', 'is_verified']),
+        ]
+    
+    def __str__(self):
+        status = "Verified" if self.is_verified else "Pending"
+        return f"{self.otp_type.title()} OTP for {self.borrow_request} - {status}"
+    
+    def is_expired(self):
+        """Check if OTP has expired"""
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        """Check if OTP is still valid for verification"""
+        return (
+            not self.is_verified and
+            not self.is_expired() and
+            self.attempts < self.max_attempts
+        )
+    
+    def verify(self, user, entered_otp):
+        """
+        Verify the OTP code
+        Returns tuple: (success: bool, message: str)
+        """
+        # Increment attempts
+        self.attempts += 1
+        self.save(update_fields=['attempts'])
+        
+        # Check if already verified
+        if self.is_verified:
+            return False, "OTP already verified"
+        
+        # Check if expired
+        if self.is_expired():
+            return False, "OTP has expired"
+        
+        # Check if max attempts exceeded
+        if self.attempts > self.max_attempts:
+            return False, "Maximum verification attempts exceeded"
+        
+        # Verify OTP code
+        if self.otp_code == entered_otp:
+            # Use an atomic transaction and assign FK by id to avoid
+            # potential FK constraint issues when saving the relation.
+            try:
+                with transaction.atomic():
+                    self.is_verified = True
+                    self.verified_at = timezone.now()
+                    # Ensure user has a primary key
+                    if not getattr(user, 'pk', None):
+                        return False, "Invalid verifier user"
+                    # Assign by id to make the DB write explicit
+                    self.verified_by_id = user.pk
+                    self.save(update_fields=['is_verified', 'verified_at', 'verified_by'])
+                return True, "OTP verified successfully"
+            except IntegrityError as e:
+                # Return a clearer message instead of bubbling up the DB exception
+                return False, "Database error during OTP verification"
+        else:
+            remaining_attempts = self.max_attempts - self.attempts
+            if remaining_attempts > 0:
+                return False, f"Invalid OTP. {remaining_attempts} attempts remaining"
+            else:
+                return False, "Invalid OTP. Maximum attempts exceeded"
+    
+    def save(self, *args, **kwargs):
+        """Set expiry time on creation"""
+        if not self.pk and not self.expires_at:
+            # OTP expires in 15 minutes by default
+            self.expires_at = timezone.now() + timedelta(minutes=15)
+        super().save(*args, **kwargs)
+
+
+class PurchaseRequest(models.Model):
+    """
+    Model to track buy/sell requests and transactions
+    Similar to BorrowRequest but for purchasing products
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved - Awaiting Pickup'),
+        ('rejected', 'Rejected'),
+        ('completed', 'Completed - Item Delivered'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    # Relationships
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='purchase_requests'
+    )
+    buyer = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='purchase_requests_made'
+    )
+    seller = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='purchase_requests_received'
+    )
+    
+    # Request Details
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Message from buyer to seller"
+    )
+    
+    # Financial
+    purchase_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Agreed purchase price"
+    )
+    
+    # Dates
+    request_date = models.DateTimeField(auto_now_add=True)
+    approved_date = models.DateTimeField(blank=True, null=True)
+    completed_date = models.DateTimeField(blank=True, null=True)
+    
+    # Response from seller
+    seller_response = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Response message from seller"
+    )
+    
+    # OTP Verification Status (Uber-style)
+    handover_otp_verified = models.BooleanField(
+        default=False,
+        help_text="Whether handover OTP has been verified (item transfer confirmed)"
+    )
+    handover_otp_verified_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When handover OTP was verified"
+    )
+    
+    # Location Sharing (NEW)
+    seller_shares_location = models.BooleanField(
+        default=False,
+        help_text="Whether seller has agreed to share precise location for this request"
+    )
+    buyer_shares_location = models.BooleanField(
+        default=False,
+        help_text="Whether buyer has agreed to share precise location for this request"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'purchase_requests'
+        ordering = ['-created_at']
+        verbose_name = 'Purchase Request'
+        verbose_name_plural = 'Purchase Requests'
+    
+    def __str__(self):
+        return f"{self.buyer.name} wants to buy {self.product.title}"
+    
+    def is_expired(self):
+        """
+        Check if approved request has expired (24 hours without OTP verification)
+        """
+        if self.status == 'approved' and self.approved_date and not self.handover_otp_verified:
+            expiry_time = self.approved_date + timedelta(hours=24)
+            return timezone.now() > expiry_time
+        return False
+    
+    def can_be_cancelled_by_buyer(self):
+        """Check if buyer can cancel this request"""
+        return self.status in ['pending', 'approved']
+    
+    def can_be_cancelled_by_seller(self):
+        """Check if seller can cancel this request (after approval if handover doesn't happen)"""
+        return self.status == 'approved' and not self.handover_otp_verified
+
+
+class PurchaseOTP(models.Model):
+    """
+    OTP model for Uber-style verification during purchase handover
+    Similar to BorrowOTP but for purchase transactions
+    """
+    # Relationships
+    purchase_request = models.ForeignKey(
+        PurchaseRequest,
+        on_delete=models.CASCADE,
+        related_name='otps'
+    )
+    
+    # OTP Details
+    otp_code = models.CharField(
+        max_length=6,
+        help_text="6-digit OTP code for handover verification"
+    )
+    
+    # Verification Status
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether OTP has been successfully verified"
+    )
+    verified_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When OTP was verified"
+    )
+    verified_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_purchase_otps',
+        help_text="User who verified the OTP"
+    )
+    
+    # Expiry and Attempts
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(
+        help_text="OTP expiry time (default 15 minutes)"
+    )
+    attempts = models.IntegerField(
+        default=0,
+        help_text="Number of verification attempts"
+    )
+    max_attempts = models.IntegerField(
+        default=5,
+        help_text="Maximum allowed verification attempts"
+    )
+    
+    class Meta:
+        db_table = 'purchase_otps'
+        ordering = ['-created_at']
+        verbose_name = 'Purchase OTP'
+        verbose_name_plural = 'Purchase OTPs'
+        indexes = [
+            models.Index(fields=['purchase_request', '-created_at']),
+            models.Index(fields=['otp_code', 'is_verified']),
+        ]
+    
+    def __str__(self):
+        status = "Verified" if self.is_verified else "Pending"
+        return f"Handover OTP for {self.purchase_request} - {status}"
+    
+    def is_expired(self):
+        """Check if OTP has expired"""
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        """Check if OTP is still valid for verification"""
+        return (
+            not self.is_verified and
+            not self.is_expired() and
+            self.attempts < self.max_attempts
+        )
+    
+    def time_remaining_minutes(self):
+        """Get remaining minutes until expiry"""
+        if self.is_expired():
+            return 0
+        remaining = (self.expires_at - timezone.now()).total_seconds() / 60
+        return max(0, int(remaining))
+    
+    def verify(self, user, entered_otp):
+        """
+        Verify the OTP code
+        Returns tuple: (success: bool, message: str)
+        """
+        # Increment attempts
+        self.attempts += 1
+        self.save(update_fields=['attempts'])
+        
+        # Check if already verified
+        if self.is_verified:
+            return False, "OTP already verified"
+        
+        # Check if expired
+        if self.is_expired():
+            return False, "OTP has expired"
+        
+        # Check if max attempts exceeded
+        if self.attempts > self.max_attempts:
+            return False, "Maximum verification attempts exceeded"
+        
+        # Verify OTP code
+        if self.otp_code == entered_otp:
+            try:
+                with transaction.atomic():
+                    self.is_verified = True
+                    self.verified_at = timezone.now()
+                    if not getattr(user, 'pk', None):
+                        return False, "Invalid verifier user"
+                    self.verified_by_id = user.pk
+                    self.save(update_fields=['is_verified', 'verified_at', 'verified_by'])
+                return True, "OTP verified successfully"
+            except IntegrityError as e:
+                return False, "Database error during OTP verification"
+        else:
+            remaining_attempts = self.max_attempts - self.attempts
+            if remaining_attempts > 0:
+                return False, f"Invalid OTP. {remaining_attempts} attempts remaining"
+            else:
+                return False, "Invalid OTP. Maximum attempts exceeded"
+    
+    def save(self, *args, **kwargs):
+        """Set expiry time on creation"""
+        if not self.pk and not self.expires_at:
+            # OTP expires in 15 minutes by default
+            self.expires_at = timezone.now() + timedelta(minutes=15)
+        super().save(*args, **kwargs)
 

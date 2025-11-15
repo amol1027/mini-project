@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+      crossorigin=""/>
+
+<!-- Leaflet MarkerCluster CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+<style>
+    #map {
+        height: 600px;
+        width: 100%;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .leaflet-popup-content {
+        margin: 0;
+        padding: 0;
+        min-width: 250px;
+    }
+    
+    .product-popup {
+        padding: 0;
+    }
+    
+    .product-popup img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 0.375rem 0.375rem 0 0;
+    }
+    
+    .product-popup-content {
+        padding: 1rem;
+    }
+    
+    .distance-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        background-color: #e0f2fe;
+        color: #0369a1;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    @media (max-width: 640px) {
+        #map {
+            height: 400px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Product Map</h1>
+            <p class="text-gray-600 mt-1">Discover products near you</p>
+        </div>
+        <a href="{% url 'products:product_list' %}" 
+           class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+            </svg>
+            List View
+        </a>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <form method="GET" action="{% url 'products:product_map' %}" class="flex flex-wrap gap-4">
+            <!-- Category Filter -->
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select name="category" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for value, label in categories %}
+                    <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Distance Filter -->
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Max Distance</label>
+                <select name="distance" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        onchange="this.form.submit()">
+                    <option value="">Any Distance</option>
+                    <option value="5" {% if selected_distance == "5" %}selected{% endif %}>Within 5 km</option>
+                    <option value="10" {% if selected_distance == "10" %}selected{% endif %}>Within 10 km</option>
+                    <option value="25" {% if selected_distance == "25" %}selected{% endif %}>Within 25 km</option>
+                    <option value="50" {% if selected_distance == "50" %}selected{% endif %}>Within 50 km</option>
+                </select>
+            </div>
+            
+            <!-- Listing Type Filter -->
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Listing Type</label>
+                <select name="type" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        onchange="this.form.submit()">
+                    <option value="">All Types</option>
+                    <option value="sell" {% if selected_type == "sell" %}selected{% endif %}>For Sale</option>
+                    <option value="lend" {% if selected_type == "lend" %}selected{% endif %}>For Lending</option>
+                    <option value="both" {% if selected_type == "both" %}selected{% endif %}>Both</option>
+                </select>
+            </div>
+            
+            <!-- Reset Button -->
+            <div class="flex items-end">
+                <a href="{% url 'products:product_map' %}" 
+                   class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Location Warning -->
+    {% if not user.has_location %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="ml-3 flex-1">
+                <p class="text-sm text-yellow-700">
+                    <strong>Your location is not set.</strong> 
+                    Please <a href="{% url 'user_profile:edit_profile' %}" class="font-medium underline hover:text-yellow-900">update your profile</a> 
+                    with your address to see distances and enable map features.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% elif products|length == 0 %}
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="ml-3 flex-1">
+                <p class="text-sm text-blue-700">
+                    <strong>No products found in this area.</strong> 
+                    Try adjusting your filters or check back later for new listings.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Map Container -->
+    <div id="map"></div>
+    
+    <!-- Legend -->
+    <div class="mt-6 bg-white rounded-lg shadow-sm p-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Map Legend</h3>
+        <div class="flex flex-wrap gap-4 text-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                <span>Your Location</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+                <span>For Sale</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-purple-500 rounded-full"></div>
+                <span>For Lending</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-orange-500 rounded-full"></div>
+                <span>Sale or Lend</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+        crossorigin=""></script>
+
+<!-- Leaflet MarkerCluster JS -->
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script>
+    // Parse data from Django
+    const products = {{ products_json|safe }};
+    const userLocation = {{ user_location_json|safe }};
+    
+    // Determine initial view
+    let initialLat, initialLng, initialZoom;
+    
+    if (userLocation) {
+        // Center on user location
+        initialLat = userLocation.latitude;
+        initialLng = userLocation.longitude;
+        initialZoom = 12;
+    } else if (products.length > 0) {
+        // Center on first product with valid coordinates
+        const validProduct = products.find(p => p.latitude && p.longitude);
+        if (validProduct) {
+            initialLat = validProduct.latitude;
+            initialLng = validProduct.longitude;
+            initialZoom = 10;
+        } else {
+            // Fallback to India center
+            initialLat = 20.5937;
+            initialLng = 78.9629;
+            initialZoom = 5;
+        }
+    } else {
+        // Fallback to India center
+        initialLat = 20.5937;
+        initialLng = 78.9629;
+        initialZoom = 5;
+    }
+    
+    // Initialize map
+    const map = L.map('map').setView([initialLat, initialLng], initialZoom);
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(map);
+    
+    // Add user location marker
+    if (userLocation) {
+        const userIcon = L.divIcon({
+            html: '<div style="background-color: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+            className: '',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        L.marker([userLocation.latitude, userLocation.longitude], { icon: userIcon })
+            .addTo(map)
+            .bindPopup(`<div class="p-2"><strong>📍 ${userLocation.name}</strong><br>Your current location</div>`);
+    }
+    
+    // Create marker cluster group
+    const markers = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false
+    });
+    
+    // Add product markers
+    products.forEach(product => {
+        if (!product.latitude || !product.longitude) return;
+        
+        // Determine marker color based on listing type
+        let markerColor;
+        switch(product.listing_type) {
+            case 'sell':
+                markerColor = '#10b981'; // green
+                break;
+            case 'lend':
+                markerColor = '#8b5cf6'; // purple
+                break;
+            case 'both':
+                markerColor = '#f59e0b'; // orange
+                break;
+            default:
+                markerColor = '#6b7280'; // gray
+        }
+        
+        // Custom marker icon
+        const productIcon = L.divIcon({
+            html: `<div style="background-color: ${markerColor}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
+            className: '',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+        
+        // Create popup content
+        const listingBadge = product.listing_type === 'sell' ? 'For Sale' : 
+                            product.listing_type === 'lend' ? 'For Lending' : 'Sale or Lend';
+        
+        const priceText = product.listing_type === 'sell' || product.listing_type === 'both' ?
+                         `₹${product.price}` : 
+                         product.borrow_price ? `₹${product.borrow_price}/day` : '';
+        
+        const distanceBadge = product.distance ? 
+            `<span class="distance-badge">📍 ${product.distance.toFixed(1)} km away</span>` : '';
+        
+        const popupContent = `
+            <div class="product-popup">
+                ${product.image_url ? `<img src="${product.image_url}" alt="${product.title}">` : 
+                  '<div style="width:100%; height:150px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#9ca3af;">No image</div>'}
+                <div class="product-popup-content">
+                    <h3 class="font-semibold text-gray-900 mb-1">${product.title}</h3>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">${product.category}</span>
+                        <span class="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded">${listingBadge}</span>
+                    </div>
+                    ${priceText ? `<p class="text-lg font-bold text-indigo-600 mb-2">${priceText}</p>` : ''}
+                    ${distanceBadge}
+                    <p class="text-sm text-gray-600 mt-2">📍 ${product.seller_city || 'Location not specified'}</p>
+                    <a href="/products/${product.id}/" 
+                       class="mt-3 block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        const marker = L.marker([product.latitude, product.longitude], { icon: productIcon })
+            .bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'product-popup-container'
+            });
+        
+        markers.addLayer(marker);
+    });
+    
+    // Add marker cluster to map
+    map.addLayer(markers);
+    
+    // Fit map to show all markers
+    if (products.length > 0 && markers.getBounds().isValid()) {
+        map.fitBounds(markers.getBounds(), { padding: [50, 50] });
+    }
+</script>
+{% endblock %}
