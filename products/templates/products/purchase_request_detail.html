@@ -610,19 +610,7 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                     attribution: '© OpenStreetMap contributors'
                 }).addTo(this.map);
                 
-                // Add meeting point marker
-                L.marker([data.meeting_point.latitude, data.meeting_point.longitude], {
-                    icon: L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    })
-                }).addTo(this.map).bindPopup(`<strong>📍 Meeting Point</strong><br>${data.meeting_point.address}`);
-                
-                // Add user location marker
+                // Add your location marker (buyer)
                 L.marker([data.user1.latitude, data.user1.longitude], {
                     icon: L.icon({
                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
@@ -632,9 +620,9 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                         popupAnchor: [1, -34],
                         shadowSize: [41, 41]
                     })
-                }).addTo(this.map).bindPopup(`<strong>You</strong><br>${data.user1.name}`);
+                }).addTo(this.map).bindPopup(`<strong>📍 You</strong><br>${data.user1.name}`);
                 
-                // Add other user location marker if they share location
+                // Add seller location marker if they share location
                 if (data.user2.shares_location && data.user2.latitude && data.user2.longitude) {
                     L.marker([data.user2.latitude, data.user2.longitude], {
                         icon: L.icon({
@@ -645,34 +633,82 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                             popupAnchor: [1, -34],
                             shadowSize: [41, 41]
                         })
-                    }).addTo(this.map).bindPopup(`<strong>${data.user2.name}</strong><br>Exact location`);
+                    }).addTo(this.map).bindPopup(`<strong>🏪 Seller Location</strong><br>${data.user2.name}`);
+                } else if (data.meeting_point) {
+                    // Show approximate area if seller doesn't share exact location
+                    L.marker([data.meeting_point.latitude, data.meeting_point.longitude], {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        })
+                    }).addTo(this.map).bindPopup(`<strong>📍 Approximate Area</strong><br>${data.meeting_point.address}`);
                 }
                 
-                // Show meeting info
+                // Show location info
                 const distanceText = typeof data.meeting_point.distance_km === 'number'
                     ? `${data.meeting_point.distance_km.toFixed(2)} km from you`
                     : 'Distance unavailable';
 
                 this.meetingInfo = `
                     <div class="space-y-2">
-                        <p><strong>📍 Suggested Meeting Point:</strong><br>${data.meeting_point.address}</p>
-                        <p><strong>📏 Distance:</strong> ${distanceText}</p>
                         ${data.user2.shares_location 
-                            ? `<p class="text-green-700">✅ Other party is sharing their exact location</p>` 
-                            : `<p class="text-gray-600">ℹ️ Other party location (approximate): ${data.user2.approximate_location}</p>`
+                            ? `<p class="text-green-700"><strong>✅ Seller is sharing exact location</strong></p>
+                               <p><strong>📏 Distance:</strong> ${distanceText}</p>` 
+                            : `<p class="text-gray-600"><strong>ℹ️ Seller's approximate area:</strong> ${data.user2.approximate_location}</p>
+                               <p><strong>📏 Distance:</strong> ${distanceText}</p>`
                         }
                     </div>
                 `;
                 
-                // Fit map to show all markers
-                const bounds = L.latLngBounds([
-                    [data.user1.latitude, data.user1.longitude],
-                    [data.meeting_point.latitude, data.meeting_point.longitude]
-                ]);
-                if (data.user2.shares_location && data.user2.latitude) {
-                    bounds.extend([data.user2.latitude, data.user2.longitude]);
+                // Fetch and draw route from buyer to seller
+                try {
+                    const routeUrl = `{% url 'products:route_to_meeting' purchase_request.id 'purchase' %}`;
+                    const routeResponse = await fetch(routeUrl);
+                    const routeData = await routeResponse.json();
+                    
+                    if (routeData.geometry) {
+                        // Convert GeoJSON coordinates [lng, lat] to Leaflet format [lat, lng]
+                        const routeCoords = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                        
+                        // Draw route polyline
+                        const routeLine = L.polyline(routeCoords, {
+                            color: '#2563eb',
+                            weight: 4,
+                            opacity: 0.7
+                        }).addTo(this.map);
+                        
+                        // Update info with route details
+                        this.meetingInfo += `
+                            <p class="mt-2 text-sm bg-blue-50 p-2 rounded">
+                                <strong>🚗 Route to Seller:</strong> ${routeData.distance_km.toFixed(1)} km, 
+                                approximately ${Math.round(routeData.duration_minutes)} minutes
+                            </p>
+                        `;
+                        
+                        // Fit map to show route
+                        this.map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                    }
+                } catch (routeError) {
+                    console.warn('Route not available:', routeError);
+                    // Still show locations even if route fails
                 }
-                this.map.fitBounds(bounds, { padding: [50, 50] });
+                
+                // Fallback: Fit map to show all markers if route wasn't drawn
+                if (!this.map.getBounds || this.map.getBounds().equals(L.latLngBounds())) {
+                    const bounds = L.latLngBounds([
+                        [data.user1.latitude, data.user1.longitude]
+                    ]);
+                    if (data.user2.shares_location && data.user2.latitude) {
+                        bounds.extend([data.user2.latitude, data.user2.longitude]);
+                    } else if (data.meeting_point) {
+                        bounds.extend([data.meeting_point.latitude, data.meeting_point.longitude]);
+                    }
+                    this.map.fitBounds(bounds, { padding: [50, 50] });
+                }
                 
             } catch (error) {
                 console.error('Error loading meeting point:', error);

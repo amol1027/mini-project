@@ -189,3 +189,6 @@ CELERY_WORKER_LOG_LEVEL = 'INFO'
 
 # Task result extended mode (stores more details)
 CELERY_RESULT_EXTENDED = True
+
+# OSRM Routing Configuration
+OSRM_BASE_URL = 'http://localhost:5000'

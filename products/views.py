@@ -6,7 +6,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.utils import timezone
-from .models import Product, BorrowRequest
+from .models import Product, BorrowRequest, PurchaseRequest
 from .history_models import ProductHistory
 from .forms import ProductForm
 from .decorators import login_required, owner_required, lender_required, borrower_required, request_participant_required, rate_limit
@@ -1685,4 +1685,105 @@ def toggle_location_sharing(request, request_id, request_type):
         'message': 'Location sharing enabled' if shares_location else 'Location sharing disabled'
     })
 
+
+@login_required
+@rate_limit(max_requests=30, window_seconds=60)
+def route_to_meeting_point(request, request_id, request_type):
+    """
+    API endpoint to get route from OSRM for meeting point.
+    
+    Security features:
+    - Rate limited to 30 requests per minute per user
+    - Verifies user is participant in the request
+    - Respects location sharing settings
+    - Returns GeoJSON route geometry
+    """
+    from registration.models import User
+    from django.conf import settings
+    import requests as http_requests
+    
+    current_user = request.session.get('user_id')
+    user = get_object_or_404(User, id=current_user)
+    
+    # Get the request based on type
+    if request_type == 'borrow':
+        borrow_request = get_object_or_404(BorrowRequest, id=request_id)
+        is_lender = borrow_request.product.seller.id == current_user
+        is_borrower = borrow_request.borrower.id == current_user
+        
+        if not (is_lender or is_borrower):
+            return JsonResponse({'error': 'Not authorized'}, status=403)
+        
+        user1 = borrow_request.product.seller
+        user2 = borrow_request.borrower
+        user1_shares = borrow_request.lender_shares_location
+        user2_shares = borrow_request.borrower_shares_location
+    else:  # purchase
+        purchase_request = get_object_or_404(PurchaseRequest, id=request_id)
+        is_seller = purchase_request.product.seller.id == current_user
+        is_buyer = purchase_request.buyer.id == current_user
+        
+        if not (is_seller or is_buyer):
+            return JsonResponse({'error': 'Not authorized'}, status=403)
+        
+        user1 = purchase_request.product.seller
+        user2 = purchase_request.buyer
+        user1_shares = purchase_request.seller_shares_location
+        user2_shares = purchase_request.buyer_shares_location
+    
+    # Check if both users have location data
+    if not user1.has_location() or not user2.has_location():
+        return JsonResponse({'error': 'Both parties need location data'}, status=400)
+    
+    # Get coordinates (use precise if shared, otherwise approximate)
+    from registration.geocoding_utils import approximate_coordinates
+    
+    # Seller/lender location (destination)
+    if user1_shares:
+        seller_lat, seller_lng = user1.latitude, user1.longitude
+    else:
+        seller_lat, seller_lng = approximate_coordinates(user1.latitude, user1.longitude)
+    
+    # Buyer/borrower location (start point)
+    if user2_shares:
+        buyer_lat, buyer_lng = user2.latitude, user2.longitude
+    else:
+        buyer_lat, buyer_lng = approximate_coordinates(user2.latitude, user2.longitude)
+    
+    # Route: buyer/borrower goes to seller/lender
+    # If current user is seller/lender, show reverse route (from seller to buyer)
+    if current_user == user1.id:
+        start_lat, start_lng = seller_lat, seller_lng
+        end_lat, end_lng = buyer_lat, buyer_lng
+    else:
+        start_lat, start_lng = buyer_lat, buyer_lng
+        end_lat, end_lng = seller_lat, seller_lng
+    
+    # Query OSRM for route (from start to end location)
+    osrm_url = getattr(settings, 'OSRM_BASE_URL', 'http://localhost:5000')
+    route_url = f"{osrm_url}/route/v1/driving/{start_lng},{start_lat};{end_lng},{end_lat}?overview=full&geometries=geojson"
+    
+    try:
+        response = http_requests.get(route_url, timeout=10)
+        response.raise_for_status()
+        route_data = response.json()
+        
+        if route_data.get('code') != 'Ok':
+            return JsonResponse({'error': 'Route calculation failed'}, status=500)
+        
+        # Extract route geometry and summary
+        route = route_data['routes'][0]
+        geometry = route['geometry']
+        distance = route['distance'] / 1000  # Convert to km
+        duration = route['duration'] / 60  # Convert to minutes
+        
+        return JsonResponse({
+            'geometry': geometry,
+            'distance_km': distance,
+            'duration_minutes': duration
+        })
+    except http_requests.RequestException as e:
+        return JsonResponse({'error': 'Routing service unavailable'}, status=503)
+    except Exception as e:
+        return JsonResponse({'error': 'Error calculating route'}, status=500)
 
