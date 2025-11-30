@@ -155,7 +155,9 @@
         <div class="mb-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg shadow-sm border-2 border-blue-200 p-6" 
              data-toggle-location-url="{% url 'products:toggle_location_sharing' purchase_request.id 'purchase' %}"
              data-meeting-point-url="{% url 'products:meeting_point_api' purchase_request.id 'purchase' %}"
-             x-data="locationSharing('{{ purchase_request.id }}', 'purchase', {{ is_seller|yesno:'true,false' }}, {{ purchase_request.seller_shares_location|yesno:'true,false' }}, {{ purchase_request.buyer_shares_location|yesno:'true,false' }})">
+             data-live-location-url="{% url 'products:live_location_api' purchase_request.id 'purchase' %}"
+             x-data="locationSharing('{{ purchase_request.id }}', 'purchase', {{ is_seller|yesno:'true,false' }}, {{ purchase_request.seller_shares_location|yesno:'true,false' }}, {{ purchase_request.buyer_shares_location|yesno:'true,false' }})"
+             x-init="init()">
             <div class="flex items-start gap-4">
                 <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,6 +223,49 @@
                             <div class="text-sm text-gray-700" x-show="!meetingError" x-html="meetingInfo"></div>
                         </div>
                     </div>
+
+                    <!-- Seller Live Tracking Toggle -->
+                    {% if is_seller %}
+                    <div class="mt-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-300">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1">
+                                <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900">Live Tracking</p>
+                                    <p class="text-xs text-gray-600">Broadcast your live location to the buyer</p>
+                                </div>
+                            </div>
+                            <button @click="toggleLiveLocation()" 
+                                    :class="isLiveTracking ? 'bg-green-600' : 'bg-gray-400'"
+                                    class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                <span :class="isLiveTracking ? 'translate-x-5' : 'translate-x-0'"
+                                      class="inline-block h-7 w-7 transform rounded-full bg-white shadow-lg transition duration-200"></span>
+                            </button>
+                        </div>
+                        <div x-show="isLiveTracking" class="mt-3 flex items-start bg-white/60 rounded-lg p-3 text-xs text-gray-700">
+                            <div class="animate-pulse w-2 h-2 bg-green-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                            <div>
+                                <p class="font-semibold">Broadcasting location every <span x-text="liveTrackingInterval / 1000"></span>s</p>
+                                <p class="text-gray-600 mt-0.5">Stop sharing any time using the switch above</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if not is_seller %}
+                    <div class="mt-4 bg-white border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center text-sm font-semibold text-gray-900">
+                            <span class="w-2 h-2 rounded-full mr-2"
+                                  :class="remoteLiveActive ? 'bg-green-500 animate-pulse' : 'bg-gray-300'"></span>
+                            Seller live tracking status
+                         </div>
+                        <p class="text-sm text-gray-600 mt-2" x-text="liveStatusMessage || 'Waiting for the seller to start live tracking.'"></p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -511,12 +556,328 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
         requestType: requestType,
         isSeller: isSeller,
         sharesLocation: isSeller ? sellerShares : buyerShares,
+        otherUserShares: isSeller ? buyerShares : sellerShares,
         mapLoaded: false,
         meetingInfo: '',
         meetingError: '',
         meetingErrorShowProfileLink: false,
         map: null,
+        isLiveTracking: false,
+        liveTrackingInterval: 10000,
+        liveTrackingTimer: null,
+        watchId: null,
+        sellerMarker: null,
+        routeLine: null,
+        liveLocationUrl: null,
+        livePollingTimer: null,
+        liveStatusMessage: 'Waiting for live updates...',
+        remoteLiveActive: false,
+        lastLiveUpdate: null,
+        _inited: false,
         
+        init() {
+            if (this._inited) return;
+            this._inited = true;
+
+            this.liveLocationUrl = this.$el.dataset.liveLocationUrl || null;
+
+            if (this.sharesLocation && this.otherUserShares) {
+                this.mapLoaded = true;
+                this.$nextTick(() => {
+                    this.loadMeetingPoint();
+                });
+            }
+
+            if (!this.isSeller && this.liveLocationUrl) {
+                this.startLivePolling();
+            }
+        },
+
+        async toggleLiveLocation() {
+            if (!this.isSeller) {
+                return;
+            }
+            if (!this.sharesLocation) {
+                alert('Enable precise location sharing before broadcasting live location.');
+                return;
+            }
+            if (!this.liveLocationUrl) {
+                console.error('Live location endpoint not configured');
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser');
+                return;
+            }
+
+            if (!this.isLiveTracking) {
+                try {
+                    this.watchId = navigator.geolocation.watchPosition(
+                        (position) => this.updateLiveLocation(position),
+                        (error) => {
+                            console.error('Geolocation error:', error);
+                            alert('Unable to access your location. Please enable location services.');
+                            this.stopLiveTracking();
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            maximumAge: 5000,
+                            timeout: 10000
+                        }
+                    );
+
+                    this.liveTrackingTimer = window.setInterval(() => {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => this.updateLiveLocation(position),
+                            (error) => console.warn('Position update failed:', error)
+                        );
+                    }, this.liveTrackingInterval);
+
+                    this.isLiveTracking = true;
+                } catch (error) {
+                    console.error('Error starting live tracking:', error);
+                    alert('Failed to start live tracking');
+                    await this.stopLiveTracking();
+                }
+            } else {
+                await this.stopLiveTracking();
+            }
+        },
+
+        async stopLiveTracking() {
+            if (this.watchId !== null) {
+                navigator.geolocation.clearWatch(this.watchId);
+                this.watchId = null;
+            }
+
+            if (this.liveTrackingTimer !== null) {
+                clearInterval(this.liveTrackingTimer);
+                this.liveTrackingTimer = null;
+            }
+
+            if (this.isLiveTracking) {
+                this.isLiveTracking = false;
+                if (this.liveLocationUrl) {
+                    try {
+                        await this.sendLiveLocation(null, null, false);
+                    } catch (error) {
+                        console.warn('Unable to notify server about stopping live tracking:', error);
+                    }
+                }
+            }
+        },
+
+        async updateLiveLocation(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            if (this.map && this.mapLoaded) {
+                if (this.sellerMarker) {
+                    this.map.removeLayer(this.sellerMarker);
+                }
+
+                this.sellerMarker = L.marker([lat, lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(this.map).bindPopup(`<strong>🏪 Live Location</strong><br>Updated: ${new Date().toLocaleTimeString()}`);
+
+                await this.updateRouteToSeller(lat, lng);
+            }
+
+            if (this.liveLocationUrl) {
+                try {
+                    await this.sendLiveLocation(lat, lng, true);
+                } catch (error) {
+                    console.error('Failed to push live location:', error);
+                    alert('Live tracking stopped because the server rejected the update.');
+                    await this.stopLiveTracking();
+                }
+            }
+        },
+
+        async sendLiveLocation(lat, lng, isActive = true) {
+            const csrfToken = this.getCsrfToken();
+            if (!csrfToken) {
+                throw new Error('Missing CSRF token for live tracking');
+            }
+            if (!this.liveLocationUrl) {
+                throw new Error('Live location endpoint unavailable');
+            }
+
+            const payload = { is_active: isActive };
+            if (isActive) {
+                payload.latitude = lat;
+                payload.longitude = lng;
+            }
+
+            const response = await fetch(this.liveLocationUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Unable to update live location');
+            }
+            return data;
+        },
+
+        startLivePolling() {
+            if (this.livePollingTimer || !this.liveLocationUrl) {
+                return;
+            }
+            this.fetchLiveLocation();
+            const interval = Math.max(this.liveTrackingInterval, 8000);
+            this.livePollingTimer = window.setInterval(() => {
+                this.fetchLiveLocation();
+            }, interval);
+        },
+
+        stopLivePolling() {
+            if (this.livePollingTimer !== null) {
+                clearInterval(this.livePollingTimer);
+                this.livePollingTimer = null;
+            }
+        },
+
+        async fetchLiveLocation() {
+            if (this.isSeller || !this.liveLocationUrl) {
+                return;
+            }
+            try {
+                const response = await fetch(this.liveLocationUrl);
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    this.remoteLiveActive = false;
+                    this.liveStatusMessage = data.error || 'Seller is offline.';
+                    this.clearLiveRoute();
+                    return;
+                }
+
+                if (data.is_active && data.latitude !== null && data.longitude !== null) {
+                    this.remoteLiveActive = true;
+                    this.lastLiveUpdate = data.updated_at || null;
+                    const updatedText = data.updated_at ? new Date(data.updated_at).toLocaleTimeString() : 'just now';
+                    this.liveStatusMessage = `Seller is en route. Last update: ${updatedText}`;
+                    await this.handleRemoteLiveUpdate(data.latitude, data.longitude, data.updated_at);
+                } else {
+                    this.remoteLiveActive = false;
+                    this.liveStatusMessage = 'Seller has not started live tracking yet.';
+                    this.clearLiveRoute();
+                }
+            } catch (error) {
+                console.warn('Unable to fetch live location:', error);
+                this.liveStatusMessage = 'Unable to fetch live location. Retrying...';
+            }
+        },
+
+        async handleRemoteLiveUpdate(lat, lng, updatedAt) {
+            if (this.isSeller) {
+                return;
+            }
+
+            if (!this.mapLoaded && this.sharesLocation) {
+                await this.loadMeetingPoint();
+            }
+
+            if (!this.map) {
+                return;
+            }
+
+            if (this.sellerMarker) {
+                this.map.removeLayer(this.sellerMarker);
+            }
+
+            this.sellerMarker = L.marker([lat, lng], {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
+            }).addTo(this.map).bindPopup(`<strong>🏪 Live Location</strong><br>Updated: ${updatedAt ? new Date(updatedAt).toLocaleTimeString() : 'just now'}`);
+
+            await this.updateRouteToSeller(lat, lng);
+        },
+
+        clearLiveRoute() {
+            if (this.sellerMarker && this.map) {
+                this.map.removeLayer(this.sellerMarker);
+                this.sellerMarker = null;
+            }
+            if (this.routeLine && this.map) {
+                this.map.removeLayer(this.routeLine);
+                this.routeLine = null;
+            }
+        },
+
+        async updateRouteToSeller(sellerLat, sellerLng) {
+            try {
+                const meetingPointUrl = this.$root.dataset.meetingPointUrl;
+                const response = await fetch(meetingPointUrl);
+                const data = await response.json();
+
+                if (data.user1 && data.user1.latitude && data.user1.longitude) {
+                    const buyerLat = data.user1.latitude;
+                    const buyerLng = data.user1.longitude;
+
+                    const osrmUrl = `http://localhost:5000/route/v1/driving/${buyerLng},${buyerLat};${sellerLng},${sellerLat}?overview=full&geometries=geojson`;
+                    const routeResponse = await fetch(osrmUrl);
+                    const routeData = await routeResponse.json();
+
+                    if (routeData.code === 'Ok') {
+                        if (this.routeLine) {
+                            this.map.removeLayer(this.routeLine);
+                        }
+
+                        const routeCoords = routeData.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                        this.routeLine = L.polyline(routeCoords, {
+                            color: '#10b981',
+                            weight: 5,
+                            opacity: 0.8
+                        }).addTo(this.map);
+
+                        const distance = routeData.routes[0].distance / 1000;
+                        const duration = routeData.routes[0].duration / 60;
+
+                        this.meetingInfo = `
+                            <div class="space-y-2">
+                                <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                                    <p class="text-green-900 font-bold flex items-center">
+                                        <span class="animate-pulse w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                                        Live Tracking Active
+                                    </p>
+                                    <p class="text-green-800 mt-2">
+                                        <strong>📍 Current Distance:</strong> ${distance.toFixed(1)} km<br>
+                                        <strong>⏱️ Estimated Time:</strong> ~${Math.round(duration)} minutes<br>
+                                        <small class="text-green-700">Last updated: ${new Date().toLocaleTimeString()}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+
+                        this.map.fitBounds(this.routeLine.getBounds(), { padding: [50, 50] });
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to update route:', error);
+            }
+        },
+
         async toggleLocation() {
             try {
                 // Get CSRF token from cookie or meta tag
@@ -540,8 +901,13 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                 const data = await response.json();
                 if (data.success) {
                     this.sharesLocation = data.shares_location;
-                    if (this.mapLoaded) {
+                    if (this.sharesLocation) {
                         await this.loadMeetingPoint();
+                    } else {
+                        this.clearLiveRoute();
+                        if (this.isSeller && this.isLiveTracking) {
+                            await this.stopLiveTracking();
+                        }
                     }
                 } else {
                     alert(data.error || 'Failed to toggle location sharing');
@@ -620,7 +986,7 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                         popupAnchor: [1, -34],
                         shadowSize: [41, 41]
                     })
-                }).addTo(this.map).bindPopup(`<strong>📍 You</strong><br>${data.user1.name}`);
+                }).addTo(this.map).bindPopup(`<strong>📍 You</strong><br>${data.user1?.name || 'You'}`);
                 
                 // Add seller location marker if they share location
                 if (data.user2.shares_location && data.user2.latitude && data.user2.longitude) {
@@ -633,7 +999,7 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                             popupAnchor: [1, -34],
                             shadowSize: [41, 41]
                         })
-                    }).addTo(this.map).bindPopup(`<strong>🏪 Seller Location</strong><br>${data.user2.name}`);
+                    }).addTo(this.map).bindPopup(`<strong>🏪 Seller Location</strong><br>${data.user2?.name || 'Seller'}`);
                 } else if (data.meeting_point) {
                     // Show approximate area if seller doesn't share exact location
                     L.marker([data.meeting_point.latitude, data.meeting_point.longitude], {
@@ -658,7 +1024,7 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                         ${data.user2.shares_location 
                             ? `<p class="text-green-700"><strong>✅ Seller is sharing exact location</strong></p>
                                <p><strong>📏 Distance:</strong> ${distanceText}</p>` 
-                            : `<p class="text-gray-600"><strong>ℹ️ Seller's approximate area:</strong> ${data.user2.approximate_location}</p>
+                            : `<p class="text-gray-600"><strong>ℹ️ Seller's approximate area:</strong> ${data.user2.approximate_location || 'Not provided'}</p>
                                <p><strong>📏 Distance:</strong> ${distanceText}</p>`
                         }
                     </div>
@@ -671,11 +1037,13 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                     const routeData = await routeResponse.json();
                     
                     if (routeData.geometry) {
-                        // Convert GeoJSON coordinates [lng, lat] to Leaflet format [lat, lng]
                         const routeCoords = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
                         
-                        // Draw route polyline
-                        const routeLine = L.polyline(routeCoords, {
+                        if (this.routeLine) {
+                            this.map.removeLayer(this.routeLine);
+                        }
+                        
+                        this.routeLine = L.polyline(routeCoords, {
                             color: '#2563eb',
                             weight: 4,
                             opacity: 0.7
@@ -690,7 +1058,7 @@ function locationSharing(requestId, requestType, isSeller, sellerShares, buyerSh
                         `;
                         
                         // Fit map to show route
-                        this.map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                        this.map.fitBounds(this.routeLine.getBounds(), { padding: [50, 50] });
                     }
                 } catch (routeError) {
                     console.warn('Route not available:', routeError);

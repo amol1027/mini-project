@@ -51,5 +51,6 @@ urlpatterns = [
     path('<int:product_id>/distance/', views.product_distance_api, name='product_distance_api'),
     path('meeting-point/<int:request_id>/<str:request_type>/', views.meeting_point_api, name='meeting_point_api'),
     path('toggle-location/<int:request_id>/<str:request_type>/', views.toggle_location_sharing, name='toggle_location_sharing'),
+    path('live-location/<int:request_id>/<str:request_type>/', views.live_location_api, name='live_location_api'),
     path('route/<int:request_id>/<str:request_type>/', views.route_to_meeting_point, name='route_to_meeting'),
 ]

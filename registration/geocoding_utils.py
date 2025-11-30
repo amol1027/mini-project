@@ -38,7 +38,7 @@ def geocode_address(address, use_cache=True):
         cache_key = f'geocode_{get_address_hash(address)}'
         cached_result = cache.get(cache_key)
         if cached_result:
-            logger.info(f"Geocoding cache hit for: {address[:50]}")
+            logger.info(f"Geocoding cache hit for hash: {get_address_hash(address)}")
             return cached_result
     
     try:
@@ -49,7 +49,7 @@ def geocode_address(address, use_cache=True):
         
         if location:
             lat, lng = location.latitude, location.longitude
-            logger.info(f"Geocoded: {address[:50]} -> ({lat}, {lng})")
+            logger.info(f"Geocoded hash: {get_address_hash(address)} -> ({lat}, {lng})")
             
             # Cache for 24 hours
             if use_cache:
@@ -58,11 +58,11 @@ def geocode_address(address, use_cache=True):
             
             return lat, lng
         else:
-            logger.warning(f"Geocoding failed: No results for {address[:50]}")
+            logger.warning(f"Geocoding failed: No results for hash {get_address_hash(address)}")
             return None, None
             
     except GeocoderTimedOut:
-        logger.error(f"Geocoding timeout for: {address[:50]}")
+        logger.error(f"Geocoding timeout for hash: {get_address_hash(address)}")
         return None, None
     except GeocoderServiceError as e:
         logger.error(f"Geocoding service error: {str(e)}")
@@ -244,3 +244,70 @@ def approximate_coordinates(lat, lng, radius_km=0.1):
     approx_lng = round(float(lng), 3)
     
     return approx_lat, approx_lng
+
+def reverse_geocode(lat, lng, use_cache=True):
+    """
+    Convert coordinates to address details
+    
+    Args:
+        lat, lng: Coordinates
+        use_cache: Use cached results if available
+        
+    Returns:
+        dict: Address components or None
+    """
+    if lat is None or lng is None:
+        return None
+        
+    # Check cache first
+    cache_key = f'reverse_geocode_{lat}_{lng}'
+    if use_cache:
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            logger.info(f"Reverse geocoding cache hit for: {lat}, {lng}")
+            return cached_result
+            
+    try:
+        # Nominatim rate limit: 1 request per second
+        time.sleep(1)
+        
+        location = geolocator.reverse(f"{lat}, {lng}", timeout=10, language='en')
+        
+        if location and location.raw.get('address'):
+            address = location.raw['address']
+            
+            # Construct address line 1
+            house_number = address.get('house_number', '')
+            road = address.get('road') or address.get('pedestrian') or address.get('footway') or address.get('street') or ''
+            
+            if house_number and road:
+                address_line1 = f"{house_number} {road}"
+            else:
+                address_line1 = house_number or road or ''
+                
+            # If still empty, try to use the name of the place (e.g. building name)
+            if not address_line1:
+                 address_line1 = address.get('amenity') or address.get('building') or ''
+
+            # Map Nominatim fields to our model fields
+            result = {
+                'address_line1': address_line1,
+                'city': address.get('city') or address.get('town') or address.get('village') or address.get('hamlet') or address.get('suburb') or '',
+                'state_province': address.get('state') or address.get('region') or '',
+                'zip_postal_code': address.get('postcode') or '',
+                'country': address.get('country') or '',
+                'full_address': location.address
+            }
+            
+            # Cache for 24 hours
+            if use_cache:
+                cache.set(cache_key, result, 86400)
+                
+            return result
+        else:
+            logger.warning(f"Reverse geocoding failed: No results for {lat}, {lng}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Reverse geocoding error: {str(e)}")
+        return None

@@ -1,7 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_protect
 from registration.models import User
-from registration.geocoding_utils import geocode_user
+from registration.geocoding_utils import geocode_user, geocode_address, reverse_geocode
+from registration.tasks import geocode_user_task
+import logging
+
+logger = logging.getLogger(__name__)
 
 def profile_view(request):
     """
@@ -108,19 +114,29 @@ def edit_profile(request):
         # When unchecked, POST contains only 'false' (hidden)
         user.share_precise_location = 'true' in request.POST.getlist('share_precise_location')
         
+        # Handle explicit location from "Use Current Location"
+        lat = request.POST.get('latitude')
+        lng = request.POST.get('longitude')
+        explicit_location = False
+        
+        if lat and lng:
+            try:
+                user.latitude = float(lat)
+                user.longitude = float(lng)
+                explicit_location = True
+            except (ValueError, TypeError):
+                pass
+
         # Save user
         user.save()
         
         # Handle address changes and geocoding
         new_address = user.get_full_address()
-        if new_address != old_address:
+        if new_address != old_address and not explicit_location:
             if new_address:
-                # Address changed to a new value - geocode it
-                geocode_success = geocode_user(user)
-                if geocode_success:
-                    messages.success(request, 'Profile updated successfully! Location coordinates updated.')
-                else:
-                    messages.warning(request, 'Profile updated, but we couldn\'t find exact coordinates for your address.')
+                # Address changed to a new value - geocode asynchronously
+                geocode_user_task.delay(user.id)
+                messages.success(request, 'Profile updated successfully! Location coordinates will be updated shortly.')
             else:
                 # Address was cleared - remove stale coordinates
                 user.latitude = None
@@ -128,7 +144,7 @@ def edit_profile(request):
                 user.save()
                 messages.success(request, 'Profile updated successfully!')
         else:
-            # Address unchanged
+            # Address unchanged or explicit location used
             messages.success(request, 'Profile updated successfully!')
         
         return redirect('user_profile:profile')
@@ -138,3 +154,135 @@ def edit_profile(request):
     }
     
     return render(request, 'user_profile/edit_profile.html', context)
+
+
+from django.core.cache import cache
+
+@csrf_protect
+def verify_address_api(request):
+    """
+    API endpoint to verify an address and return coordinates
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    # Check if user is logged in
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+    # Rate limiting: 10 requests per minute per user
+    rate_limit_key = f"verify_address_limit_{user_id}"
+    request_count = cache.get(rate_limit_key, 0)
+    if request_count >= 10:
+        return JsonResponse({'error': 'Too many requests. Please try again later.'}, status=429)
+    
+    if request_count == 0:
+        cache.set(rate_limit_key, 1, 60)
+    else:
+        cache.incr(rate_limit_key)
+        
+    try:
+        import json
+        data = json.loads(request.body)
+        
+        # Input validation
+        address_parts = [
+            str(data.get('address_line1', ''))[:100],
+            str(data.get('address_line2', ''))[:100],
+            str(data.get('city', ''))[:50],
+            str(data.get('state_province', ''))[:50],
+            str(data.get('zip_postal_code', ''))[:20],
+            str(data.get('country', ''))[:50]
+        ]
+        
+        # Filter out empty parts
+        full_address = ", ".join([p for p in address_parts if p and p.strip()])
+        
+        if not full_address:
+            return JsonResponse({'error': 'Address is empty'}, status=400)
+            
+        if len(full_address) > 500:
+             return JsonResponse({'error': 'Address too long'}, status=400)
+
+        # Geocode
+        lat, lng = geocode_address(full_address, use_cache=True)
+        
+        if lat and lng:
+            return JsonResponse({
+                'success': True,
+                'latitude': lat,
+                'longitude': lng,
+                'formatted_address': full_address # Returning user's own input formatted
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Could not find coordinates for this address'
+            })
+            
+    except Exception as e:
+        # Log only the error type, not the content which might contain PII
+        logger.error(f"Error in verify_address_api: {type(e).__name__}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
+@csrf_protect
+def reverse_geocode_api(request):
+    """
+    API endpoint to get address from coordinates
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    # Check if user is logged in
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+    # Rate limiting: 10 requests per minute per user
+    rate_limit_key = f"reverse_geocode_limit_{user_id}"
+    request_count = cache.get(rate_limit_key, 0)
+    if request_count >= 10:
+        return JsonResponse({'error': 'Too many requests. Please try again later.'}, status=429)
+    
+    if request_count == 0:
+        cache.set(rate_limit_key, 1, 60)
+    else:
+        cache.incr(rate_limit_key)
+        
+    try:
+        import json
+        data = json.loads(request.body)
+        
+        lat = data.get('latitude')
+        lng = data.get('longitude')
+        
+        if not lat or not lng:
+            return JsonResponse({'error': 'Coordinates missing'}, status=400)
+            
+        # Validate coordinates
+        try:
+            lat = float(lat)
+            lng = float(lng)
+            if not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
+                raise ValueError
+        except ValueError:
+            return JsonResponse({'error': 'Invalid coordinates'}, status=400)
+
+        # Reverse Geocode
+        address_data = reverse_geocode(lat, lng, use_cache=True)
+        
+        if address_data:
+            return JsonResponse({
+                'success': True,
+                'address': address_data
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Could not find address for these coordinates'
+            })
+            
+    except Exception as e:
+        logger.error(f"Error in reverse_geocode_api: {type(e).__name__}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)

@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from registration.models import User
 from django.utils import timezone
 from django.db import transaction, IntegrityError
@@ -328,6 +328,31 @@ class BorrowRequest(models.Model):
         default=False,
         help_text="Whether borrower has agreed to share precise location for this request"
     )
+    lender_live_tracking_enabled = models.BooleanField(
+        default=False,
+        help_text="Whether lender is currently broadcasting live location"
+    )
+    lender_live_latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        help_text="Latest live latitude shared by lender"
+    )
+    lender_live_longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        help_text="Latest live longitude shared by lender"
+    )
+    lender_live_updated_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When lender last shared live location"
+    )
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -577,6 +602,31 @@ class PurchaseRequest(models.Model):
     buyer_shares_location = models.BooleanField(
         default=False,
         help_text="Whether buyer has agreed to share precise location for this request"
+    )
+    seller_live_tracking_enabled = models.BooleanField(
+        default=False,
+        help_text="Whether seller is currently broadcasting live location"
+    )
+    seller_live_latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        help_text="Latest live latitude shared by seller"
+    )
+    seller_live_longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        help_text="Latest live longitude shared by seller"
+    )
+    seller_live_updated_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When seller last shared live location"
     )
     
     # Timestamps

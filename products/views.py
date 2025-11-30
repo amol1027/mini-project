@@ -4,6 +4,7 @@ from django.db.models import F
 from django.db import transaction
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
+import json
 from django.core.cache import cache
 from django.utils import timezone
 from .models import Product, BorrowRequest, PurchaseRequest
@@ -1687,6 +1688,110 @@ def toggle_location_sharing(request, request_id, request_type):
 
 
 @login_required
+@rate_limit(max_requests=60, window_seconds=60)
+def live_location_api(request, request_id, request_type):
+    '''Handle live location updates from seller/lender and polling by the other party.'''
+    from registration.models import User
+
+    current_user = request.session.get('user_id')
+    get_object_or_404(User, id=current_user)
+    request_type = (request_type or '').lower()
+
+    if request_type == 'borrow':
+        req = get_object_or_404(BorrowRequest, id=request_id)
+        owner_user = req.lender
+        viewer_user = req.borrower
+        allowed_status = ['approved', 'active']
+        share_enabled = req.lender_shares_location
+        live_prefix = 'lender'
+    elif request_type == 'purchase':
+        req = get_object_or_404(PurchaseRequest, id=request_id)
+        owner_user = req.seller
+        viewer_user = req.buyer
+        allowed_status = ['approved', 'completed']
+        share_enabled = req.seller_shares_location
+        live_prefix = 'seller'
+    else:
+        return JsonResponse({'error': 'Invalid request type'}, status=400)
+
+    if owner_user is None or viewer_user is None:
+        return JsonResponse({'error': 'Participants not found'}, status=400)
+
+    if current_user not in [owner_user.id, viewer_user.id]:
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+
+    if req.status not in allowed_status:
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+
+    live_enabled_attr = f'{live_prefix}_live_tracking_enabled'
+    live_lat_attr = f'{live_prefix}_live_latitude'
+    live_lng_attr = f'{live_prefix}_live_longitude'
+    live_updated_attr = f'{live_prefix}_live_updated_at'
+
+    if request.method == 'POST':
+        if owner_user.id != current_user:
+            return JsonResponse({'error': 'Only the seller or lender can send live location'}, status=403)
+        if not share_enabled:
+            return JsonResponse({'error': 'Enable precise location sharing before live tracking'}, status=400)
+
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+
+        is_active = payload.get('is_active', True)
+        update_fields = [live_enabled_attr, live_lat_attr, live_lng_attr, live_updated_attr, 'updated_at']
+
+        if not is_active:
+            setattr(req, live_enabled_attr, False)
+            setattr(req, live_lat_attr, None)
+            setattr(req, live_lng_attr, None)
+            setattr(req, live_updated_attr, None)
+            req.save(update_fields=update_fields)
+            return JsonResponse({'success': True, 'is_active': False})
+
+        latitude = payload.get('latitude')
+        longitude = payload.get('longitude')
+
+        if latitude is None or longitude is None:
+            return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
+
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'Invalid coordinates supplied'}, status=400)
+
+        if not (-90.0 <= latitude <= 90.0 and -180.0 <= longitude <= 180.0):
+            return JsonResponse({'error': 'Coordinates out of bounds'}, status=400)
+
+        setattr(req, live_enabled_attr, True)
+        setattr(req, live_lat_attr, latitude)
+        setattr(req, live_lng_attr, longitude)
+        setattr(req, live_updated_attr, timezone.now())
+        req.save(update_fields=update_fields)
+
+        return JsonResponse({'success': True, 'is_active': True})
+
+    if request.method == 'GET':
+        live_enabled = getattr(req, live_enabled_attr)
+        latitude = getattr(req, live_lat_attr)
+        longitude = getattr(req, live_lng_attr)
+        updated_at = getattr(req, live_updated_attr)
+
+        is_active = bool(share_enabled and live_enabled and latitude is not None and longitude is not None)
+
+        return JsonResponse({
+            'is_active': is_active,
+            'latitude': float(latitude) if is_active else None,
+            'longitude': float(longitude) if is_active else None,
+            'updated_at': updated_at.isoformat() if updated_at else None,
+        })
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
 @rate_limit(max_requests=30, window_seconds=60)
 def route_to_meeting_point(request, request_id, request_type):
     """
@@ -1708,6 +1813,11 @@ def route_to_meeting_point(request, request_id, request_type):
     # Get the request based on type
     if request_type == 'borrow':
         borrow_request = get_object_or_404(BorrowRequest, id=request_id)
+        
+        # Only show for approved/active requests
+        if borrow_request.status not in ['approved', 'active']:
+            return JsonResponse({'error': 'Not authorized'}, status=403)
+        
         is_lender = borrow_request.product.seller.id == current_user
         is_borrower = borrow_request.borrower.id == current_user
         
@@ -1720,6 +1830,11 @@ def route_to_meeting_point(request, request_id, request_type):
         user2_shares = borrow_request.borrower_shares_location
     else:  # purchase
         purchase_request = get_object_or_404(PurchaseRequest, id=request_id)
+        
+        # Only show for approved/completed requests
+        if purchase_request.status not in ['approved', 'completed']:
+            return JsonResponse({'error': 'Not authorized'}, status=403)
+        
         is_seller = purchase_request.product.seller.id == current_user
         is_buyer = purchase_request.buyer.id == current_user
         
@@ -1771,6 +1886,10 @@ def route_to_meeting_point(request, request_id, request_type):
         if route_data.get('code') != 'Ok':
             return JsonResponse({'error': 'Route calculation failed'}, status=500)
         
+        # Check if routes exist
+        if not route_data.get('routes') or len(route_data['routes']) == 0:
+            return JsonResponse({'error': 'No route found between these locations'}, status=404)
+            
         # Extract route geometry and summary
         route = route_data['routes'][0]
         geometry = route['geometry']
