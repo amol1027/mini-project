@@ -146,9 +146,10 @@
                             </div>
                             <div class="text-right">
                                 <p class="text-xs text-gray-500">👁️ {{ product.views }} views</p>
-                                <p class="text-xs text-gray-500">by <span
-                                        class="{% if not request.session.user_id %}blur-username{% endif %}">{{
-                                        product.seller.name|default:product.seller.email|truncatechars:15 }}</span></p>
+                                <p class="text-xs text-gray-500">Uploaded by <span
+                                        class="{% if not request.session.user_id %}blur-username{% endif %}">{% if
+                                        product.seller.name %}{{ product.seller.name|truncatechars:15 }}{% else %}{{
+                                        product.seller.email|truncatechars:15 }}{% endif %}</span></p>
                             </div>
                         </div>
                     </div>

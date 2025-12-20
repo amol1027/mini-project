@@ -1,5 +1,6 @@
 from django import forms
 from .models import User
+import re
 
 class RegistrationForm(forms.ModelForm):
     """
@@ -7,7 +8,7 @@ class RegistrationForm(forms.ModelForm):
     """
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'class': 'w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
             'placeholder': 'Enter password'
         }),
         label='Password',
@@ -17,7 +18,7 @@ class RegistrationForm(forms.ModelForm):
     
     confirm_password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'class': 'w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
             'placeholder': 'Confirm password'
         }),
         label='Confirm Password'
@@ -83,6 +84,13 @@ class RegistrationForm(forms.ModelForm):
         if password and confirm_password:
             if password != confirm_password:
                 raise forms.ValidationError("Passwords do not match!")
+            
+            if not re.search(r'\d', password):
+                raise forms.ValidationError("Password must contain at least one digit.")
+            if not re.search(r'[A-Za-z]', password):
+                raise forms.ValidationError("Password must contain at least one letter.")
+            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+                raise forms.ValidationError("Password must contain at least one special character.")
         
         return cleaned_data
     

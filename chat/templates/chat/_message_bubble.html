@@ -1,35 +1,42 @@
 {# Reusable message bubble component #}
 {# Parameters: message, user #}
-<div class="flex {% if message.sender.id == user.id %}justify-end{% else %}justify-start{% endif %} animate-fadeIn" data-message-id="{{ message.id }}">
+<div class="flex {% if message.sender.id == user.id %}justify-end{% else %}justify-start{% endif %} animate-fadeIn"
+    data-message-id="{{ message.id }}">
     <div class="flex items-end gap-1.5 sm:gap-2 max-w-[90%] sm:max-w-[85%] md:max-w-[70%]">
         {# Avatar for other user (left side) #}
         {% if message.sender.id != user.id %}
-        <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-purple-100">
+        <div
+            class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-purple-100">
             {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
         </div>
         {% endif %}
-        
+
         {# Message bubble #}
         <div class="group relative">
-            <div class="{% if message.sender.id == user.id %}bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg{% else %}bg-white text-gray-900 border border-gray-200 shadow-md{% endif %} rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 transition-all hover:shadow-xl">
+            <div
+                class="{% if message.sender.id == user.id %}bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg{% else %}bg-white text-gray-900 border border-gray-200 shadow-md{% endif %} rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 transition-all hover:shadow-xl">
                 <p class="text-sm sm:text-base break-words leading-relaxed">{{ message.content }}</p>
                 <div class="flex items-center gap-1 mt-1.5">
-                    <p class="text-xs {% if message.sender.id == user.id %}text-indigo-100{% else %}text-gray-500{% endif %}">
+                    <p
+                        class="text-xs {% if message.sender.id == user.id %}text-indigo-100{% else %}text-gray-500{% endif %}">
                         {{ message.created_at|date:"g:i A" }}
                     </p>
                     {# Checkmark for current user's messages #}
                     {% if message.sender.id == user.id %}
                     <svg class="w-3 h-3 text-indigo-100" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        <path fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd" />
                     </svg>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         {# Avatar for current user (right side) #}
         {% if message.sender.id == user.id %}
-        <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-indigo-100">
+        <div
+            class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md ring-2 ring-indigo-100">
             {{ message.sender.name|default:message.sender.email|slice:":1"|upper }}
         </div>
         {% endif %}

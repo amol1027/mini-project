@@ -1,6 +1,7 @@
 {% load static tailwind_tags %}
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <title>Student Resource Exchange</title>
     <meta charset="UTF-8">
@@ -10,108 +11,112 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% tailwind_css %}
-    
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
-    
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        
+
         html {
             scroll-behavior: smooth;
         }
-        
-        [x-cloak] { display: none !important; }
-        
+
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* Mobile menu visibility */
-    /* x-cloak hides elements until Alpine initializes. Keep only x-cloak. */
-        
+        /* x-cloak hides elements until Alpine initializes. Keep only x-cloak. */
+
         /* Fade in animation */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .animate-fadeInUp {
             animation: fadeInUp 0.6s ease-out forwards;
         }
-        
+
         /* Card hover effect */
         .feature-card {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                        border-color 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s ease;
         }
-        
+
         .feature-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.15), 
-                        0 10px 10px -5px rgba(99, 102, 241, 0.08);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.15),
+                0 10px 10px -5px rgba(99, 102, 241, 0.08);
             border-color: rgba(99, 102, 241, 0.3);
         }
-        
+
         /* Button hover effects */
         .btn-hover {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .btn-hover:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
         }
-        
+
         /* Smooth transitions */
-        a, button {
+        a,
+        button {
             transition: all 0.2s ease-in-out;
         }
-        
+
         /* Custom Scrollbar Styles */
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #c7d2fe;
             border-radius: 4px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #a5b4fc;
         }
-        
+
         /* Scrollbar for tables and horizontal scroll areas */
         .overflow-x-auto::-webkit-scrollbar {
             height: 6px;
         }
-        
+
         .overflow-x-auto::-webkit-scrollbar-track {
             background: #f3f4f6;
             border-radius: 3px;
         }
-        
+
         .overflow-x-auto::-webkit-scrollbar-thumb {
             background: #d1d5db;
             border-radius: 3px;
         }
-        
+
         .overflow-x-auto::-webkit-scrollbar-thumb:hover {
             background: #9ca3af;
         }
-        
+
         /* Prevent text selection on navigation buttons */
         .pagination-btn {
             user-select: none;
@@ -119,17 +124,19 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
-        
+
         /* Fix mobile viewport height issues */
         @supports (-webkit-touch-callout: none) {
             .min-h-screen {
                 min-height: -webkit-fill-available;
             }
         }
-        
+
         /* Touch device optimizations */
         @media (hover: none) and (pointer: coarse) {
-            button, a {
+
+            button,
+            a {
                 min-height: 44px;
                 min-width: 44px;
             }
@@ -141,17 +148,21 @@
 <body class="bg-white text-gray-800 antialiased">
 
     <!-- Main Navigation Bar -->
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" x-data="{ mobileMenuOpen: false, userMenuOpen: false }" @click.away="userMenuOpen = false">
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm"
+        x-data="{ mobileMenuOpen: false, userMenuOpen: false }" @click.away="userMenuOpen = false">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                
+
                 <!-- Logo and Brand -->
                 <div class="flex items-center">
-                    <a href="{% if request.session.user_id %}{% url 'products:product_list' %}{% else %}{% url 'landing:landing' %}{% endif %}" class="flex items-center gap-2 group">
-                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform flex-shrink-0">
+                    <a href="{% if request.session.user_id %}{% url 'products:product_list' %}{% else %}{% url 'landing:landing' %}{% endif %}"
+                        class="flex items-center gap-2 group">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform flex-shrink-0">
                             <span class="text-white font-bold text-xl">SRE</span>
                         </div>
-                        <span class="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">Student Resource Exchange</span>
+                        <span class="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">Student Resource
+                            Exchange</span>
                     </a>
                 </div>
 
@@ -159,28 +170,28 @@
                 <div class="hidden md:flex items-center gap-1 ml-auto">
                     {% if request.session.user_id %}
                     <!-- Logged In User Navigation -->
-                    <a href="{% url 'products:product_list' %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if request.path == '/' or '/products/' in request.path and '/my-products' not in request.path and '/create' not in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <a href="{% url 'products:product_list' %}"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if request.path == '/' or '/products/' in request.path and '/my-products' not in request.path and '/create' not in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                         Home
                     </a>
-                    <a href="{% url 'products:product_create' %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if '/products/create' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <a href="{% url 'products:product_create' %}"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if '/products/create' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                         Upload Product
                     </a>
                     {% if request.session.is_admin %}
-                    <a href="{% url 'dashboard:dashboard' %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if '/dashboard/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <a href="{% url 'dashboard:dashboard' %}"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if '/dashboard/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                         Dashboard
                     </a>
                     {% endif %}
                     {% else %}
                     <!-- Not Logged In User Navigation - Only Browse Products -->
-                     <a href="{% url 'landing:landing' %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if request.path == '/' or '/landing/' in request.path and '/my-products' not in request.path and '/create' not in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <a href="{% url 'landing:landing' %}"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if request.path == '/' or '/landing/' in request.path and '/my-products' not in request.path and '/create' not in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                         Home
                     </a>
-                    <a href="{% url 'products:product_list' %}" 
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if '/products/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <a href="{% url 'products:product_list' %}"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {% if '/products/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                         Browse Products
                     </a>
                     {% endif %}
@@ -191,113 +202,144 @@
                     {% if request.session.user_id %}
                     <!-- User Dropdown Menu (Desktop) -->
                     <div class="hidden md:block relative">
-                        <button @click="userMenuOpen = !userMenuOpen" 
-                                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-                            <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <button @click="userMenuOpen = !userMenuOpen"
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div
+                                class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                                 <span class="text-white font-semibold text-sm">
                                     {{ request.session.user_name.0|upper }}
                                 </span>
                             </div>
                             <span class="text-sm font-medium text-gray-700">{{ request.session.user_name }}</span>
-                            <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': userMenuOpen }" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            <svg class="w-4 h-4 text-gray-500 transition-transform"
+                                :class="{ 'rotate-180': userMenuOpen }" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
                             </svg>
                         </button>
-                        
+
                         <!-- Dropdown Menu -->
-                        <div x-show="userMenuOpen" 
-                             x-cloak
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="transform opacity-100 scale-100"
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                            
+                        <div x-show="userMenuOpen" x-cloak x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+
                             <div class="px-4 py-3 border-b border-gray-100">
                                 <p class="text-sm font-medium text-gray-900">{{ request.session.user_name }}</p>
                                 <p class="text-xs text-gray-500 truncate">{{ request.session.user_email }}</p>
                             </div>
-                            
-                                                        <a href="{% url 'user_profile:profile' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+
+                            <a href="{% url 'user_profile:profile' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                                 Profile
                             </a>
-                            
-                            <a href="{% url 'products:my_products' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+
+                            <a href="{% url 'products:my_products' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                 <svg class="w-4 h-4 mr-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                                    <path
+                                        d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
                                 </svg>
                                 My Products
                             </a>
-                            
-                            <a href="{% url 'products:my_borrow_requests' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+
+                            <a href="{% url 'products:my_borrow_requests' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                 </svg>
                                 My Borrow Requests
                             </a>
-                            
-                            <a href="{% url 'products:my_lend_requests' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+
+                            <a href="{% url 'products:my_lend_requests' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                 </svg>
                                 <span class="flex items-center gap-2">
                                     Lending Dashboard
                                     {% if pending_borrow_requests_count > 0 %}
-                                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full animate-pulse" id="nav-pending-requests-badge">
+                                    <span
+                                        class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full animate-pulse"
+                                        id="nav-pending-requests-badge">
                                         {{ pending_borrow_requests_count }}
                                     </span>
                                     {% endif %}
                                 </span>
                             </a>
-                            
-                            <a href="{% url 'products:my_purchase_requests' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+
+                            <a href="{% url 'products:my_purchase_requests' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                 </svg>
                                 My Purchase Requests
                             </a>
-                            
-                            <a href="{% url 'products:my_sale_requests' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+
+                            <a href="{% url 'products:my_sale_requests' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 Sales Dashboard
                             </a>
-                            
-                            <a href="{% url 'chat:conversation_list' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+
+                            <a href="{% url 'chat:conversation_list' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                 <svg class="w-4 h-4 mr-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
-                                    <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                                    <path
+                                        d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                                    <path
+                                        d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
                                 </svg>
                                 <span class="flex items-center gap-2">
                                     Messages
                                     {% if unread_message_count > 0 %}
-                                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full" id="nav-unread-badge">
+                                    <span
+                                        class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
+                                        id="nav-unread-badge">
                                         {{ unread_message_count }}
                                     </span>
                                     {% endif %}
                                 </span>
                             </a>
-                            
+
                             {% if request.session.is_admin %}
-                            <a href="{% url 'dashboard:dashboard' %}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                            <a href="{% url 'dashboard:dashboard' %}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                 <svg class="w-4 h-4 mr-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                                    <path
+                                        d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                                 </svg>
                                 Admin Dashboard
                             </a>
                             {% endif %}
-                            
+
                             <hr class="my-1">
-                            
-                            <a href="{% url 'login:logout' %}" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+
+                            <a href="{% url 'login:logout' %}"
+                                class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                 <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                                    <path fill-rule="evenodd"
+                                        d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+                                        clip-rule="evenodd" />
                                 </svg>
                                 Logout
                             </a>
@@ -306,25 +348,27 @@
                     {% else %}
                     <!-- Not Logged In (Desktop) -->
                     <div class="hidden md:flex items-center gap-2">
-                        <a href="{% url 'login:login' %}" 
-                           class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <a href="{% url 'login:login' %}"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                             Login
                         </a>
-                        <a href="{% url 'registration:register' %}" 
-                           class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+                        <a href="{% url 'registration:register' %}"
+                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
                             Sign Up
                         </a>
                     </div>
                     {% endif %}
 
                     <!-- Mobile Menu Button -->
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" 
-                            class="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            aria-label="Toggle menu"
-                            :aria-expanded="mobileMenuOpen">
-                        <svg class="w-6 h-6 transition-transform duration-200" :class="{'rotate-90': mobileMenuOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                            <path x-show="mobileMenuOpen" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        aria-label="Toggle menu" :aria-expanded="mobileMenuOpen">
+                        <svg class="w-6 h-6 transition-transform duration-200" :class="{'rotate-90': mobileMenuOpen}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path x-show="mobileMenuOpen" x-cloak stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
@@ -332,22 +376,21 @@
         </div>
 
         <!-- Mobile Menu -->
-        <div x-show="mobileMenuOpen" 
-             x-cloak
-             @click.away="mobileMenuOpen = false"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 transform -translate-y-2"
-             x-transition:enter-end="opacity-100 transform translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 transform translate-y-0"
-             x-transition:leave-end="opacity-0 transform -translate-y-2"
-             class="md:hidden border-t border-gray-200 bg-white shadow-lg">
+        <div x-show="mobileMenuOpen" x-cloak @click.away="mobileMenuOpen = false"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 transform -translate-y-2"
+            x-transition:enter-end="opacity-100 transform translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 transform translate-y-0"
+            x-transition:leave-end="opacity-0 transform -translate-y-2"
+            class="md:hidden border-t border-gray-200 bg-white shadow-lg">
             <div class="px-4 py-3 space-y-1">
-                
+
                 {% if request.session.user_id %}
                 <!-- User Info -->
                 <div class="flex items-center gap-3 px-3 py-3 bg-gray-50 rounded-lg mb-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                         <span class="text-white font-semibold">{{ request.session.user_name.0|upper }}</span>
                     </div>
                     <div>
@@ -356,131 +399,138 @@
                     </div>
                 </div>
                 {% endif %}
-                
+
                 <!-- Navigation Links -->
                 {% if request.session.user_id %}
                 <!-- Logged In User - Mobile Menu -->
-                <a href="{% url 'products:product_list' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium {% if request.path == '/' or '/products/' in request.path and '/my-products' not in request.path and '/create' not in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
-                   @click="mobileMenuOpen = false">
+                <a href="{% url 'products:product_list' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {% if request.path == '/' or '/products/' in request.path and '/my-products' not in request.path and '/create' not in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                    @click="mobileMenuOpen = false">
                     Home
                 </a>
-                
-                <a href="{% url 'products:product_create' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'products:product_create' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     Upload Product
                 </a>
-                
-                <a href="{% url 'user_profile:profile' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'user_profile:profile' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     My Profile
                 </a>
-                
-                <a href="{% url 'products:my_products' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'products:my_products' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     My Products
                 </a>
-                
-                <a href="{% url 'products:my_borrow_requests' %}" 
-                   class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'products:my_borrow_requests' %}"
+                    class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
                     My Borrow Requests
                 </a>
-                
-                <a href="{% url 'products:my_lend_requests' %}" 
-                   class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'products:my_lend_requests' %}"
+                    class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     <span class="flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                         Lending Dashboard
                     </span>
                     {% if pending_borrow_requests_count > 0 %}
-                    <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full animate-pulse mobile-pending-requests-badge">
+                    <span
+                        class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-yellow-600 rounded-full animate-pulse mobile-pending-requests-badge">
                         {{ pending_borrow_requests_count }}
                     </span>
                     {% endif %}
                 </a>
-                
-                <a href="{% url 'products:my_purchase_requests' %}" 
-                   class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'products:my_purchase_requests' %}"
+                    class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                     My Purchase Requests
                 </a>
-                
-                <a href="{% url 'products:my_sale_requests' %}" 
-                   class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'products:my_sale_requests' %}"
+                    class="flex items-center px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Sales Dashboard
                 </a>
-                
-                <a href="{% url 'chat:conversation_list' %}" 
-                   class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium {% if '/chat/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'chat:conversation_list' %}"
+                    class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium {% if '/chat/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                    @click="mobileMenuOpen = false">
                     <span class="flex items-center gap-2">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
-                            <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                            <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                            <path
+                                d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
                         </svg>
                         Messages
                     </span>
                     {% if unread_message_count > 0 %}
-                    <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full animate-pulse mobile-unread-badge">
+                    <span
+                        class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full animate-pulse mobile-unread-badge">
                         {{ unread_message_count }}
                     </span>
                     {% endif %}
                 </a>
-                
+
                 {% if request.session.is_admin %}
-                <a href="{% url 'dashboard:dashboard' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+                <a href="{% url 'dashboard:dashboard' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     Admin Dashboard
                 </a>
                 {% endif %}
-                
+
                 <hr class="my-2">
-                
-                <a href="{% url 'login:logout' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-red-600 hover:bg-red-50"
-                   @click="mobileMenuOpen = false">
+
+                <a href="{% url 'login:logout' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium text-red-600 hover:bg-red-50"
+                    @click="mobileMenuOpen = false">
                     Logout
                 </a>
                 {% else %}
                 <!-- Not Logged In - Mobile Menu - Only Browse Products -->
-                 <a href="{% url 'landing:landing' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium {% if '/landing/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
-                   @click="mobileMenuOpen = false">
+                <a href="{% url 'landing:landing' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {% if '/landing/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                    @click="mobileMenuOpen = false">
                     Home
                 </a>
-                <a href="{% url 'products:product_list' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium {% if '/products/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
-                   @click="mobileMenuOpen = false">
+                <a href="{% url 'products:product_list' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium {% if '/products/' in request.path %}bg-indigo-50 text-indigo-700{% else %}text-gray-700 hover:bg-gray-100{% endif %}"
+                    @click="mobileMenuOpen = false">
                     Browse Products
                 </a>
-                
+
                 <hr class="my-2">
-                <a href="{% url 'login:login' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
-                   @click="mobileMenuOpen = false">
+                <a href="{% url 'login:login' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                    @click="mobileMenuOpen = false">
                     Login
                 </a>
-                <a href="{% url 'registration:register' %}" 
-                   class="block px-3 py-2 rounded-lg text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 text-center"
-                   @click="mobileMenuOpen = false">
+                <a href="{% url 'registration:register' %}"
+                    class="block px-3 py-2 rounded-lg text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 text-center"
+                    @click="mobileMenuOpen = false">
                     Sign Up
                 </a>
                 {% endif %}
@@ -492,30 +542,37 @@
     {% if messages and '/chat/' not in request.path %}
     <div class="fixed top-20 right-4 z-50 space-y-2 max-w-md">
         {% for message in messages %}
-        <div role="alert" 
-             class="rounded-lg shadow-lg p-4 {% if message.tags == 'error' %}bg-red-50 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 border-l-4 border-green-500{% elif message.tags == 'warning' %}bg-yellow-50 border-l-4 border-yellow-500{% else %}bg-blue-50 border-l-4 border-blue-500{% endif %} animate-fadeInUp"
-             x-data="{ show: true }"
-             x-show="show"
-             x-init="setTimeout(() => show = false, 5000)">
+        <div role="alert"
+            class="rounded-lg shadow-lg p-4 {% if message.tags == 'error' %}bg-red-50 border-l-4 border-red-500{% elif message.tags == 'success' %}bg-green-50 border-l-4 border-green-500{% elif message.tags == 'warning' %}bg-yellow-50 border-l-4 border-yellow-500{% else %}bg-blue-50 border-l-4 border-blue-500{% endif %} animate-fadeInUp"
+            x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
             <div class="flex items-center">
                 {% if message.tags == 'error' %}
                 <svg class="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clip-rule="evenodd" />
                 </svg>
                 {% elif message.tags == 'success' %}
                 <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd" />
                 </svg>
                 {% elif message.tags == 'warning' %}
                 <svg class="w-5 h-5 text-yellow-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd" />
                 </svg>
                 {% else %}
                 <svg class="w-5 h-5 text-blue-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clip-rule="evenodd" />
                 </svg>
                 {% endif %}
-                <p class="text-sm {% if message.tags == 'error' %}text-red-800{% elif message.tags == 'success' %}text-green-800{% elif message.tags == 'warning' %}text-yellow-800{% else %}text-blue-800{% endif %}">
+                <p
+                    class="text-sm {% if message.tags == 'error' %}text-red-800{% elif message.tags == 'success' %}text-green-800{% elif message.tags == 'warning' %}text-yellow-800{% else %}text-blue-800{% endif %}">
                     {{ message }}
                 </p>
             </div>
@@ -537,35 +594,41 @@
                 <!-- Brand -->
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center gap-2 mb-4">
-                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                             <span class="text-white font-bold text-xl">SRE</span>
                         </div>
                         <span class="text-xl font-bold text-white">Student Resource Exchange</span>
                     </div>
                     <p class="text-gray-400 text-sm mb-4">
-                        A platform built by students, for students. Share, exchange, and discover educational resources within your community.
+                        A platform built by students, for students. Share, exchange, and discover educational resources
+                        within your community.
                     </p>
                     <p class="text-gray-500 text-xs">
                         © 2025 Student Resource Exchange. All rights reserved.
                     </p>
                 </div>
-                
+
                 <!-- Quick Links -->
                 <div>
                     <h3 class="text-white font-semibold mb-4">Quick Links</h3>
                     <ul class="space-y-2 text-sm">
-                        
-                        <li><a href="{% url 'products:product_list' %}" class="hover:text-white transition-colors">Browse Products</a></li>
+
+                        <li><a href="{% url 'products:product_list' %}"
+                                class="hover:text-white transition-colors">Browse Products</a></li>
                         {% if request.session.user_id %}
-                        <li><a href="{% url 'products:product_create' %}" class="hover:text-white transition-colors">Upload Product</a></li>
-                        <li><a href="{% url 'products:my_products' %}" class="hover:text-white transition-colors">My Products</a></li>
+                        <li><a href="{% url 'products:product_create' %}"
+                                class="hover:text-white transition-colors">Upload Product</a></li>
+                        <li><a href="{% url 'products:my_products' %}" class="hover:text-white transition-colors">My
+                                Products</a></li>
                         {% else %}
                         <li><a href="{% url 'login:login' %}" class="hover:text-white transition-colors">Login</a></li>
-                        <li><a href="{% url 'registration:register' %}" class="hover:text-white transition-colors">Sign Up</a></li>
+                        <li><a href="{% url 'registration:register' %}" class="hover:text-white transition-colors">Sign
+                                Up</a></li>
                         {% endif %}
                     </ul>
                 </div>
-                
+
                 <!-- Support -->
                 <div>
                     <h3 class="text-white font-semibold mb-4">Support</h3>
@@ -579,50 +642,50 @@
             </div>
         </div>
     </footer>
-    
+
     <!-- Vanilla JS Fallback for Mobile Menu -->
     <script>
         // Fallback if Alpine.js doesn't load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Wait a bit for Alpine to initialize
-            setTimeout(function() {
+            setTimeout(function () {
                 if (typeof window.Alpine === 'undefined') {
                     console.log('Alpine.js not detected, using vanilla JS fallback');
-                    
+
                     const menuButton = document.querySelector('[data-mobile-menu-button]');
                     const closeButton = document.querySelector('[data-mobile-menu-close]');
                     const mobileMenu = document.querySelector('[data-mobile-menu]');
                     const backdrop = document.querySelector('[data-mobile-menu-backdrop]');
                     const menuLinks = document.querySelectorAll('[data-mobile-menu-link]');
                     const menuPanel = document.querySelector('[data-mobile-menu-panel]');
-                    
+
                     if (menuButton && menuPanel) {
                         // Initialize menu as hidden
                         menuPanel.style.display = 'none';
-                        
-                        menuButton.addEventListener('click', function() {
+
+                        menuButton.addEventListener('click', function () {
                             const isHidden = menuPanel.style.display === 'none';
                             menuPanel.style.display = isHidden ? 'block' : 'none';
                             // Also toggle the parent menu visibility
                             mobileMenu.style.display = isHidden ? 'block' : 'none';
                         });
-                        
+
                         if (closeButton) {
-                            closeButton.addEventListener('click', function() {
+                            closeButton.addEventListener('click', function () {
                                 menuPanel.style.display = 'none';
                                 mobileMenu.style.display = 'none';
                             });
                         }
-                        
+
                         if (backdrop) {
-                            backdrop.addEventListener('click', function() {
+                            backdrop.addEventListener('click', function () {
                                 menuPanel.style.display = 'none';
                                 mobileMenu.style.display = 'none';
                             });
                         }
-                        
-                        menuLinks.forEach(function(link) {
-                            link.addEventListener('click', function() {
+
+                        menuLinks.forEach(function (link) {
+                            link.addEventListener('click', function () {
                                 menuPanel.style.display = 'none';
                                 mobileMenu.style.display = 'none';
                             });
@@ -633,134 +696,135 @@
         });
 
         // Auto-dismiss messages after 5 seconds with smooth animation
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const messages = document.querySelectorAll('[role="alert"]');
-            messages.forEach(function(message) {
+            messages.forEach(function (message) {
                 // Add a close button to each message
                 const closeBtn = document.createElement('button');
                 closeBtn.innerHTML = '&times;';
                 closeBtn.className = 'ml-auto text-2xl font-bold leading-none hover:opacity-75 transition-opacity';
                 closeBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 0 0 0 12px;';
                 closeBtn.setAttribute('aria-label', 'Close');
-                
+
                 // Add close button to message
                 const messageContent = message.querySelector('div');
                 if (messageContent) {
                     messageContent.appendChild(closeBtn);
                 }
-                
+
                 // Function to dismiss message
                 function dismissMessage() {
                     message.style.transition = 'all 0.5s ease-out';
                     message.style.opacity = '0';
                     message.style.transform = 'translateY(-10px)';
-                    setTimeout(function() {
+                    setTimeout(function () {
                         message.remove();
                     }, 500);
                 }
-                
+
                 // Close button click handler
                 closeBtn.addEventListener('click', dismissMessage);
-                
+
                 // Auto-dismiss after 5 seconds
                 setTimeout(dismissMessage, 5000);
             });
         });
     </script>
-    
+
     <!-- Unread Message Count Polling -->
     {% if request.session.user_id %}
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Poll for unread message count every 5 seconds for faster updates
-        async function updateUnreadCount() {
-            try {
-                const response = await fetch('{% url "chat:get_unread_count" %}');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        const badges = document.querySelectorAll('#nav-unread-badge, .mobile-unread-badge');
-                        
-                        if (data.unread_count > 0) {
-                            badges.forEach(badge => {
-                                if (badge) {
-                                    badge.textContent = data.unread_count;
-                                    badge.style.display = 'inline-flex';
+        document.addEventListener('DOMContentLoaded', function () {
+            // Poll for unread message count every 5 seconds for faster updates
+            async function updateUnreadCount() {
+                try {
+                    const response = await fetch('{% url "chat:get_unread_count" %}');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            const badges = document.querySelectorAll('#nav-unread-badge, .mobile-unread-badge');
+
+                            if (data.unread_count > 0) {
+                                badges.forEach(badge => {
+                                    if (badge) {
+                                        badge.textContent = data.unread_count;
+                                        badge.style.display = 'inline-flex';
+                                    }
+                                });
+
+                                // Update page title if there are unread messages
+                                if (!document.title.startsWith('(')) {
+                                    document.title = '(' + data.unread_count + ') ' + document.title;
+                                } else {
+                                    document.title = document.title.replace(/\(\d+\)/, '(' + data.unread_count + ')');
                                 }
-                            });
-                            
-                            // Update page title if there are unread messages
-                            if (!document.title.startsWith('(')) {
-                                document.title = '(' + data.unread_count + ') ' + document.title;
                             } else {
-                                document.title = document.title.replace(/\(\d+\)/, '(' + data.unread_count + ')');
+                                badges.forEach(badge => {
+                                    if (badge) {
+                                        badge.style.display = 'none';
+                                    }
+                                });
+
+                                // Remove unread count from title
+                                document.title = document.title.replace(/^\(\d+\)\s*/, '');
                             }
-                        } else {
-                            badges.forEach(badge => {
-                                if (badge) {
-                                    badge.style.display = 'none';
-                                }
-                            });
-                            
-                            // Remove unread count from title
-                            document.title = document.title.replace(/^\(\d+\)\s*/, '');
                         }
                     }
+                } catch (error) {
+                    console.error('Error updating unread count:', error);
                 }
-            } catch (error) {
-                console.error('Error updating unread count:', error);
+
+                // Schedule next update in 5 seconds
+                setTimeout(updateUnreadCount, 5000);
             }
-            
-            // Schedule next update in 5 seconds
-            setTimeout(updateUnreadCount, 5000);
-        }
-        
-        // Start polling immediately
-        setTimeout(updateUnreadCount, 1000);
-    });
+
+            // Start polling immediately
+            setTimeout(updateUnreadCount, 1000);
+        });
     </script>
-    
+
     <!-- Pending Borrow Requests Count Polling -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Poll for pending borrow requests count every 20 seconds
-        async function updatePendingRequestsCount() {
-            try {
-                const response = await fetch('{% url "products:get_pending_requests_count" %}');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        const badges = document.querySelectorAll('#nav-pending-requests-badge, .mobile-pending-requests-badge');
-                        
-                        if (data.pending_count > 0) {
-                            badges.forEach(badge => {
-                                if (badge) {
-                                    badge.textContent = data.pending_count;
-                                    badge.style.display = 'inline-flex';
-                                }
-                            });
-                        } else {
-                            badges.forEach(badge => {
-                                if (badge) {
-                                    badge.style.display = 'none';
-                                }
-                            });
+        document.addEventListener('DOMContentLoaded', function () {
+            // Poll for pending borrow requests count every 20 seconds
+            async function updatePendingRequestsCount() {
+                try {
+                    const response = await fetch('{% url "products:get_pending_requests_count" %}');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            const badges = document.querySelectorAll('#nav-pending-requests-badge, .mobile-pending-requests-badge');
+
+                            if (data.pending_count > 0) {
+                                badges.forEach(badge => {
+                                    if (badge) {
+                                        badge.textContent = data.pending_count;
+                                        badge.style.display = 'inline-flex';
+                                    }
+                                });
+                            } else {
+                                badges.forEach(badge => {
+                                    if (badge) {
+                                        badge.style.display = 'none';
+                                    }
+                                });
+                            }
                         }
                     }
+                } catch (error) {
+                    console.error('Error updating pending requests count:', error);
                 }
-            } catch (error) {
-                console.error('Error updating pending requests count:', error);
+
+                // Schedule next update
+                setTimeout(updatePendingRequestsCount, 20000);
             }
-            
-            // Schedule next update
-            setTimeout(updatePendingRequestsCount, 20000);
-        }
-        
-        // Start polling after 7 seconds (slightly offset from messages)
-        setTimeout(updatePendingRequestsCount, 7000);
-    });
+
+            // Start polling after 7 seconds (slightly offset from messages)
+            setTimeout(updatePendingRequestsCount, 7000);
+        });
     </script>
     {% endif %}
 
 </body>
+
 </html>
