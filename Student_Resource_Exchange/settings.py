@@ -52,13 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_beat',  # Celery beat scheduler for periodic tasks
     'social_django',  # Social authentication
-]
-
-# Add tailwind only in development (requires Node.js)
-if DEBUG:
-    INSTALLED_APPS.extend(['tailwind', 'theme'])
-
-INSTALLED_APPS.extend([
+    'theme',  # Theme templates and static files
     'landing',
     'registration',
     'login',
@@ -67,7 +61,11 @@ INSTALLED_APPS.extend([
     'products',
     'chat',
     'ai_assistant',  # AI Assistant chatbot
-])
+]
+
+# Add django-tailwind only in development (requires Node.js)
+if DEBUG:
+    INSTALLED_APPS.insert(INSTALLED_APPS.index('theme'), 'tailwind')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
