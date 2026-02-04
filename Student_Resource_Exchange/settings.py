@@ -32,12 +32,13 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.ngrok-free
 if not DEBUG:
     ALLOWED_HOSTS.append('.onrender.com')
 
-# CSRF trusted origins for ngrok
+# CSRF trusted origins for ngrok and Render
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
     'https://*.ngrok.io',
     'https://*.ngrok-free.dev',
     'https://luz-unregainable-karly.ngrok-free.dev',
+    'https://*.onrender.com',
 ]
 
 # Application definition
@@ -182,10 +183,14 @@ NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 # ========== Celery Configuration ==========
 # Celery broker (message queue) - using Redis
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# In production, use environment variable if available, otherwise disable Celery
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 
 # Celery result backend (stores task results)
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+# Disable Celery in production if Redis is not available
+CELERY_TASK_ALWAYS_EAGER = not DEBUG and not os.environ.get('REDIS_URL')
 
 # Celery task serialization format
 CELERY_ACCEPT_CONTENT = ['json']
