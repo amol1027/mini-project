@@ -95,7 +95,15 @@ def edit_profile(request):
     
     if request.method == 'POST':
         # Update user fields
-        user.name = request.POST.get('name', user.name)
+        name = request.POST.get('name', user.name)
+        
+        # Validate name
+        import re
+        if re.search(r'\d', name):
+            messages.error(request, 'Name cannot contain numbers.')
+            return redirect('user_profile:profile')
+            
+        user.name = name
         user.college_name = request.POST.get('college_name', user.college_name)
         user.university_name = request.POST.get('university_name', user.university_name)
         user.college_id = request.POST.get('college_id', user.college_id)

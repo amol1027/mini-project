@@ -99,10 +99,10 @@
                             </div>
 
                             <!-- Unread Badge -->
-                            {% if conv_data.unread_count > 0 %}
+                            {% if conv_data.conversation.unread_count > 0 %}
                             <div class="flex-shrink-0 self-center">
                                 <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs sm:text-sm font-bold rounded-full shadow-md animate-pulse">
-                                    {{ conv_data.unread_count }}
+                                    {{ conv_data.conversation.unread_count }}
                                 </span>
                             </div>
                             {% else %}

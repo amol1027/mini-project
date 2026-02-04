@@ -28,6 +28,8 @@ urlpatterns = [
     path('profile/', include('user_profile.urls')),
     path('products/', include('products.urls')),
     path('chat/', include('chat.urls')),
+    path('assistant/', include('ai_assistant.urls')),  # AI Assistant
+    path('auth/', include('social_django.urls', namespace='social')),  # Google OAuth
 ]
 
 # Serve media files in development

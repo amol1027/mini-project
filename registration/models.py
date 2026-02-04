@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+import secrets
 
 class User(models.Model):
     """
@@ -16,6 +18,7 @@ class User(models.Model):
     rating = models.IntegerField(default=0)
     email_verified = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
+    is_google_user = models.BooleanField(default=False, help_text="User registered via Google OAuth")
     
     # Address fields
     address_line1 = models.CharField(max_length=255, blank=True, null=True)
@@ -89,3 +92,33 @@ class User(models.Model):
     def has_location(self):
         """Check if user has valid coordinates"""
         return self.latitude is not None and self.longitude is not None
+
+
+class EmailVerificationToken(models.Model):
+    """
+    Model to store email verification tokens for users
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_tokens')
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'email_verification_token'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Verification token for {self.user.email}"
+    
+    @classmethod
+    def create_token(cls, user):
+        """Create a new verification token for a user"""
+        from django.conf import settings
+        token = secrets.token_urlsafe(32)
+        expires_at = timezone.now() + timezone.timedelta(days=settings.EMAIL_VERIFICATION_TIMEOUT_DAYS)
+        return cls.objects.create(user=user, token=token, expires_at=expires_at)
+    
+    def is_valid(self):
+        """Check if token is still valid"""
+        return not self.is_used and timezone.now() < self.expires_at

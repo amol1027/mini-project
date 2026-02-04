@@ -6,8 +6,11 @@
     <!-- Main Content -->
     <div class="relative isolate py-12 px-4 sm:px-6 lg:px-8">
         <!-- Background decoration -->
-        <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-            <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
+        <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+            aria-hidden="true">
+            <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+                style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)">
+            </div>
         </div>
 
         <div class="max-w-2xl mx-auto">
@@ -17,268 +20,341 @@
                 <p class="text-gray-600">Join the Student Resource Exchange community</p>
             </div>
 
-        <!-- Registration Form Card -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-            <!-- Form -->
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-                
-                <!-- Email -->
+            <!-- Registration Form Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <!-- Google Sign-In Button -->
                 <div>
-                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Email Address <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
+                    <a href="{% url 'social:begin' 'google-oauth2' %}"
+                        class="flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md group">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                            <path fill="#4285F4"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        <span class="text-gray-700 font-semibold group-hover:text-gray-900">Continue with Google</span>
+                    </a>
+                </div>
+
+                <!-- Divider -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-white text-gray-500 font-medium">Or register with email</span>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+
+                    <!-- Email -->
+                    <div>
+                        <label for="{{ form.email.id_for_label }}"
+                            class="block text-sm font-semibold text-gray-700 mb-2">
+                            Email Address <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                        {% endif %}
+                    </div>
 
-                <!-- College ID -->
-                <div>
-                    <label for="{{ form.college_id.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        College ID <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.college_id }}
-                    {% if form.college_id.errors %}
+                    <!-- College ID -->
+                    <div>
+                        <label for="{{ form.college_id.id_for_label }}"
+                            class="block text-sm font-semibold text-gray-700 mb-2">
+                            College ID <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.college_id }}
+                        {% if form.college_id.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.college_id.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                        {% endif %}
+                    </div>
 
-                <!-- Name (Optional) -->
-                <div>
-                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Full Name <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.name }}
-                    {% if form.name.errors %}
+                    <!-- Name (Optional) -->
+                    <div>
+                        <label for="{{ form.name.id_for_label }}"
+                            class="block text-sm font-semibold text-gray-700 mb-2">
+                            Full Name <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                        {% endif %}
+                    </div>
 
-                <!-- College Name -->
-                <div>
-                    <label for="{{ form.college_name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        College Name <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.college_name }}
-                    {% if form.college_name.errors %}
+                    <!-- College Name -->
+                    <div>
+                        <label for="{{ form.college_name.id_for_label }}"
+                            class="block text-sm font-semibold text-gray-700 mb-2">
+                            College Name <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.college_name }}
+                        {% if form.college_name.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.college_name.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                        {% endif %}
+                    </div>
 
-                <!-- University Name -->
-                <div>
-                    <label for="{{ form.university_name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        University Name <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.university_name }}
-                    {% if form.university_name.errors %}
+                    <!-- University Name -->
+                    <div>
+                        <label for="{{ form.university_name.id_for_label }}"
+                            class="block text-sm font-semibold text-gray-700 mb-2">
+                            University Name <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.university_name }}
+                        {% if form.university_name.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.university_name.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <!-- Password -->
-                <div>
-                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Password <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        {{ form.password }}
-                        <button type="button"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
-                            data-password-toggle="{{ form.password.id_for_label }}"
-                            aria-label="Show password" aria-pressed="false">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" data-eye-icon>
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <svg class="h-5 w-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" data-eye-off-icon>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.477 10.48a3 3 0 104.243 4.243" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M6.228 6.23C4.38 7.56 3.06 9.52 2.458 12c1.274 4.057 5.064 7 9.542 7 1.598 0 3.12-.374 4.448-1.044" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9.88 5.09A9.86 9.86 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-2.13 3.59" />
-                            </svg>
-                        </button>
+                        {% endif %}
                     </div>
-                    {% if form.password.errors %}
+
+                    <!-- Password -->
+                    <div>
+                        <label for="{{ form.password.id_for_label }}"
+                            class="block text-sm font-semibold text-gray-700 mb-2">
+                            Password <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            {{ form.password }}
+                            <button type="button"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+                                data-password-toggle="{{ form.password.id_for_label }}" aria-label="Show password"
+                                aria-pressed="false">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24" aria-hidden="true" data-eye-icon>
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <svg class="h-5 w-5 hidden" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24" aria-hidden="true" data-eye-off-icon>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10.477 10.48a3 3 0 104.243 4.243" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M6.228 6.23C4.38 7.56 3.06 9.52 2.458 12c1.274 4.057 5.064 7 9.542 7 1.598 0 3.12-.374 4.448-1.044" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.88 5.09A9.86 9.86 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-2.13 3.59" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.password.errors.0 }}</p>
-                    {% else %}
+                        {% else %}
                         <p class="mt-1 text-xs text-gray-500">{{ form.password.help_text }}</p>
-                    {% endif %}
-                </div>
-
-                <!-- Confirm Password -->
-                <div>
-                    <label for="{{ form.confirm_password.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Confirm Password <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        {{ form.confirm_password }}
-                        <button type="button"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
-                            data-password-toggle="{{ form.confirm_password.id_for_label }}"
-                            aria-label="Show password" aria-pressed="false">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" data-eye-icon>
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <svg class="h-5 w-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" data-eye-off-icon>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.477 10.48a3 3 0 104.243 4.243" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M6.228 6.23C4.38 7.56 3.06 9.52 2.458 12c1.274 4.057 5.064 7 9.542 7 1.598 0 3.12-.374 4.448-1.044" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9.88 5.09A9.86 9.86 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-2.13 3.59" />
-                            </svg>
-                        </button>
+                        {% endif %}
                     </div>
-                    {% if form.confirm_password.errors %}
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label for="{{ form.confirm_password.id_for_label }}"
+                            class="block text-sm font-semibold text-gray-700 mb-2">
+                            Confirm Password <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            {{ form.confirm_password }}
+                            <button type="button"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+                                data-password-toggle="{{ form.confirm_password.id_for_label }}"
+                                aria-label="Show password" aria-pressed="false">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24" aria-hidden="true" data-eye-icon>
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <svg class="h-5 w-5 hidden" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24" aria-hidden="true" data-eye-off-icon>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10.477 10.48a3 3 0 104.243 4.243" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M6.228 6.23C4.38 7.56 3.06 9.52 2.458 12c1.274 4.057 5.064 7 9.542 7 1.598 0 3.12-.374 4.448-1.044" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9.88 5.09A9.86 9.86 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-2.13 3.59" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if form.confirm_password.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.confirm_password.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                        {% endif %}
+                    </div>
 
-                <!-- Address Section -->
-                <div class="pt-4 border-t border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Address Information (Optional)</h3>
-                    
-                    <!-- Address Line 1 -->
-                    <div class="mb-4">
-                        <label for="{{ form.address_line1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                            Address Line 1
-                        </label>
-                        {{ form.address_line1 }}
-                        {% if form.address_line1.errors %}
+                    <!-- Address Section -->
+                    <div class="pt-4 border-t border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Address Information</h3>
+
+                        <!-- Address Line 1 -->
+                        <div class="mb-4">
+                            <label for="{{ form.address_line1.id_for_label }}"
+                                class="block text-sm font-medium text-gray-700 mb-2">
+                                Address Line 1 <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.address_line1 }}
+                            {% if form.address_line1.errors %}
                             <p class="mt-1 text-sm text-red-600">{{ form.address_line1.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                            {% endif %}
+                        </div>
 
-                    <!-- Address Line 2 -->
-                    <div class="mb-4">
-                        <label for="{{ form.address_line2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                            Address Line 2
-                        </label>
-                        {{ form.address_line2 }}
-                        {% if form.address_line2.errors %}
+                        <!-- Address Line 2 -->
+                        <div class="mb-4">
+                            <label for="{{ form.address_line2.id_for_label }}"
+                                class="block text-sm font-medium text-gray-700 mb-2">
+                                Address Line 2
+                            </label>
+                            {{ form.address_line2 }}
+                            {% if form.address_line2.errors %}
                             <p class="mt-1 text-sm text-red-600">{{ form.address_line2.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                            {% endif %}
+                        </div>
 
-                    <!-- City and State -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                                City
-                            </label>
-                            {{ form.city }}
-                            {% if form.city.errors %}
+                        <!-- City and State -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="{{ form.city.id_for_label }}"
+                                    class="block text-sm font-medium text-gray-700 mb-2">
+                                    City <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
                                 <p class="mt-1 text-sm text-red-600">{{ form.city.errors.0 }}</p>
-                            {% endif %}
-                        </div>
+                                {% endif %}
+                            </div>
 
-                        <div>
-                            <label for="{{ form.state_province.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                                State/Province
-                            </label>
-                            {{ form.state_province }}
-                            {% if form.state_province.errors %}
+                            <div>
+                                <label for="{{ form.state_province.id_for_label }}"
+                                    class="block text-sm font-medium text-gray-700 mb-2">
+                                    State/Province <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.state_province }}
+                                {% if form.state_province.errors %}
                                 <p class="mt-1 text-sm text-red-600">{{ form.state_province.errors.0 }}</p>
-                            {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- ZIP and Country -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="{{ form.zip_postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                                ZIP/Postal Code
-                            </label>
-                            {{ form.zip_postal_code }}
-                            {% if form.zip_postal_code.errors %}
+                        <!-- ZIP and Country -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="{{ form.zip_postal_code.id_for_label }}"
+                                    class="block text-sm font-medium text-gray-700 mb-2">
+                                    ZIP/Postal Code <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.zip_postal_code }}
+                                {% if form.zip_postal_code.errors %}
                                 <p class="mt-1 text-sm text-red-600">{{ form.zip_postal_code.errors.0 }}</p>
-                            {% endif %}
-                        </div>
+                                {% endif %}
+                            </div>
 
-                        <div>
-                            <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                                Country
-                            </label>
-                            {{ form.country }}
-                            {% if form.country.errors %}
+                            <div>
+                                <label for="{{ form.country.id_for_label }}"
+                                    class="block text-sm font-medium text-gray-700 mb-2">
+                                    Country <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
                                 <p class="mt-1 text-sm text-red-600">{{ form.country.errors.0 }}</p>
-                            {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Form-level errors -->
-                {% if form.non_field_errors %}
+                    <!-- Form-level errors -->
+                    {% if form.non_field_errors %}
                     <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
                         {% for error in form.non_field_errors %}
-                            <p>{{ error }}</p>
+                        <p>{{ error }}</p>
                         {% endfor %}
                     </div>
-                {% endif %}
+                    {% endif %}
 
-                <!-- Submit Button -->
-                <div class="pt-4">
-                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl">
-                        Register
-                    </button>
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit"
+                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl">
+                            Register
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Additional Links -->
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account?
+                        <a href="{% url 'login:login' %}"
+                            class="text-indigo-600 hover:text-indigo-800 font-semibold">Sign in here</a>
+                    </p>
                 </div>
-            </form>
+            </div>
+        </div>
 
-            <!-- Additional Links -->
-            <div class="mt-6 text-center">
-                <p class="text-sm text-gray-600">
-                    Already have an account? 
-                    <a href="{% url 'login:login' %}" class="text-indigo-600 hover:text-indigo-800 font-semibold">Sign in here</a>
-                </p>
+        <!-- Bottom decoration -->
+        <div class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
+            aria-hidden="true">
+            <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
+                style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)">
             </div>
         </div>
     </div>
-    
-    <!-- Bottom decoration -->
-    <div class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
-        <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
-    </div>
-</div>
 
-<script>
-    (function () {
-        function wirePasswordToggle(button) {
-            const inputId = button.getAttribute('data-password-toggle');
-            if (!inputId) return;
-            const input = document.getElementById(inputId);
-            if (!input) return;
+    <script>
+        (function () {
+            // Prevent numbers in name fields
+            function preventNumbers(inputId) {
+                const input = document.getElementById(inputId);
+                if (!input) return;
 
-            const eye = button.querySelector('[data-eye-icon]');
-            const eyeOff = button.querySelector('[data-eye-off-icon]');
+                input.addEventListener('input', function (e) {
+                    this.value = this.value.replace(/[0-9]/g, '');
+                });
 
-            function setState(isVisible) {
-                input.type = isVisible ? 'text' : 'password';
-                button.setAttribute('aria-pressed', String(isVisible));
-                button.setAttribute('aria-label', isVisible ? 'Hide password' : 'Show password');
-                if (eye && eyeOff) {
-                    eye.classList.toggle('hidden', isVisible);
-                    eyeOff.classList.toggle('hidden', !isVisible);
-                }
+                input.addEventListener('keydown', function (e) {
+                    if (e.key >= '0' && e.key <= '9') {
+                        e.preventDefault();
+                    }
+                });
             }
 
-            button.addEventListener('click', function () {
-                const nextVisible = input.type === 'password';
-                setState(nextVisible);
-                input.focus();
-            });
+            // Apply to name field if it exists
+            preventNumbers('{{ form.name.id_for_label }}');
 
-            setState(false);
-        }
+            function wirePasswordToggle(button) {
+                const inputId = button.getAttribute('data-password-toggle');
+                if (!inputId) return;
+                const input = document.getElementById(inputId);
+                if (!input) return;
 
-        document.querySelectorAll('[data-password-toggle]').forEach(wirePasswordToggle);
-    })();
-</script>
-{% endblock %}
+                const eye = button.querySelector('[data-eye-icon]');
+                const eyeOff = button.querySelector('[data-eye-off-icon]');
+
+                function setState(isVisible) {
+                    input.type = isVisible ? 'text' : 'password';
+                    button.setAttribute('aria-pressed', String(isVisible));
+                    button.setAttribute('aria-label', isVisible ? 'Hide password' : 'Show password');
+                    if (eye && eyeOff) {
+                        eye.classList.toggle('hidden', isVisible);
+                        eyeOff.classList.toggle('hidden', !isVisible);
+                    }
+                }
+
+                button.addEventListener('click', function () {
+                    const nextVisible = input.type === 'password';
+                    setState(nextVisible);
+                    input.focus();
+                });
+
+                setState(false);
+            }
+
+            document.querySelectorAll('[data-password-toggle]').forEach(wirePasswordToggle);
+        })();
+    </script>
+    {% endblock %}

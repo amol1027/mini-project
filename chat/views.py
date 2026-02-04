@@ -21,13 +21,20 @@ def conversation_list(request):
     user = get_object_or_404(User, id=user_id)
     
     # Get all conversations where user is either buyer or seller
+    # Only show conversations that have at least one message
     conversations = Conversation.objects.filter(
         Q(buyer=user) | Q(seller=user)
     ).select_related('buyer', 'seller', 'product').prefetch_related(
         Prefetch('messages', queryset=Message.objects.order_by('-created_at'))
     ).annotate(
-        last_message_time=Max('messages__created_at')
-    ).order_by('-last_message_time')
+        last_message_time=Max('messages__created_at'),
+        message_count=Count('messages'),
+        unread_count=Count(
+            'messages',
+            filter=Q(messages__is_read=False) & ~Q(messages__sender=user),
+            distinct=True,
+        ),
+    ).filter(message_count__gt=0).order_by('-last_message_time')
     
     # Add context for each conversation
     conversation_data = []
@@ -35,13 +42,12 @@ def conversation_list(request):
         # Determine the other party in the conversation
         other_user = conv.seller if conv.buyer.id == user.id else conv.buyer
         last_message = conv.get_last_message()
-        unread_count = conv.messages.exclude(sender=user).filter(is_read=False).count()
         
         conversation_data.append({
             'conversation': conv,
             'other_user': other_user,
             'last_message': last_message,
-            'unread_count': unread_count
+            'unread_count': conv.unread_count
         })
     
     # Pagination - 12 conversations per page

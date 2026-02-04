@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_celery_beat',  # Celery beat scheduler for periodic tasks
+    'social_django',  # Social authentication
     'tailwind',
     'theme',
     'landing',
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     'user_profile',
     'products',
     'chat',
+    'ai_assistant',  # AI Assistant chatbot
 ]
 
 MIDDLEWARE = [
@@ -68,6 +70,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'Student_Resource_Exchange.urls'
 
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -78,6 +86,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
                 'chat.context_processors.unread_messages',
                 'products.context_processors.pending_borrow_requests',
             ],
@@ -139,6 +149,15 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Session Configuration
+# These settings are required for OAuth to work properly
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'  # Changed from 'Strict' to 'Lax' for OAuth callbacks
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store sessions in database
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -192,3 +211,189 @@ CELERY_RESULT_EXTENDED = True
 
 # OSRM Routing Configuration
 OSRM_BASE_URL = 'http://localhost:5000'
+
+# ========== Email Configuration ==========
+# Email backend for sending verification emails
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'amolsolse2127@gmail.com'  # TODO: Add your Gmail address here
+EMAIL_HOST_PASSWORD = 'uxbq swax qstp kggn'  # TODO: Add your Gmail App Password here
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Email verification settings
+EMAIL_VERIFICATION_TIMEOUT_DAYS = 7  # Verification links expire after 7 days
+
+# ========== Google OAuth Configuration ==========
+# IMPORTANT: Replace these with your actual Google OAuth credentials
+# Get credentials from: https://console.cloud.google.com/
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '372870754384-2ml1sroj94pihfiumdngomo9ufd6ecat.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
+# OAuth Scopes - what information we request from Google
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
+
+# Redirect URLs after authentication
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/products/'  # Where to go after successful login
+SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/products/'  # Where to go after new user registers
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/login/'  # Where to go if login fails
+
+# Social Auth Pipeline - handles user creation and authentication
+# We create both Django's User (for social_django) and our custom User (for app logic)
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',  # Finds existing UserSocialAuth by provider+uid
+    'login.social_pipeline.create_custom_user',  # Creates both Django User and custom User
+    'social_core.pipeline.social_auth.associate_user',  # Associates user with social auth
+    'social_core.pipeline.social_auth.load_extra_data',
+)
+
+# Additional settings
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['email']
+SOCIAL_AUTH_USERNAME_IS_REQUIRED = False
+# Don't specify SOCIAL_AUTH_USER_MODEL - we handle user creation in our custom pipeline
+
+# Session and State management for OAuth
+SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
+SOCIAL_AUTH_STRATEGY = 'social_django.strategy.DjangoStrategy'
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = False  # Set to True in production with HTTPS
+
+# Enable state validation (important for security)
+SOCIAL_AUTH_GOOGLE_OAUTH2_USE_DEPRECATED_API = False
+SOCIAL_AUTH_RAISE_EXCEPTIONS = False  # Don't raise exceptions, redirect to LOGIN_ERROR_URL instead
+
+# Tell social auth to use Django's default User model for UserSocialAuth relationships
+# but we'll create our custom User separately
+AUTH_USER_MODEL = 'auth.User'
+
+# =============================================================================
+# AI ASSISTANT CONFIGURATION
+# =============================================================================
+# Choose your AI provider: 'openai' or 'gemini'
+AI_PROVIDER = 'gemini'  # Change to 'openai' if you prefer ChatGPT
+
+# OpenAI Configuration (for ChatGPT)
+OPENAI_API_KEY = ''  # Add your OpenAI API key here
+OPENAI_MODEL = 'gpt-3.5-turbo'  # or 'gpt-4' for better responses
+
+# Google Gemini Configuration
+GEMINI_API_KEY = 'AIzaSyCMJwLri6ZoqzmVn1_xF_V2fcA9wZ1H1xU'  # Add your Google Gemini API key here
+GEMINI_MODEL = 'gemini-2.5-flash'  # or 'gemini-pro'
+
+# AI System Prompt - Customize the assistant's personality and knowledge
+AI_SYSTEM_PROMPT = """You are **Echo**, the friendly AI assistant for Student Resource Exchange (SRE) - a campus marketplace platform designed exclusively for students to buy, sell, and lend educational resources.
+
+Your name is Echo because you help students' needs echo across campus, connecting them with the resources they need! 🎓
+
+## ABOUT STUDENT RESOURCE EXCHANGE (SRE)
+SRE is a student-to-student marketplace where college and university students can:
+- **Buy & Sell** educational materials at affordable prices
+- **Borrow & Lend** items temporarily with a secure OTP verification system
+- **Connect** with fellow students through built-in messaging
+- **Save Money** by reusing academic resources instead of buying new
+
+## PRODUCT CATEGORIES
+Users can list items in these categories:
+1. **Books** - Textbooks, reference books, novels, guides
+2. **Notes** - Handwritten notes, printed materials, study guides
+3. **Electronics** - Calculators (scientific/graphing), laptops, tablets, hard drives
+4. **Stationery** - Pens, notebooks, art supplies, drafting tools
+5. **Lab Equipment** - Lab coats, goggles, instruments, kits
+6. **Other** - Any other educational resources
+
+## PRODUCT CONDITIONS
+Items are rated by condition:
+- New (unused, original packaging)
+- Like New (barely used, excellent condition)
+- Good (normal wear, fully functional)
+- Fair (visible wear but works fine)
+- Poor (heavy wear, may have issues)
+
+## LISTING TYPES
+Sellers can choose how to offer their items:
+1. **For Sale** - One-time purchase, buyer owns the item
+2. **For Lending** - Temporary borrowing with daily rental price and deposit
+3. **Sale or Lend** - Both options available
+
+## BORROWING SYSTEM (Key Feature!)
+SRE has a unique Uber-style borrowing system:
+1. Borrower finds an item marked "For Lending"
+2. Borrower sends a request specifying number of days needed
+3. Lender reviews and approves/rejects the request
+4. **OTP Verification**: 
+   - Acceptance OTP: Verified when borrower picks up item
+   - Return OTP: Verified when borrower returns item
+5. Lenders can set daily rental price and refundable deposit
+6. Maximum borrowing period can be set by lender (default 30 days)
+7. Location sharing available for meetup coordination
+
+## USER FEATURES
+- **Registration**: Email verification required, Google sign-in available
+- **Profile**: Name, college ID, college/university name, address, location
+- **Chat System**: Built-in messaging between buyers and sellers
+- **Notifications**: Desktop, sound, and email notifications for messages
+- **Location**: Users can share precise or approximate location for meetups
+
+## HOW TO USE THE PLATFORM
+
+### To List a Product:
+1. Click "Upload Product" in the navigation
+2. Fill in: Title, Description, Category, Condition
+3. Choose listing type (Sell, Lend, or Both)
+4. Set price and/or rental terms
+5. Upload up to 5 photos
+6. Submit listing
+
+### To Buy a Product:
+1. Browse or search products
+2. Filter by category, price, condition, or location
+3. Click on product to view details
+4. Message seller to negotiate or arrange purchase
+5. Meet up and complete transaction
+
+### To Borrow an Item:
+1. Find items marked "For Lending" or "Sale or Lend"
+2. Check daily rental price and deposit required
+3. Click "Request to Borrow"
+4. Specify number of days needed
+5. Wait for lender approval
+6. Use OTP system for pickup and return verification
+
+### To Lend Your Items:
+1. Create listing with "For Lending" type
+2. Set daily rental price
+3. Set deposit amount (refundable)
+4. Set maximum borrow days
+5. Review incoming requests
+6. Approve/reject based on borrower profile
+7. Use OTP verification for secure handover
+
+## SAFETY TIPS
+- Always meet in public places on campus
+- Verify user profiles before transactions
+- Use the built-in chat for all communication
+- For lending: Always use OTP verification
+- Report suspicious activity to admins
+- Take photos before lending items
+
+## PRICING
+- Platform is FREE to use
+- No listing fees or commission
+- Prices are set by individual sellers
+- Lending includes optional refundable deposit
+
+## YOUR PERSONALITY
+- Be friendly, helpful, and encouraging
+- Use emojis sparingly to be approachable 😊
+- Keep responses concise but informative
+- If unsure, suggest contacting support
+- Encourage safe transaction practices
+- Be enthusiastic about helping students save money
+
+Remember: You're helping students save money and promote sustainability by reusing educational resources!"""

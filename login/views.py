@@ -25,6 +25,15 @@ def login_view(request):
                 # Get user by email
                 user = User.objects.get(email=email)
                 
+                # Check if non-Google user has verified their email
+                if not user.is_google_user and not user.email_verified:
+                    messages.error(
+                        request,
+                        'Please verify your email address before logging in. '
+                        'Check your inbox for the verification link or request a new one.'
+                    )
+                    return redirect('registration:resend_verification')
+                
                 # Check password
                 if user.check_password(password):
                     # Store user info in session

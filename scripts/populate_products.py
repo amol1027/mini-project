@@ -1,6 +1,5 @@
 """
-Script to populate the database with 15-20 diverse products
-User: amolsolse2127@gmail.com
+Script to populate the database with 15-20 diverse products for testing
 """
 
 import os
@@ -20,31 +19,37 @@ from registration.models import User
 from products.models import Product
 
 def create_or_get_user():
-    """Create or retrieve the user with given credentials"""
-    email = "amolsolse2127@gmail.com"
-    password = "amolsolse2127@gmail.com"
+    """
+    Create or retrieve a test user for populating products.
+    Note: This creates a regular user without admin privileges.
+    To create admin users, use Django's createsuperuser command or admin UI.
+    """
+    email = "testuser@example.com"
+    password = "testpass123"
     
     try:
         user = User.objects.get(email=email)
         print(f"✓ User found: {user.email}")
         return user
     except User.DoesNotExist:
-        print(f"Creating new user: {email}")
+        print(f"Creating new test user: {email}")
         user = User.objects.create(
             email=email,
-            college_id="STU2127",
-            name="Amol Solse",
-            college_name="Engineering College",
-            university_name="Mumbai University",
+            college_id="TEST001",
+            name="Test User",
+            college_name="Test Engineering College",
+            university_name="Test University",
             email_verified=True,
-            is_admin=True,
+            is_admin=False,  # Never grant admin privileges via populate scripts
             city="Mumbai",
             state_province="Maharashtra",
             country="India"
         )
         user.set_password(password)
         user.save()
-        print(f"✓ User created: {user.email}")
+        print(f"✓ Test user created: {user.email}")
+        print(f"  Login credentials: {email} / {password}")
+        print(f"  Note: This is a regular user. For admin access, use Django's createsuperuser command.")
         return user
 
 def create_products(seller):

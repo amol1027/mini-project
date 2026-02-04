@@ -4,3 +4,4 @@ celery>=5.3.4
 redis>=5.0.0
 django-celery-beat>=2.5.0
 geopy>=2.4.0
+social-auth-app-django>=5.6.0

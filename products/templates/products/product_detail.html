@@ -120,8 +120,7 @@
                     <div class="grid grid-cols-2 gap-3 sm:gap-4 border-t border-gray-200 pt-4 sm:pt-6">
                         <div>
                             <p class="text-xs sm:text-sm text-gray-500 mb-1">Condition</p>
-                            <p class="text-sm sm:text-base font-semibold text-gray-900">{{ product.get_condition_display
-                                }}</p>
+                            <p class="text-sm sm:text-base font-semibold text-gray-900">{{ product.get_condition_display }}</p>
                         </div>
                         <div>
                             <p class="text-xs sm:text-sm text-gray-500 mb-1">Availability</p>
@@ -152,10 +151,8 @@
                             </span>
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{
-                                product.seller.name|default:"Student Seller" }}</p>
-                            <p class="text-xs sm:text-sm text-gray-600 truncate">{{
-                                product.seller.college_name|default:"College Student" }}</p>
+                            <p class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{ product.seller.name|default:"Student Seller" }}</p>
+                            <p class="text-xs sm:text-sm text-gray-600 truncate">{{ product.seller.college_name|default:"College Student" }}</p>
                         </div>
                     </div>
 
@@ -277,13 +274,10 @@
                                 <div class="flex-1">
                                     <p class="text-green-800 font-medium mb-1">Lending Terms:</p>
                                     <ul class="text-green-700 space-y-1">
-                                        <li>• Daily Rate: <span class="font-semibold">₹{{ product.borrow_price_per_day
-                                                }}</span></li>
-                                        <li>• Max Duration: <span class="font-semibold">{{ product.max_borrow_days }}
-                                                days</span></li>
+                                        <li>• Daily Rate: <span class="font-semibold">₹{{ product.borrow_price_per_day }}</span></li>
+                                        <li>• Max Duration: <span class="font-semibold">{{ product.max_borrow_days }} days</span></li>
                                         {% if product.borrow_deposit %}
-                                        <li>• Security Deposit: <span class="font-semibold">₹{{ product.borrow_deposit
-                                                }}</span> (refundable)</li>
+                                        <li>• Security Deposit: <span class="font-semibold">₹{{ product.borrow_deposit }}</span> (refundable)</li>
                                         {% endif %}
                                     </ul>
                                 </div>
@@ -444,8 +438,7 @@
                         </div>
                         {% endif %}
                         <div class="p-4">
-                            <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600">{{
-                                related.title }}</h3>
+                            <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600">{{ related.title }}</h3>
                             <p class="text-xl font-bold text-indigo-600">₹{{ related.price }}</p>
                         </div>
                     </div>

@@ -3,189 +3,853 @@
 {% load dashboard_extras %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                    <p class="mt-1 text-sm text-gray-600">Welcome back, {{ current_user.name|default:current_user.email }}</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Print
+                    </button>
+                    <a href="{% url 'dashboard:export_dashboard' %}?period={{ filter_period }}{% if filter_start_date %}&start_date={{ filter_start_date }}{% endif %}{% if filter_end_date %}&end_date={{ filter_end_date }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Export Summary
+                    </a>
+                    <a href="{% url 'dashboard:user_list' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Page Title -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">Dashboard Overview</h2>
-            <p class="mt-2 text-gray-600">Monitor and manage your Student Resource Exchange platform</p>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Total Users -->
-            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Total Users</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_users }}</p>
+        
+        <!-- Date Range Filter -->
+        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h3 class="text-lg font-semibold text-gray-900">Analytics Period</h3>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                            {% if filter_start_date and filter_end_date %}
+                                Custom: {{ filter_start_date }} to {{ filter_end_date }}
+                            {% else %}
+                                {{ filter_period_label }}
+                            {% endif %}
+                        </span>
                     </div>
-                    <div class="p-3 bg-indigo-100 rounded-lg">
-                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <p class="text-sm text-gray-600 mt-1">Select time range to view statistics</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="inline-flex rounded-lg border border-gray-300 overflow-hidden divide-x divide-gray-300" role="group" aria-label="Analytics period">
+                        <button onclick="filterByPeriod('7')" id="filter-7" type="button" aria-pressed="false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset whitespace-nowrap">
+                            Last 7 Days
+                        </button>
+                        <button onclick="filterByPeriod('30')" id="filter-30" type="button" aria-pressed="true" class="px-4 py-2 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset whitespace-nowrap">
+                            Last 30 Days
+                        </button>
+                        <button onclick="filterByPeriod('90')" id="filter-90" type="button" aria-pressed="false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset whitespace-nowrap">
+                            Last 90 Days
+                        </button>
+                        <button onclick="filterByPeriod('all')" id="filter-all" type="button" aria-pressed="false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset whitespace-nowrap">
+                            All Time
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 border-l border-gray-300 pl-3">
+                        <input type="date" id="startDate" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <span class="text-gray-500">to</span>
+                        <input type="date" id="endDate" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <button onclick="filterByCustomDate()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                            Apply
+                        </button>
+                    </div>
+                    <p id="dateError" class="hidden w-full text-sm text-red-600" role="alert" aria-live="polite"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Users Card -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        +{{ new_users_filtered }} in period
+                    </span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">{{ total_users }}</h3>
+                <p class="text-sm text-gray-600 mt-1">Total Users</p>
+                <div class="mt-3 flex items-center text-xs">
+                    {% if growth_direction == 'down' %}
+                    <span class="text-red-600 font-medium">↓ {{ growth_rate_abs }}%</span>
+                    {% else %}
+                    <span class="text-green-600 font-medium">↑ {{ growth_rate_abs }}%</span>
+                    {% endif %}
+                    <span class="text-gray-500 ml-1">vs previous period</span>
                 </div>
             </div>
 
-            <!-- Verified Users -->
-            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Verified Users</p>
-                        <p class="text-3xl font-bold text-green-600 mt-2">{{ verified_users }}</p>
-                    </div>
-                    <div class="p-3 bg-green-100 rounded-lg">
-                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <!-- Products Card -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        +{{ new_products_filtered }} in period
+                    </span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">{{ total_products }}</h3>
+                <p class="text-sm text-gray-600 mt-1">Total Products</p>
+                <div class="mt-3 flex items-center text-xs">
+                    <span class="text-blue-600 font-medium">{{ new_products_7d }}</span>
+                    <span class="text-gray-500 ml-1">this week</span>
                 </div>
             </div>
 
-            <!-- Recent Signups -->
-            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">New (7 days)</p>
-                        <p class="text-3xl font-bold text-blue-600 mt-2">{{ recent_users }}</p>
-                    </div>
-                    <div class="p-3 bg-blue-100 rounded-lg">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+            <!-- Revenue/Value Card -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        Period Value
+                    </span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">₹{{ total_product_value|floatformat:0 }}</h3>
+                <p class="text-sm text-gray-600 mt-1">Products Listed Value</p>
+                <div class="mt-3 flex items-center text-xs">
+                    <span class="text-purple-600 font-medium">{{ products_borrowed_in_period }}</span>
+                    <span class="text-gray-500 ml-1">borrowed in period</span>
                 </div>
             </div>
 
-            <!-- Unverified Users -->
-            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Unverified</p>
-                        <p class="text-3xl font-bold text-yellow-600 mt-2">{{ unverified_users }}</p>
-                    </div>
-                    <div class="p-3 bg-yellow-100 rounded-lg">
-                        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            <!-- Engagement Card -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                         </svg>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        {{ messages_filtered }} in period
+                    </span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">{{ total_messages }}</h3>
+                <p class="text-sm text-gray-600 mt-1">Total Messages</p>
+                <div class="mt-3 flex items-center text-xs">
+                    <span class="text-orange-600 font-medium">{{ total_conversations }}</span>
+                    <span class="text-gray-500 ml-1">conversations</span>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
+        <!-- Transaction Metrics Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Buy/Sell Transactions Card -->
+            <a href="{% url 'dashboard:transactions' %}?type=purchase" class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow cursor-pointer">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        +{{ purchase_transactions_filtered }} in period
+                    </span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">{{ total_purchase_transactions }}</h3>
+                <p class="text-sm text-gray-600 mt-1">Total Buy/Sell Transactions</p>
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-emerald-600 font-medium">₹{{ total_purchase_value|floatformat:0 }}</span>
+                        <span class="text-gray-500 ml-1">total transaction value</span>
+                    </div>
+                    <span class="text-indigo-600 font-medium hover:text-indigo-800">View Details →</span>
+                </div>
+            </a>
+
+            <!-- Lend/Borrow Transactions Card -->
+            <a href="{% url 'dashboard:transactions' %}?type=borrow" class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow cursor-pointer">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                        +{{ borrow_transactions_filtered }} in period
+                    </span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">{{ total_borrow_transactions }}</h3>
+                <p class="text-sm text-gray-600 mt-1">Total Lend/Borrow Transactions</p>
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-teal-600 font-medium">₹{{ total_borrow_value|floatformat:0 }}</span>
+                        <span class="text-gray-500 ml-1">total rental value</span>
+                    </div>
+                    <span class="text-indigo-600 font-medium hover:text-indigo-800">View Details →</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- User Growth Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">User Growth ({{ filter_period_label }})</h3>
+                    <span class="text-sm text-gray-500">{{ new_users_filtered }} new</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Product Growth Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Product Listings ({{ filter_period_label }})</h3>
+                    <span class="text-sm text-gray-500">{{ new_products_filtered }} new</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="productGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversion Funnel -->
         <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-8">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <a href="{% url 'dashboard:user_list' %}" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors group">
-                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    <span class="font-medium text-indigo-900 group-hover:text-indigo-700">View All Users</span>
-                </a>
-                
-                <a href="{% url 'admin:index' %}" class="flex items-center gap-3 px-4 py-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors group">
-                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="font-medium text-purple-900 group-hover:text-purple-700">Django Admin</span>
-                </a>
-                
+            <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Conversion Funnel</h3>
+                    <p class="text-sm text-gray-600 mt-1">Based on users who signed up in {{ filter_period_label }}</p>
+                </div>
+                <span class="text-xs text-gray-500">Visitors are not tracked yet</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {% for step in conversion_funnel_steps %}
+                <div class="rounded-lg border border-gray-200 p-4">
+                    <div class="text-xs font-medium text-gray-500">{{ step.label }}</div>
+                    <div class="mt-2 text-2xl font-bold text-gray-900">
+                        {% if step.value is None %}
+                            —
+                        {% else %}
+                            {{ step.value }}
+                        {% endif %}
+                    </div>
+                    <div class="mt-2 text-xs text-gray-600">{{ step.sub }}</div>
+                    {% if step.rate_from_prev is not None and step.label != 'Verified' and step.label != 'Signups' and step.label != 'Visitors' %}
+                    <div class="mt-2 text-xs text-gray-500">{{ step.rate_from_prev }}% vs previous step</div>
+                    {% elif step.label == 'Verified' and step.rate_from_prev is not None %}
+                    <div class="mt-2 text-xs text-gray-500">{{ step.rate_from_prev }}% verified</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <!-- Two Column Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Latest Users -->
+        <!-- Cohort Retention -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Cohort Retention</h3>
+                <p class="text-sm text-gray-600 mt-1">Weekly cohorts (last 8 weeks): Week+1 return and 30-day transaction rate</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signup Week</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cohort Size</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Returned (W+1)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transacted (30d)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for row in cohort_retention_rows %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ row.week_label }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ row.cohort_size }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                <span class="font-semibold">{{ row.returned_w1 }}</span>
+                                <span class="text-gray-500">({{ row.returned_w1_pct }}%)</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                <span class="font-semibold">{{ row.transacted_30d }}</span>
+                                <span class="text-gray-500">({{ row.transacted_30d_pct }}%)</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">No cohort data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top / Bottom Performers -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Most Borrowed Products -->
             <div class="bg-white rounded-xl shadow-md border border-gray-100">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Latest Users</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Most Borrowed</h3>
+                    <p class="text-sm text-gray-600 mt-1">{{ filter_period_label }}</p>
                 </div>
                 <div class="divide-y divide-gray-100">
-                    {% for user in latest_users %}
-                    <a href="{% url 'dashboard:user_detail' user.id %}" class="block px-6 py-4 hover:bg-gray-50 transition-colors">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <p class="font-medium text-gray-900">{{ user.name|default:user.email }}</p>
-                                <p class="text-sm text-gray-500">{{ user.email }}</p>
+                    {% for product in top_borrowed_products %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">{{ product.title }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ product.category|capfirst }}</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                {{ product.borrow_count }} borrows
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="px-6 py-8 text-center text-gray-500">No borrow activity</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Most Active Users -->
+            <div class="bg-white rounded-xl shadow-md border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Most Active Users</h3>
+                    <p class="text-sm text-gray-600 mt-1">Messages + listings + requests ({{ filter_period_label }})</p>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    {% for user in most_active_users %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">{{ user.name|default:user.email }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ user.email }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm text-gray-500">{{ user.created_at|date:"M d, Y" }}</p>
-                                {% if user.email_verified %}
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Verified
-                                </span>
-                                {% else %}
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    Pending
-                                </span>
-                                {% endif %}
+                                <div class="text-sm font-semibold text-gray-900">{{ user.activity_score }}</div>
+                                <div class="text-xs text-gray-500">score</div>
                             </div>
                         </div>
-                    </a>
+                        <div class="mt-2 text-xs text-gray-600">
+                            {{ user.messages_sent }} msgs · {{ user.products_listed }} listings · {{ user.borrow_requests }} borrows · {{ user.purchase_requests }} purchases
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="px-6 py-8 text-center text-gray-500">No user activity</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Repeated Cancellations -->
+            <div class="bg-white rounded-xl shadow-md border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Repeated Cancellations</h3>
+                    <p class="text-sm text-gray-600 mt-1">Cancelled requests ({{ filter_period_label }})</p>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    {% for user in cancellation_users %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">{{ user.name|default:user.email }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ user.email }}</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                {{ user.cancellation_count }} cancellations
+                            </span>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-600">
+                            {{ user.borrow_cancellations }} borrow · {{ user.purchase_cancellations }} purchase
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="px-6 py-8 text-center text-gray-500">No cancellations</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Verification Stats -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Email Verification
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs text-gray-600">Verified</span>
+                            <span class="text-xs font-medium text-green-600">{{ verified_users }} ({{ verified_percentage }}%)</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: {{ verified_percentage }}%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Unverified</span>
+                        <span class="font-medium text-yellow-600">{{ unverified_users }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Google Auth</span>
+                        <span class="font-medium text-blue-600">{{ google_users }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Categories -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    Top Categories
+                </h3>
+                <div class="space-y-2">
+                    {% for category in products_by_category|slice:":5" %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-700 capitalize">{{ category.category|title }}</span>
+                        <span class="text-sm font-semibold text-gray-900">{{ category.count }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500">No products yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- User Ratings -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                    </svg>
+                    User Ratings
+                </h3>
+                <div class="text-center mb-4">
+                    <div class="text-3xl font-bold text-gray-900">{{ avg_rating|floatformat:1 }}</div>
+                    <div class="text-sm text-gray-500">Average Rating</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-600">⭐⭐⭐⭐⭐ (4-5)</span>
+                        <span class="text-xs font-medium text-green-600">{{ high_rated }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-600">⭐⭐⭐ (2-3)</span>
+                        <span class="text-xs font-medium text-yellow-600">{{ medium_rated }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-600">⭐ (0-1)</span>
+                        <span class="text-xs font-medium text-red-600">{{ low_rated }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Three Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Recent Activity -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-md border border-gray-100">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                </div>
+                <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                    {% for activity in recent_activities %}
+                    <div class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start gap-4">
+                            <div class="p-2 bg-{{ activity.color }}-100 rounded-lg flex-shrink-0">
+                                {% if activity.icon == 'user-plus' %}
+                                <svg class="w-5 h-5 text-{{ activity.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                </svg>
+                                {% elif activity.icon == 'shopping-bag' %}
+                                <svg class="w-5 h-5 text-{{ activity.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                </svg>
+                                {% elif activity.icon == 'message-circle' %}
+                                <svg class="w-5 h-5 text-{{ activity.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-gray-900">{{ activity.description }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ activity.timestamp|timesince }} ago</p>
+                            </div>
+                        </div>
+                    </div>
                     {% empty %}
                     <div class="px-6 py-8 text-center text-gray-500">
-                        No users found
+                        No recent activity
                     </div>
                     {% endfor %}
                 </div>
-                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                    <a href="{% url 'dashboard:user_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View all users →</a>
-                </div>
             </div>
 
-            <!-- User Statistics -->
+            <!-- Top Viewed Products -->
             <div class="bg-white rounded-xl shadow-md border border-gray-100">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">User Statistics</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Top Viewed</h3>
                 </div>
-                <div class="px-6 py-6 space-y-6">
-                    <!-- Verification Status -->
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-600">Email Verification</span>
-                            <span class="text-sm text-gray-500">{{ verified_users }}/{{ total_users }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ verified_percentage }}%"></div>
-                        </div>
-                    </div>
-
-                    <!-- User Ratings -->
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-3">User Ratings</p>
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600">High (4-5 stars)</span>
-                                <span class="text-sm font-medium text-green-600">{{ high_rated }}</span>
+                <div class="divide-y divide-gray-100">
+                    {% for product in top_viewed_products %}
+                    <div class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">{{ product.title }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ product.category|capfirst }}</p>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600">Medium (2-3 stars)</span>
-                                <span class="text-sm font-medium text-yellow-600">{{ medium_rated }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600">Low (0-1 stars)</span>
-                                <span class="text-sm font-medium text-red-600">{{ low_rated }}</span>
+                            <div class="ml-4 flex items-center text-sm text-gray-600">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                {{ product.views }}
                             </div>
                         </div>
                     </div>
-
-                    <!-- Address Information -->
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-gray-600">Profiles with Address</span>
-                            <span class="text-sm text-gray-500">{{ users_with_address }}/{{ total_users }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ address_percentage }}%"></div>
-                        </div>
+                    {% empty %}
+                    <div class="px-6 py-8 text-center text-gray-500">
+                        No products yet
                     </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+
+        <!-- Latest Users Table -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Latest Users</h3>
+                <a href="{% url 'dashboard:user_list' %}" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">View All →</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for user in latest_users %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 flex-shrink-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-semibold text-sm">{{ user.name|default:user.email|slice:":1"|upper }}</span>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ user.name|default:"—" }}</div>
+                                        <div class="text-xs text-gray-500">ID: {{ user.id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ user.email }}</div>
+                                {% if user.is_google_user %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                    Google
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if user.email_verified %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Verified
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="text-yellow-400 mr-1">★</span>
+                                    <span class="text-sm text-gray-900">{{ user.rating|default:"0" }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.created_at|date:"M d, Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="{% url 'dashboard:user_detail' user.id %}" class="text-indigo-600 hover:text-indigo-900 font-medium">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                No users found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </main>
 </div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    // Wait for DOM and Chart.js to load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Chart is available
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js library not loaded');
+            return;
+        }
+
+        // User Growth Chart
+        try {
+            const userGrowthData = {{ user_growth_data|safe }};
+            const userGrowthCanvas = document.getElementById('userGrowthChart');
+            
+            if (userGrowthCanvas && userGrowthData && userGrowthData.length > 0) {
+                const userGrowthCtx = userGrowthCanvas.getContext('2d');
+                new Chart(userGrowthCtx, {
+                    type: 'line',
+                    data: {
+                        labels: userGrowthData.map(d => d.date),
+                        datasets: [{
+                            label: 'New Users',
+                            data: userGrowthData.map(d => d.count),
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: 'rgb(59, 130, 246)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 2,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                cornerRadius: 8
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    maxTicksLimit: 10,
+                                    autoSkip: true
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: Math.max(...userGrowthData.map(d => d.count)) + 2,
+                                ticks: {
+                                    precision: 0,
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.warn('User growth chart: Canvas element or data not found');
+            }
+        } catch (error) {
+            console.error('Error creating user growth chart:', error);
+        }
+
+        // Product Growth Chart
+        try {
+            const productGrowthData = {{ product_growth_data|safe }};
+            const productGrowthCanvas = document.getElementById('productGrowthChart');
+            
+            if (productGrowthCanvas && productGrowthData && productGrowthData.length > 0) {
+                const productGrowthCtx = productGrowthCanvas.getContext('2d');
+                new Chart(productGrowthCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: productGrowthData.map(d => d.date),
+                        datasets: [{
+                            label: 'New Products',
+                            data: productGrowthData.map(d => d.count),
+                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                            borderColor: 'rgb(34, 197, 94)',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            hoverBackgroundColor: 'rgba(34, 197, 94, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 2,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                cornerRadius: 8
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    maxTicksLimit: 10,
+                                    autoSkip: true
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: Math.max(...productGrowthData.map(d => d.count)) + 2,
+                                ticks: {
+                                    precision: 0,
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.warn('Product growth chart: Canvas element or data not found');
+            }
+        } catch (error) {
+            console.error('Error creating product growth chart:', error);
+        }
+    });
+
+    // Filter functionality
+    function filterByPeriod(days) {
+        // Reload page with new filter
+        window.location.href = `?period=${days}`;
+    }
+
+    function filterByCustomDate() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const dateError = document.getElementById('dateError');
+
+        if (dateError) {
+            dateError.textContent = '';
+            dateError.classList.add('hidden');
+        }
+        
+        if (!startDate || !endDate) {
+            if (dateError) {
+                dateError.textContent = 'Please select both start and end dates.';
+                dateError.classList.remove('hidden');
+            }
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            if (dateError) {
+                dateError.textContent = 'Start date must be on or before the end date.';
+                dateError.classList.remove('hidden');
+            }
+            return;
+        }
+        
+        // Reload page with custom date range
+        window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
+    }
+
+    // Set active filter button on page load
+    (function setActiveFilterButton() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const period = urlParams.get('period') || '30';
+        const startDate = urlParams.get('start_date');
+        const endDate = urlParams.get('end_date');
+
+        const inactiveSegmentClass = 'px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset whitespace-nowrap';
+        const activeSegmentClass = 'px-4 py-2 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset whitespace-nowrap';
+        
+        // First, reset all buttons to inactive state
+        ['7', '30', '90', 'all'].forEach(p => {
+            const btn = document.getElementById(`filter-${p}`);
+            if (btn) {
+                btn.className = inactiveSegmentClass;
+                btn.setAttribute('aria-pressed', 'false');
+            }
+        });
+        
+        if (startDate && endDate) {
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
+            // All preset buttons remain inactive (already set above)
+        } else {
+            // Highlight the active period button
+            const activeBtn = document.getElementById(`filter-${period}`);
+            if (activeBtn) {
+                activeBtn.className = activeSegmentClass;
+                activeBtn.setAttribute('aria-pressed', 'true');
+            }
+        }
+    })();
+</script>
 {% endblock %}
